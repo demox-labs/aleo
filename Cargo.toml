@@ -21,12 +21,19 @@ edition = "2018"
 members = [ "rust/account", "wasm" ]
 
 [workspace.dependencies.snarkvm]
+path="../snarkVM"
 version = "0.9.11"
 
 [workspace.dependencies.snarkvm-synthesizer]
+path="../snarkVM/synthesizer"
+version = "0.9.11"
+
+[workspace.dependencies.snarkvm-console]
+path="../snarkVM/console"
 version = "0.9.11"
 
 [workspace.dependencies.snarkvm-wasm]
+path="../snarkVM/wasm"
 version = "0.9.11"
 
 [lib]
@@ -85,6 +92,7 @@ num-format = "0.4.4"
   version = "1"
 
   [dependencies.snarkvm]
+  path="../../snarkVM"
   workspace = true
   features = [ "aleo-cli", "circuit", "console", "parallel" ]
 

@@ -21,6 +21,8 @@ use crate::{
 
 use aleo_account::{Aleo, Process, Program, Request, Transaction};
 use std::convert::TryInto;
+use wasm_bindgen::prelude::*;
+
 
 pub struct TransactionBuilder {}
 
@@ -67,14 +69,6 @@ impl TransactionBuilder {
         let rng = &mut rand::thread_rng();
         // Compute the request.
         Request::sign(&private_key, *program.id(), *function.name(), inputs.iter(), &input_types, rng).unwrap()
-    }
-
-    pub fn submit_transfer(transaction: Transaction) -> Result<String, String> {
-        ureq::post("https://vm.aleo.org/api/testnet3/transaction/broadcast")
-            .set("Content-Type", "application/json")
-            .send_json(transaction)
-            .map(|res| res.into_string().unwrap())
-            .map_err(|res| format!("result was {res:?}"))
     }
 }
 
