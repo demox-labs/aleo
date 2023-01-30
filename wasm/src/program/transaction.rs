@@ -23,9 +23,10 @@ use aleo_account::{Aleo, Process, Program, Request, Transaction};
 use std::convert::TryInto;
 use wasm_bindgen::prelude::*;
 
-
+#[wasm_bindgen]
 pub struct TransactionBuilder {}
 
+#[wasm_bindgen]
 impl TransactionBuilder {
     /// Creates an execute transaction from a full proof of execution
     pub fn build_transfer_full(
@@ -33,7 +34,7 @@ impl TransactionBuilder {
         address: Address,
         amount: u64,
         record: RecordPlaintext,
-    ) -> Transaction {
+    ) -> String {
         let process = Process::load().unwrap();
         let credits_program = Program::credits().unwrap();
         let mut amount_str = amount.to_string();
@@ -44,7 +45,9 @@ impl TransactionBuilder {
             process.authorize::<Aleo, _>(&private_key, credits_program.id(), "transfer", inputs.iter(), rng).unwrap();
         let (_, execution, _, _) = process.execute::<Aleo, _>(authorization, rng).unwrap();
         // TODO: Figure out how to get proper inclusion proofs
-        Transaction::from_execution(execution, None).unwrap()
+        let tx = Transaction::from_execution(execution, None).unwrap();
+        let tx_string = tx.to_string();
+        tx_string
     }
 
     pub fn build_authorization(
@@ -52,7 +55,7 @@ impl TransactionBuilder {
         address: Address,
         amount: u64,
         record: RecordPlaintext,
-    ) -> Request {
+    ) -> String {
         // Get credits function
         let program = Program::credits().unwrap();
         // Get function id
@@ -68,7 +71,9 @@ impl TransactionBuilder {
         let inputs = [record.to_string(), address.to_string(), amount_str];
         let rng = &mut rand::thread_rng();
         // Compute the request.
-        Request::sign(&private_key, *program.id(), *function.name(), inputs.iter(), &input_types, rng).unwrap()
+        let req = Request::sign(&private_key, *program.id(), *function.name(), inputs.iter(), &input_types, rng).unwrap();
+        let req_string = req.to_string();
+        req_string
     }
 }
 
