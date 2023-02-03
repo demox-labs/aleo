@@ -60,6 +60,7 @@ dependencies = [
  "rand",
  "rand_chacha",
  "snarkvm-console",
+ "snarkvm-parameters",
  "snarkvm-synthesizer",
  "snarkvm-wasm",
 ]
@@ -136,6 +137,7 @@ dependencies = [
  "console_error_panic_hook",
  "getrandom",
  "hex",
+ "js-sys",
  "rand",
  "serde",
  "serde_json",

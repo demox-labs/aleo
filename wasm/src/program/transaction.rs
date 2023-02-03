@@ -19,9 +19,33 @@ use crate::{
     record::RecordPlaintext,
 };
 
-use aleo_account::{Aleo, Process, Program, Request, Transaction};
+use aleo_account::{Aleo, Process, Program, Request, Transaction, PARAMETER_PROVIDER};
 use std::convert::TryInto;
 use wasm_bindgen::prelude::*;
+use js_sys::Array;
+
+#[wasm_bindgen]
+pub struct ParameterProvider {}
+
+#[wasm_bindgen]
+impl ParameterProvider {
+    pub fn store_bytes(name: String, bytes: Vec<u8>) {
+        PARAMETER_PROVIDER.lock().unwrap().insert(name.into(), bytes);
+    }
+
+    pub fn load_bytes(name: String) -> Vec<u8> {
+        PARAMETER_PROVIDER.lock().unwrap().get(&name).unwrap_or(&Vec::<u8>::new()).to_vec()
+    }
+    
+    pub fn free_bytes(name: String) {
+        PARAMETER_PROVIDER.lock().unwrap().remove(&name);
+    }
+
+    pub fn get_keys() -> Array {
+        let keys = PARAMETER_PROVIDER.lock().unwrap().keys().into_iter().map(JsValue::from).collect();
+        keys
+    }
+}
 
 #[wasm_bindgen]
 pub struct TransactionBuilder {}
@@ -97,13 +121,6 @@ mod tests {
         let amount = 100;
         let record = RecordPlaintext::from_string(OWNER_PLAINTEXT).unwrap();
         TransactionBuilder::build_transfer_full(private_key, address, amount, record);
-    }
-
-    #[test]
-    fn test_submit_transaction() {
-        let transaction = serde_json::from_str::<Transaction>(ALEO_TRANSACTION).unwrap();
-        let response = TransactionBuilder::submit_transfer(transaction);
-        println!("response: {response:#?}");
     }
 
     #[test]

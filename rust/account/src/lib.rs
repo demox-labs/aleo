@@ -35,6 +35,7 @@ use snarkvm_console::{
 };
 
 pub use snarkvm_wasm::{network::Environment, FromBytes, PrimeField, ToBytes};
+pub use snarkvm_parameters::{testnet3::PARAMETER_PROVIDER};
 
 // Account types
 pub type Address = AleoAddress<CurrentNetwork>;

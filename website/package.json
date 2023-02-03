@@ -29,10 +29,10 @@
     "webpack-dev-server": "^4.7.4"
   },
   "scripts": {
-    "preinstall": "cd ../wasm && wasm-pack build",
+    "preinstall": "cd ../wasm && rm -rf pkg && wasm-pack build",
     "prestart": "yarn preinstall",
     "prerestart": "yarn preinstall",
-    "start": "webpack-dev-server",
+    "start": "yarn upgrade aleo-wasm && webpack-dev-server",
     "build": "webpack --config webpack.config.js",
     "predeploy": "yarn build",
     "deploy": "gh-pages -d build",

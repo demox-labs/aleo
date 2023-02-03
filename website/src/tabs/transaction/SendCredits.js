@@ -29,6 +29,21 @@ export const SendCredits = () => {
       } catch (error) { console.error(error) }
     }
 
+    const loadFiles = async () => {
+        try {
+            const file1 = new Uint8Array([21, 31]);
+            const file2 = new Uint8Array([1, 2, 3, 4]);
+            console.log('Keys 1: ', aleo.ParameterProvider.get_keys());
+            aleo.ParameterProvider.store_bytes("File1", file1);
+            aleo.ParameterProvider.store_bytes("File2", file2);
+            console.log('Keys 2: ', aleo.ParameterProvider.get_keys());
+            const bytes = aleo.ParameterProvider.load_bytes("TestProver");
+            const file2Bytes = aleo.ParameterProvider.load_bytes("File2");
+            console.log('TestProver bytes: ', bytes);
+            console.log('File2 Bytes: ', file2Bytes);
+          } catch (error) { console.error(error) }
+    }
+
     const layout = {labelCol: {span: 4}, wrapperCol: {span: 21}};
 
     if (aleo !== null) {
@@ -50,6 +65,9 @@ export const SendCredits = () => {
                     <Input name="recordPlainText" size="large" placeholder="Record (Plain Text)" allowClear value={plaintext} onChange={(evt) => safeStateUpdate(setPlaintext, evt)}
                            style={{borderRadius: '20px'}}/>
                 </Form.Item>
+                <Button onClick={() => loadFiles()}>
+                  Load Files
+                </Button>
                 <Button onClick={() => buildTransaction()}>
                   Create Transaction
                 </Button>

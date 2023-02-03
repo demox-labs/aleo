@@ -24,6 +24,10 @@ members = [ "rust/account", "wasm" ]
 path="../snarkVM"
 version = "0.9.11"
 
+[workspace.dependencies.snarkvm-parameters]
+path="../snarkVM/parameters"
+version = "0.9.11"
+
 [workspace.dependencies.snarkvm-synthesizer]
 path="../snarkVM/synthesizer"
 version = "0.9.11"
