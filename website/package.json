@@ -30,7 +30,7 @@
     "webpack-dev-server": "^4.7.4"
   },
   "scripts": {
-    "preinstall": "cd ../wasm && rm -rf pkg && wasm-pack build --dev",
+    "preinstall": "cd ../wasm && wasm-pack build --debug",
     "prestart": "yarn preinstall",
     "prerestart": "yarn preinstall",
     "start": "yarn upgrade aleo-wasm && webpack-dev-server",

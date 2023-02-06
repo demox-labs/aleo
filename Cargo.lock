@@ -2228,6 +2228,7 @@ dependencies = [
  "serde",
  "snarkvm-utilities",
  "thiserror",
+ "web-sys",
 ]
 
 [[package]]
@@ -2297,6 +2298,7 @@ dependencies = [
  "snarkvm-fields",
  "snarkvm-utilities",
  "tracing",
+ "web-sys",
 ]
 
 [[package]]
