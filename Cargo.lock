@@ -1854,6 +1854,7 @@ dependencies = [
  "snarkvm-r1cs",
  "snarkvm-utilities",
  "thiserror",
+ "web-sys",
 ]
 
 [[package]]
@@ -2087,6 +2088,7 @@ dependencies = [
  "snarkvm-fields",
  "snarkvm-parameters",
  "snarkvm-utilities",
+ "web-sys",
 ]
 
 [[package]]
@@ -2251,7 +2253,9 @@ dependencies = [
  "snarkvm-curves",
  "snarkvm-utilities",
  "thiserror",
+ "wasm-bindgen",
  "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]

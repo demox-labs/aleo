@@ -1,6 +1,7 @@
 import React, {useState} from "react";
 import {Card, Divider, Form, Input, Button} from "antd";
 import {useAleoWASM} from "../../aleo-wasm-hook";
+import {downloadAndStoreFiles, getAllSavedFiles} from '../../db';
 
 export const SendCredits = () => {
     const [privateKey, setPrivateKey] = useState("APrivateKey1zkp3dQx4WASWYQVWKkq14v3RoQDfY2kbLssUj7iifi1VUQ6");
@@ -41,6 +42,22 @@ export const SendCredits = () => {
             const file2Bytes = aleo.ParameterProvider.load_bytes("File2");
             console.log('TestProver bytes: ', bytes);
             console.log('File2 Bytes: ', file2Bytes);
+
+            await downloadAndStoreFiles();
+
+            console.log('Storing bytes in WASM');
+            const files = await getAllSavedFiles();
+            files.map(({ name, bytes }) => {
+                console.log(`Storing bytes for: ${name}`);
+                aleo.ParameterProvider.store_bytes(name, bytes);
+            });
+
+            files.map(({ name, bytes }) => {
+                console.log(`Loading bytes for: ${name}`);
+                const somebytes = aleo.ParameterProvider.load_bytes(name, bytes);
+                console.log(`Found bytes for ${name}: `, somebytes);
+            });
+
           } catch (error) { console.error(error) }
     }
 
