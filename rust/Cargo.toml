@@ -53,11 +53,13 @@ version = "1.0.91"
 
 [dependencies.snarkvm]
 version = "0.9.11"
+path="../../snarkVM"
 features = [ "parallel" ]
 optional = true
 
 [dependencies.snarkvm-wasm]
 version = "0.9.11"
+path="../../snarkVM/wasm"
 features = [ "parallel" ]
 optional = true
 

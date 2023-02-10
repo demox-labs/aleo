@@ -16,7 +16,7 @@
 
 use snarkvm_wasm::{
     account::{Address, PrivateKey, Signature, ViewKey},
-    network::Testnet3,
+    network::{Testnet3, MarlinProvingKey},
     program::{Ciphertext, Plaintext, Record},
 };
 
@@ -30,6 +30,7 @@ pub type ViewKeyNative = ViewKey<CurrentNetwork>;
 
 // Network types
 pub type CurrentNetwork = Testnet3;
+pub type ProvingKeyNative = MarlinProvingKey<CurrentNetwork>;
 
 // Record types
 pub type CiphertextNative = Ciphertext<CurrentNetwork>;
