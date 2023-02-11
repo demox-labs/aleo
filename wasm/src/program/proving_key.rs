@@ -43,6 +43,7 @@ mod tests {
     use super::*;
 
     use wasm_bindgen_test::*;
+    use web_sys::console;
 
     fn get_transfer_bytes() -> Vec<u8> {
         include_bytes!("/Users/evanmarshall/.aleo/resources/transfer.prover.837ad21").to_vec()
@@ -59,6 +60,7 @@ mod tests {
     fn test_deserialize_key_wasm() {
         let transfer_bytes = get_transfer_bytes();
         let bytes = ProvingKey::from_bytes(transfer_bytes);
-        println!("First 1000 bytes: {:?}", bytes);
+        let formatted_string = format!("First 1000 bytes: {:?}", bytes);
+        console::log_1(&formatted_string.into());
     }
 }
