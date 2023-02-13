@@ -14,9 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo library. If not, see <https://www.gnu.org/licenses/>.
 
+use snarkvm_synthesizer::{
+    Process as AleoProcess,
+    Program as AleoProgram,
+    Transaction as AleoTransaction,
+    ProvingKey
+};
 use snarkvm_wasm::{
     account::{Address, PrivateKey, Signature, ViewKey},
-    network::{Testnet3, MarlinProvingKey},
+    network::{Testnet3}
+};
+use snarkvm_console::{
     program::{Ciphertext, Plaintext, Record},
 };
 
@@ -29,8 +37,14 @@ pub type SignatureNative = Signature<CurrentNetwork>;
 pub type ViewKeyNative = ViewKey<CurrentNetwork>;
 
 // Network types
+pub type Aleo = snarkvm_wasm::AleoV0;
 pub type CurrentNetwork = Testnet3;
-pub type ProvingKeyNative = MarlinProvingKey<CurrentNetwork>;
+pub type ProvingKeyNative = ProvingKey<CurrentNetwork>;
+
+// Program types
+pub type Process = AleoProcess<CurrentNetwork>;
+pub type Program = AleoProgram<CurrentNetwork>;
+pub type Transaction = AleoTransaction<CurrentNetwork>;
 
 // Record types
 pub type CiphertextNative = Ciphertext<CurrentNetwork>;

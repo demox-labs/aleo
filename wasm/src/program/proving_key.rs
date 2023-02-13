@@ -18,23 +18,42 @@ use crate::{
   types::{ProvingKeyNative, ToBytes, FromBytes},
 };
 
+use std::{ops::Deref};
+
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct ProvingKey(ProvingKeyNative);
 
 #[wasm_bindgen]
 impl ProvingKey {
     /// Generate a new private key
     #[wasm_bindgen]
-    #[allow(clippy::new_without_default)]
-    pub fn from_bytes(bytes: Vec<u8>) -> Vec<u8> {
+    pub fn from_bytes(bytes: Vec<u8>) -> ProvingKey {
         console_error_panic_hook::set_once();
-        let key = ProvingKeyNative::from_bytes_le(&bytes[2..]).unwrap();
-        let recovered_bytes = key.to_bytes_le().unwrap();
-        let first_1000 = &recovered_bytes[0..1000];
-        first_1000.to_vec()
+        let proving_key = ProvingKeyNative::from_bytes_le(&bytes);
+        Self(proving_key.unwrap())
+    }
+
+    #[wasm_bindgen]
+    pub fn to_bytes(&self) -> Result<Vec<u8>, String> {
+        console_error_panic_hook::set_once();
+        self.0.to_bytes_le().map_err(|_| "Failed to serialize prover key".to_string())
+    }
+}
+
+impl Deref for ProvingKey {
+    type Target = ProvingKeyNative;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Into<ProvingKeyNative> for ProvingKey {
+    fn into(self) -> ProvingKeyNative {
+        self.0
     }
 }
 
@@ -43,24 +62,16 @@ mod tests {
     use super::*;
 
     use wasm_bindgen_test::*;
-    use web_sys::console;
 
     fn get_transfer_bytes() -> Vec<u8> {
         include_bytes!("/Users/evanmarshall/.aleo/resources/transfer.prover.837ad21").to_vec()
     }
 
-    #[test]
-    fn test_deserialize_key() {
-        let transfer_bytes = get_transfer_bytes();
-        let bytes = ProvingKey::from_bytes(transfer_bytes);
-        println!("First 1000 bytes: {:?}", bytes);
-    }
-
     #[wasm_bindgen_test]
-    fn test_deserialize_key_wasm() {
+    fn test_deserialize_serialize_key_wasm() {
         let transfer_bytes = get_transfer_bytes();
-        let bytes = ProvingKey::from_bytes(transfer_bytes);
-        let formatted_string = format!("First 1000 bytes: {:?}", bytes);
-        console::log_1(&formatted_string.into());
+        let proving_key = ProvingKey::from_bytes(transfer_bytes.clone());
+        let bytes = proving_key.to_bytes().unwrap();
+        assert_eq!(transfer_bytes, bytes);
     }
 }

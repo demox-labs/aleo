@@ -28,6 +28,14 @@ version = "0.9.11"
 path="../snarkVM/wasm"
 version = "0.9.11"
 
+[workspace.dependencies.snarkvm-synthesizer]
+path="../snarkVM/synthesizer"
+version = "0.9.11"
+
+[workspace.dependencies.snarkvm-console]
+path="../snarkVM/console"
+version = "0.9.11"
+
 [lib]
 path = "cli/lib.rs"
 
@@ -87,7 +95,7 @@ version = "1"
 
 [dependencies.snarkvm]
 workspace = true
-features = [ "aleo-cli", "circuit", "console", "parallel", "snarkvm-synthesizer"]
+features = [ "aleo-cli", "circuit", "console", "snarkvm-synthesizer"]
 
 [dependencies.thiserror]
 version = "1.0"

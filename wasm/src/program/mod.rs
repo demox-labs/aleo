@@ -16,3 +16,6 @@
 
 pub mod proving_key;
 pub use proving_key::*;
+
+pub mod transaction;
+pub use transaction::*;
