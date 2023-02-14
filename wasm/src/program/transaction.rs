@@ -1,12 +1,14 @@
 use crate::{
   account::{Address, PrivateKey},
-  record::RecordPlaintext,
-  program::ProvingKey,
+  record::RecordPlaintext
 };
-
-use crate::{Aleo, Process, Program, Transaction};
+use crate::{
+    Aleo,
+    Process,
+    Program,
+    TransactionNative
+};
 use wasm_bindgen::prelude::*;
-use js_sys::Array;
 
 #[wasm_bindgen]
 pub struct TransactionBuilder {}
@@ -36,10 +38,39 @@ impl TransactionBuilder {
         let authorization =
             process.authorize::<Aleo, _>(&private_key, credits_program.id(), "transfer", inputs.iter(), rng).unwrap();
         let (_, execution, _, _) = process.execute::<Aleo, _>(authorization, rng).unwrap();
-        
+
         // TODO: Figure out how to get proper inclusion proofs
-        let tx = Transaction::from_execution(execution, None).unwrap();
+        let tx = TransactionNative::from_execution(execution, None).unwrap();
         let tx_string = tx.to_string();
         tx_string
+    }
+}
+
+#[cfg(test)]
+#[ignore]
+mod tests {
+    use super::*;
+
+    const OWNER_PLAINTEXT: &str = r"{
+  owner: aleo184vuwr5u7u0ha5f5k44067dd2uaqewxx6pe5ltha5pv99wvhfqxqv339h4.private,
+  gates: 1159017656332810u64.private,
+  _nonce: 1635890755607797813652478911794003479783620859881520791852904112255813473142group.public
+}";
+
+    const ALEO_PRIVATE_KEY: &str = "APrivateKey1zkp3dQx4WASWYQVWKkq14v3RoQDfY2kbLssUj7iifi1VUQ6";
+
+    fn get_transfer_bytes() -> ProvingKey {
+        let bytes = include_bytes!(concat!(env!("HOME"), "/.aleo/resources/transfer.prover.837ad21")).to_vec();
+        ProvingKey::from_bytes(bytes)
+    }
+
+    #[test]
+    fn test_build_transaction() {
+        let private_key = PrivateKey::from_string(ALEO_PRIVATE_KEY).unwrap();
+        let proving_key = get_transfer_bytes();
+        let address = Address::from_private_key(&private_key);
+        let amount = 100;
+        let record = RecordPlaintext::from_string(OWNER_PLAINTEXT).unwrap();
+        TransactionBuilder::build_transfer_full(private_key, proving_key, address, amount, record);
     }
 }

@@ -44,7 +44,7 @@ pub type ProvingKeyNative = ProvingKey<CurrentNetwork>;
 // Program types
 pub type Process = AleoProcess<CurrentNetwork>;
 pub type Program = AleoProgram<CurrentNetwork>;
-pub type Transaction = AleoTransaction<CurrentNetwork>;
+pub type TransactionNative = AleoTransaction<CurrentNetwork>;
 
 // Record types
 pub type CiphertextNative = Ciphertext<CurrentNetwork>;

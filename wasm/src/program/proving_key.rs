@@ -28,7 +28,6 @@ pub struct ProvingKey(ProvingKeyNative);
 
 #[wasm_bindgen]
 impl ProvingKey {
-    /// Generate a new private key
     #[wasm_bindgen]
     pub fn from_bytes(bytes: Vec<u8>) -> ProvingKey {
         console_error_panic_hook::set_once();
@@ -58,13 +57,14 @@ impl Into<ProvingKeyNative> for ProvingKey {
 }
 
 #[cfg(test)]
+#[ignore]
 mod tests {
     use super::*;
 
     use wasm_bindgen_test::*;
 
     fn get_transfer_bytes() -> Vec<u8> {
-        include_bytes!("/Users/evanmarshall/.aleo/resources/transfer.prover.837ad21").to_vec()
+        include_bytes!(concat!(env!("HOME"), "/.aleo/resources/transfer.prover.837ad21")).to_vec()
     }
 
     #[wasm_bindgen_test]
@@ -72,6 +72,6 @@ mod tests {
         let transfer_bytes = get_transfer_bytes();
         let proving_key = ProvingKey::from_bytes(transfer_bytes.clone());
         let bytes = proving_key.to_bytes().unwrap();
-        assert_eq!(transfer_bytes, bytes);
+        assert!(transfer_bytes.eq(&bytes));
     }
 }

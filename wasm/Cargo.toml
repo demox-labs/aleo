@@ -43,18 +43,20 @@ version = "0.8"
 version = "1.0"
 
 [dependencies.snarkvm-synthesizer]
-path = "../../snarkVM/synthesizer"
-workspace = true
+path="../../snarkVM/synthesizer"
+version = "0.9.11"
 default-features = false
 features = [ "wasm" ]
 
 [dependencies.snarkvm-console]
-path = "../../snarkVM/console"
-workspace = true
+path="../../snarkVM/console"
+version = "0.9.11"
 default-features = false
 
 [dependencies.snarkvm-wasm]
-workspace = true
+path="../../snarkVM/wasm"
+version = "0.9.11"
+default-features = false
 
 [dependencies.wasm-bindgen]
 version = "0.2"
