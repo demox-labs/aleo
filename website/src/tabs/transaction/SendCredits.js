@@ -1,5 +1,6 @@
 import React, {useState} from "react";
-import {Card, Divider, Form, Input, Button} from "antd";
+import {Card, Divider, Form, Input, Button } from "antd";
+const { TextArea } = Input;
 import {useAleoWASM} from "../../aleo-wasm-hook";
 import {downloadAndStoreFiles, getAllSavedFiles} from '../../db';
 
@@ -64,7 +65,7 @@ export const SendCredits = () => {
                           style={{borderRadius: '20px'}}/>
                 </Form.Item>
                 <Form.Item label="Record (Plain Text)" colon={false}>
-                    <Input name="recordPlainText" size="large" placeholder="Record (Plain Text)" allowClear value={plaintext} onChange={(evt) => safeStateUpdate(setPlaintext, evt)}
+                    <TextArea rows={5} name="recordPlainText" size="large" placeholder="Record (Plain Text)" allowClear value={plaintext} onChange={(evt) => safeStateUpdate(setPlaintext, evt)}
                           style={{borderRadius: '20px'}}/>
                 </Form.Item>
                 <Button onClick={() => buildTransaction()}>
@@ -76,7 +77,7 @@ export const SendCredits = () => {
                     <Form {...layout}>
                         <Divider/>
                         <Form.Item label="Transaction" colon={false}>
-                            <Input size="large" placeholder="Transaction" value={transaction} disabled/>
+                            <TextArea rows={7} size="large" placeholder="Transaction" value={transaction} disabled/>
                         </Form.Item>
                     </Form>
                     : null

@@ -22,16 +22,21 @@ impl TransactionBuilder {
         record: RecordPlaintext,
     ) -> String {
         console_error_panic_hook::set_once();
+
         let process = Process::load_wasm().unwrap();
         let credits_program = Program::credits().unwrap();
+
         process.insert_transfer_proving_key(proving_key.into()).unwrap();
+
         let mut amount_str = amount.to_string();
         amount_str.push_str("u64");
         let inputs = [record.to_string(), address.to_string(), amount_str];
         let rng = &mut rand::thread_rng();
+
         let authorization =
             process.authorize::<Aleo, _>(&private_key, credits_program.id(), "transfer", inputs.iter(), rng).unwrap();
         let (_, execution, _, _) = process.execute::<Aleo, _>(authorization, rng).unwrap();
+        
         // TODO: Figure out how to get proper inclusion proofs
         let tx = Transaction::from_execution(execution, None).unwrap();
         let tx_string = tx.to_string();
