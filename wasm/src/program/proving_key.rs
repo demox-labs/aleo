@@ -57,19 +57,15 @@ impl Into<ProvingKeyNative> for ProvingKey {
 }
 
 #[cfg(test)]
-#[ignore]
 mod tests {
     use super::*;
 
     use wasm_bindgen_test::*;
 
-    fn get_transfer_bytes() -> Vec<u8> {
-        include_bytes!(concat!(env!("HOME"), "/.aleo/resources/transfer.prover.837ad21")).to_vec()
-    }
-
     #[wasm_bindgen_test]
+    #[ignore]
     fn test_deserialize_serialize_key_wasm() {
-        let transfer_bytes = get_transfer_bytes();
+        let transfer_bytes = include_bytes!(concat!(env!("HOME"), "/.aleo/resources/transfer.prover.837ad21")).to_vec();
         let proving_key = ProvingKey::from_bytes(transfer_bytes.clone());
         let bytes = proving_key.to_bytes().unwrap();
         assert!(transfer_bytes.eq(&bytes));

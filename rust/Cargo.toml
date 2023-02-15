@@ -63,13 +63,11 @@ optional = true
 
 [dependencies.snarkvm-synthesizer]
 path = "../../snarkVM/synthesizer"
-workspace = true
 default-features = false
 features = [ "wasm" ]
 
 [dependencies.snarkvm-console]
 path = "../../snarkVM/console"
-workspace = true
 default-features = false
 
 [dev-dependencies.bencher]

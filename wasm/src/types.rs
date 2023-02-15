@@ -25,7 +25,7 @@ use snarkvm_wasm::{
     network::{Testnet3}
 };
 use snarkvm_console::{
-    program::{Ciphertext, Plaintext, Record},
+    program::{Ciphertext, Identifier as AleoIdentifier, Plaintext, Record},
 };
 
 pub use snarkvm_wasm::{network::Environment, FromBytes, PrimeField, ToBytes};
@@ -42,6 +42,7 @@ pub type CurrentNetwork = Testnet3;
 pub type ProvingKeyNative = ProvingKey<CurrentNetwork>;
 
 // Program types
+pub type Identifier = AleoIdentifier<CurrentNetwork>;
 pub type Process = AleoProcess<CurrentNetwork>;
 pub type Program = AleoProgram<CurrentNetwork>;
 pub type TransactionNative = AleoTransaction<CurrentNetwork>;

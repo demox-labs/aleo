@@ -5,8 +5,6 @@ db.version(1).stores({
     parameters: "name"
 });
 
-// const ALEO_URL = "https://testnet3.parameters.aleo.org";
-
 const FILES = [
   // {
   //   name: 'MintProver',

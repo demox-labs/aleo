@@ -4,10 +4,14 @@ use crate::{
 };
 use crate::{
     Aleo,
+    Identifier,
     Process,
     Program,
+    ProvingKey,
     TransactionNative
 };
+
+use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -28,7 +32,7 @@ impl TransactionBuilder {
         let process = Process::load_wasm().unwrap();
         let credits_program = Program::credits().unwrap();
 
-        process.insert_transfer_proving_key(proving_key.into()).unwrap();
+        process.insert_proving_key(credits_program.id(), &Identifier::from_str("transfer").unwrap(), proving_key.into()).unwrap();
 
         let mut amount_str = amount.to_string();
         amount_str.push_str("u64");
@@ -47,7 +51,6 @@ impl TransactionBuilder {
 }
 
 #[cfg(test)]
-#[ignore]
 mod tests {
     use super::*;
 
@@ -59,15 +62,12 @@ mod tests {
 
     const ALEO_PRIVATE_KEY: &str = "APrivateKey1zkp3dQx4WASWYQVWKkq14v3RoQDfY2kbLssUj7iifi1VUQ6";
 
-    fn get_transfer_bytes() -> ProvingKey {
-        let bytes = include_bytes!(concat!(env!("HOME"), "/.aleo/resources/transfer.prover.837ad21")).to_vec();
-        ProvingKey::from_bytes(bytes)
-    }
-
     #[test]
+    #[ignore]
     fn test_build_transaction() {
+        let bytes = include_bytes!(concat!(env!("HOME"), "/.aleo/resources/transfer.prover.837ad21")).to_vec();
         let private_key = PrivateKey::from_string(ALEO_PRIVATE_KEY).unwrap();
-        let proving_key = get_transfer_bytes();
+        let proving_key =ProvingKey::from_bytes(bytes);
         let address = Address::from_private_key(&private_key);
         let amount = 100;
         let record = RecordPlaintext::from_string(OWNER_PLAINTEXT).unwrap();

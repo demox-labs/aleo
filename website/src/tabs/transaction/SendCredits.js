@@ -77,7 +77,7 @@ export const SendCredits = () => {
                     <Form {...layout}>
                         <Divider/>
                         <Form.Item label="Transaction" colon={false}>
-                            <TextArea rows={7} size="large" placeholder="Transaction" value={transaction} disabled/>
+                            <TextArea rows={7} size="large" placeholder="Transaction" value={transaction} readOnly={true} />
                         </Form.Item>
                     </Form>
                     : null
