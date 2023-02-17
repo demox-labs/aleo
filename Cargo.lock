@@ -151,6 +151,7 @@ dependencies = [
  "snarkvm-synthesizer",
  "snarkvm-wasm",
  "wasm-bindgen",
+ "wasm-bindgen-rayon",
  "wasm-bindgen-test",
  "web-sys",
 ]
