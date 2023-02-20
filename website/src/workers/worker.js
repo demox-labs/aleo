@@ -1,6 +1,8 @@
-import init, * as aleo from "../../../wasm/pkg";
+import init, * as aleo from '@aleohq/wasm';
 
-init();
+await init();
+
+// await aleo.initThreadPool(navigator.hardwareConcurrency);
 
 self.addEventListener("message", ev => {
   const {privateKey, transferProverBytes, toAddress, amount, plaintext} = ev.data;

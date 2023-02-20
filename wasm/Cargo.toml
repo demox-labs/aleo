@@ -62,8 +62,8 @@ default-features = false
 version = "0.2"
 features = [ "serde-serialize" ]
 
-[dependencies.wasm-bindgen-rayon]
-version = "1.0"
+# [dependencies.wasm-bindgen-rayon]
+# version = "1.0"
 
 [dependencies.js-sys]
 version = "0.3"
@@ -83,7 +83,7 @@ opt-level = 3
 lto = true
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = ["-O4", "--fast-math"]
+wasm-opt = ["-O4"]
 
-[features]
-thread_local_internals = [ ]
+# [features]
+# thread_local_internals = [ ]

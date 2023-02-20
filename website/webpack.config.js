@@ -13,6 +13,10 @@ const appConfig = {
     },
     devServer: {
         port: 3000,
+        headers: {
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp'
+        },
     },
     module: {
         rules: [
@@ -36,7 +40,8 @@ const appConfig = {
     },
     experiments: {
         syncWebAssembly: true,
-        asyncWebAssembly: true
+        asyncWebAssembly: true,
+        topLevelAwait: true
     },
     devtool: 'source-map',
 }
@@ -45,12 +50,12 @@ const workerConfig = {
     mode: 'development',
     entry: "./src/workers/worker.js",
     target: "webworker",
-    plugins: [
-        new WasmPackPlugin({
-            crateDirectory: path.resolve(__dirname, "../wasm"),
-            extraArgs: '--target web'
-        })
-    ],
+    // plugins: [
+    //     new WasmPackPlugin({
+    //         crateDirectory: path.resolve(__dirname, "../wasm"),
+    //         extraArgs: '--target web'
+    //     })
+    // ],
     resolve: {
         extensions: [".js", ".wasm"]
     },
@@ -60,7 +65,8 @@ const workerConfig = {
     },
     experiments: {
         syncWebAssembly: true,
-        asyncWebAssembly: true
+        asyncWebAssembly: true,
+        topLevelAwait: true
     },
     devtool: 'source-map',
 };

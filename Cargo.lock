@@ -151,7 +151,6 @@ dependencies = [
  "snarkvm-synthesizer",
  "snarkvm-wasm",
  "wasm-bindgen",
- "wasm-bindgen-rayon",
  "wasm-bindgen-test",
  "web-sys",
 ]
@@ -2357,8 +2356,6 @@ dependencies = [
  "serde_json",
  "snarkvm-utilities-derives",
  "thiserror",
- "wasm-bindgen",
- "wasm-bindgen-rayon",
 ]
 
 [[package]]
@@ -2401,12 +2398,6 @@ name = "spin"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
-
-[[package]]
-name = "spmc"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02a8428da277a8e3a15271d79943e80ccc2ef254e78813a166a08d65e4c3ece5"
 
 [[package]]
 name = "strsim"
@@ -2897,18 +2888,6 @@ dependencies = [
  "syn 1.0.107",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
-]
-
-[[package]]
-name = "wasm-bindgen-rayon"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df87c67450805c305d3ae44a3ac537b0253d029153c25afc3ecd2edc36ccafb1"
-dependencies = [
- "js-sys",
- "rayon",
- "spmc",
- "wasm-bindgen",
 ]
 
 [[package]]
