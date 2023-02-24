@@ -17,10 +17,13 @@
 use snarkvm_console::{
     account::PrivateKey,
     network::Network,
-    program::{Ciphertext, Identifier, Literal, Plaintext},
     types::Field,
 };
 use snarkvm_utilities::Uniform;
+
+use snarkvm_console::{
+    program::{Ciphertext, Identifier, Literal, Plaintext}
+};
 
 use anyhow::{anyhow, Result};
 use once_cell::sync::OnceCell;

@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo library. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod account;
-pub use account::*;
+use crate::types::{
+    InputIDNative,
+    TransitionNative,
+};
 
-pub mod record;
-pub use record::*;
+use serde::{Serialize, Deserialize};
 
-pub mod program;
-pub use program::*;
-
-pub(crate) mod types;
+#[derive(Clone, Serialize, Deserialize)]
+pub struct IntermediateTransaction {
+    pub transition: TransitionNative,
+    pub input_ids: Vec<InputIDNative>
+}

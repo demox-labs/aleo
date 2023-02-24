@@ -14,10 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo library. If not, see <https://www.gnu.org/licenses/>.
 
+use snarkvm_synthesizer::{
+    Process as AleoProcess,
+    Program as AleoProgram,
+    Transaction as AleoTransaction,
+    Transition as AleoTransition,
+    ProvingKey as AleoProvingKey,
+    VerifyingKey as AleoVerifyingKey,
+    Inclusion as AleoInclusion,
+    Execution as AleoExecution
+};
 use snarkvm_wasm::{
     account::{Address, PrivateKey, Signature, ViewKey},
-    network::Testnet3,
-    program::{Ciphertext, Identifier, Plaintext, ProgramID, Record},
+    network::Testnet3
+};
+use snarkvm_console::{
+    program::{
+        Ciphertext,
+        Identifier as AleoIdentifier,
+        InputID as AleoInputID,
+        Plaintext,
+        ProgramID,
+        Record,
+        StatePath as AleoStatePath,
+        Network
+    }
 };
 
 pub use aleo_rust::Encryptor;
@@ -30,7 +51,21 @@ pub type SignatureNative = Signature<CurrentNetwork>;
 pub type ViewKeyNative = ViewKey<CurrentNetwork>;
 
 // Network types
+pub type Aleo = snarkvm_wasm::AleoV0;
 pub type CurrentNetwork = Testnet3;
+pub type ProvingKeyNative = AleoProvingKey<CurrentNetwork>;
+pub type VerifyingKeyNative = AleoVerifyingKey<CurrentNetwork>;
+
+// Program types
+pub type InputIDNative = AleoInputID<CurrentNetwork>;
+pub type ProcessNative = AleoProcess<CurrentNetwork>;
+pub type ProgramNative = AleoProgram<CurrentNetwork>;
+pub type TransactionNative = AleoTransaction<CurrentNetwork>;
+pub type TransitionNative = AleoTransition<CurrentNetwork>;
+pub type StateRootNative = <CurrentNetwork as Network>::StateRoot;
+pub type StatePathNative = AleoStatePath<CurrentNetwork>;
+pub type InclusionNative = AleoInclusion<CurrentNetwork>;
+pub type ExecutionNative = AleoExecution<CurrentNetwork>;
 
 // Record types
 pub type CiphertextNative = Ciphertext<CurrentNetwork>;
@@ -39,5 +74,5 @@ pub type RecordCiphertextNative = Record<CurrentNetwork, CiphertextNative>;
 pub type RecordPlaintextNative = Record<CurrentNetwork, PlaintextNative>;
 
 // Utility types
-pub type IdentifierNative = Identifier<CurrentNetwork>;
+pub type IdentifierNative = AleoIdentifier<CurrentNetwork>;
 pub type ProgramIDNative = ProgramID<CurrentNetwork>;
