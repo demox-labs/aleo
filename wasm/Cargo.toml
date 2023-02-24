@@ -41,6 +41,7 @@ version = "0.8"
 
 [dependencies.serde_json]
 version = "1.0"
+features = [ "preserve_order" ]
 
 [dependencies.snarkvm-synthesizer]
 path="../../snarkVM/synthesizer"
@@ -68,6 +69,12 @@ version = "0.3"
 [dependencies.web-sys]
 version = "0.3"
 features = ["console"]
+
+[dependencies.serde]
+version = "1.0"
+
+[dependencies.serde-wasm-bindgen]
+version = "0.4"
 
 [dependencies.console_error_panic_hook]
 version = "0.1.7"

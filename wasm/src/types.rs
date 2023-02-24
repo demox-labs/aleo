@@ -18,6 +18,7 @@ use snarkvm_synthesizer::{
     Process as AleoProcess,
     Program as AleoProgram,
     Transaction as AleoTransaction,
+    Transition as AleoTransition,
     ProvingKey
 };
 use snarkvm_wasm::{
@@ -25,7 +26,14 @@ use snarkvm_wasm::{
     network::{Testnet3}
 };
 use snarkvm_console::{
-    program::{Ciphertext, Identifier as AleoIdentifier, Plaintext, Record},
+    program::{
+        Ciphertext,
+        Identifier as AleoIdentifier,
+        Plaintext,
+        Record,
+        StatePath as AleoStatePath,
+        Network
+    }
 };
 
 pub use snarkvm_wasm::{network::Environment, FromBytes, PrimeField, ToBytes};
@@ -46,6 +54,9 @@ pub type Identifier = AleoIdentifier<CurrentNetwork>;
 pub type Process = AleoProcess<CurrentNetwork>;
 pub type Program = AleoProgram<CurrentNetwork>;
 pub type TransactionNative = AleoTransaction<CurrentNetwork>;
+pub type TransitionNative = AleoTransition<CurrentNetwork>;
+pub type StateRootNative = <CurrentNetwork as Network>::StateRoot;
+pub type StatePathNative = AleoStatePath<CurrentNetwork>;
 
 // Record types
 pub type CiphertextNative = Ciphertext<CurrentNetwork>;

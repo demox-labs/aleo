@@ -14,14 +14,33 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo library. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod proving_key;
-pub use proving_key::*;
+use crate::types::{StateRootNative};
 
-pub mod state_path;
-pub use state_path::*;
+use core::{str::FromStr};
 
-pub mod state_root;
-pub use state_root::*;
+use wasm_bindgen::prelude::*;
 
-pub mod transaction;
-pub use transaction::*;
+#[wasm_bindgen]
+#[derive(Clone, Debug)]
+pub struct StateRoot(StateRootNative);
+
+#[wasm_bindgen]
+impl StateRoot {
+    pub fn from_string(state_root: &str) -> Result<StateRoot, String> {
+        Self::from_str(state_root).map_err(|_| "Invalid state root".to_string())
+    }
+}
+
+impl FromStr for StateRoot {
+    type Err = anyhow::Error;
+
+    fn from_str(state_root: &str) -> Result<Self, Self::Err> {
+        Ok(Self(StateRootNative::from_str(state_root)?))
+    }
+}
+
+// impl From<StateRoot> for StateRootNative {
+//     fn from(state_root: StateRoot) -> StateRootNative {
+//         state_root.0
+//     }
+// }

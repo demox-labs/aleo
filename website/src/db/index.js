@@ -47,14 +47,14 @@ const FILES = [
   //   name: 'FeeVerifier',
   //   url: 'https://aleo-public.s3.us-west-2.amazonaws.com/testnet3/fee.verifier.2186739'
   // },
-  // {
-  //   name: 'InclusionProver',
-  //   url: 'https://aleo-public.s3.us-west-2.amazonaws.com/testnet3/inclusion.prover.b9921c5'
-  // },
-  // {
-  //   name: 'InclusionVerifier',
-  //   url: 'https://aleo-public.s3.us-west-2.amazonaws.com/testnet3/inclusion.verifier.3f4d6b7'
-  // }
+  {
+    name: 'InclusionProver',
+    url: 'https://aleo-public.s3.us-west-2.amazonaws.com/testnet3/inclusion.prover.b9921c5'
+  },
+  {
+    name: 'InclusionVerifier',
+    url: 'https://aleo-public.s3.us-west-2.amazonaws.com/testnet3/inclusion.verifier.3f4d6b7'
+  }
 ];
 
 export async function getAllSavedFiles() {
