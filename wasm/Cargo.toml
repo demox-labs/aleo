@@ -62,8 +62,12 @@ default-features = false
 version = "0.2"
 features = [ "serde-serialize" ]
 
-# [dependencies.wasm-bindgen-rayon]
-# version = "1.0"
+[dependencies.wasm-bindgen-rayon]
+version = "1.0"
+path = "../../wasm-bindgen-rayon"
+
+[dependencies.rayon]
+version = "1.5"
 
 [dependencies.js-sys]
 version = "0.3"

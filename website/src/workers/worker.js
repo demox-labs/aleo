@@ -2,7 +2,7 @@ import init, * as aleo from '@aleohq/wasm';
 
 await init();
 
-// await aleo.initThreadPool(navigator.hardwareConcurrency);
+await aleo.initThreadPool(2);
 
 self.addEventListener("message", ev => {
   const {privateKey, transferProverBytes, toAddress, amount, plaintext} = ev.data;
