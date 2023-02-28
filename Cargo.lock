@@ -1884,6 +1884,7 @@ dependencies = [
  "hashbrown 0.13.2",
  "hex",
  "itertools",
+ "js-sys",
  "parking_lot",
  "rand",
  "rand_chacha",
@@ -1898,6 +1899,8 @@ dependencies = [
  "snarkvm-r1cs",
  "snarkvm-utilities",
  "thiserror",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

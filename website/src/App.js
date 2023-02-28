@@ -8,11 +8,12 @@ import {DecryptRecord} from "./tabs/record/DecryptRecord";
 import {GetBlockByHeight} from "./tabs/rest/GetBlockByHeight";
 import {GetBlockByHash} from "./tabs/rest/GetBlockByHash";
 import { SendCredits } from './tabs/transaction/SendCredits';
+import { WasmWorkers } from './tabs/transaction/WasmWorkers';
 
 const {Header, Content, Footer} = Layout;
 
 function App() {
-    const [menuIndex, setMenuIndex] = useState(3);
+    const [menuIndex, setMenuIndex] = useState(4);
 
     return (
         <Layout className="layout" style={{minHeight: '100vh'}}>
@@ -23,6 +24,7 @@ function App() {
                     <Menu.Item key="2" onClick={() => setMenuIndex(1)}>Record</Menu.Item>
                     <Menu.Item key="3" onClick={() => setMenuIndex(2)}>REST API</Menu.Item>
                     <Menu.Item key="4" onClick={() => setMenuIndex(3)}>Send Credits</Menu.Item>
+                    <Menu.Item key="5" onClick={() => setMenuIndex(4)}>Play With Wasm Workers</Menu.Item>
                 </Menu>
             </Header>
             <Content style={{padding: '50px 50px'}}>
@@ -52,6 +54,12 @@ function App() {
                     menuIndex === 3 &&
                     <>
                         <SendCredits/>
+                    </>
+                }
+                {
+                    menuIndex === 4 &&
+                    <>
+                        <WasmWorkers/>
                     </>
                 }
             </Content>
