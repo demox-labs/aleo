@@ -42,19 +42,18 @@ version = "0.8"
 [dependencies.serde_json]
 version = "1.0"
 
-[dependencies.rayon]
-version = "1.5"
-
 [dependencies.snarkvm-synthesizer]
 path="../../snarkVM/synthesizer"
 version = "0.9.11"
 default-features = false
 features = [ "wasm" ]
 
-[dependencies.snarkvm-algorithms]
-path="../../snarkVM/algorithms"
-version = "0.9.11"
-default-features = false
+[dependencies.wasm-bindgen-rayon]
+version = "1.0"
+path = "../../wasm-bindgen-rayon"
+
+[dependencies.rayon]
+version = "1.5"
 
 [dependencies.snarkvm-console]
 path="../../snarkVM/console"
@@ -69,13 +68,6 @@ default-features = false
 [dependencies.wasm-bindgen]
 version = "0.2"
 features = [ "serde-serialize" ]
-
-# [dependencies.wasm-bindgen-rayon]
-# version = "1.0"
-# path = "../../wasm-bindgen-rayon"
-
-# [dependencies.rayon]
-# version = "1.5"
 
 [dependencies.js-sys]
 version = "0.3"

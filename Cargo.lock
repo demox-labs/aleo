@@ -148,11 +148,11 @@ dependencies = [
  "rand",
  "rayon",
  "serde_json",
- "snarkvm-algorithms",
  "snarkvm-console",
  "snarkvm-synthesizer",
  "snarkvm-wasm",
  "wasm-bindgen",
+ "wasm-bindgen-rayon",
  "wasm-bindgen-test",
  "web-sys",
 ]
@@ -1900,7 +1900,6 @@ dependencies = [
  "snarkvm-r1cs",
  "snarkvm-utilities",
  "thiserror",
- "wasm-bindgen-rayon",
  "web-sys",
 ]
 

@@ -26,7 +26,7 @@ pub use program::*;
 pub(crate) mod types;
 pub(crate) use types::*;
 
-pub use snarkvm_algorithms::init_thread_pool;
+pub use wasm_bindgen_rayon::init_thread_pool;
 
 use wasm_bindgen::prelude::*;
 use rayon::iter::IntoParallelIterator;
