@@ -26,13 +26,14 @@ pub use program::*;
 pub(crate) mod types;
 pub(crate) use types::*;
 
-pub use wasm_bindgen_rayon::init_thread_pool;
+pub use snarkvm_algorithms::init_thread_pool;
 
 use wasm_bindgen::prelude::*;
-use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::*;
 use rayon::iter::ParallelIterator;
 
 #[wasm_bindgen]
 pub fn sum(numbers: &[i32]) -> i32 {
-  numbers.par_iter().sum()
+  numbers.into_par_iter().with_max_len(1).sum()
 }
