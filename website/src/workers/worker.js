@@ -2,9 +2,12 @@ import init, * as aleo from '@aleohq/wasm';
 
 await init();
 
-await aleo.initThreadPool(2);
+await aleo.initThreadPool(4);
 
 self.addEventListener("message", ev => {
+  // let arrayToSum = [...Array(10000).keys()]
+  // let foo = aleo.sum(arrayToSum);
+  // console.log(foo);
   const {privateKey, transferProverBytes, toAddress, amount, plaintext} = ev.data;
   console.log('Web worker: Started Transfer...');
   console.log(ev.data);
