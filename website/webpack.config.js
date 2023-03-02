@@ -39,7 +39,6 @@ const appConfig = {
         maxAssetSize: 8388608
     },
     experiments: {
-        syncWebAssembly: true,
         asyncWebAssembly: true,
         topLevelAwait: true
     },
@@ -50,12 +49,6 @@ const workerConfig = {
     mode: 'development',
     entry: "./src/workers/worker.js",
     target: "webworker",
-    // plugins: [
-    //     new WasmPackPlugin({
-    //         crateDirectory: path.resolve(__dirname, "../wasm"),
-    //         extraArgs: '--target web'
-    //     })
-    // ],
     resolve: {
         extensions: [".js", ".wasm"]
     },

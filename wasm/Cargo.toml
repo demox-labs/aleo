@@ -46,7 +46,7 @@ version = "1.0"
 path="../../snarkVM/synthesizer"
 version = "0.9.11"
 default-features = false
-features = [ "wasm" ]
+features = [ "wasm", "parallel" ]
 
 [dependencies.wasm-bindgen-rayon]
 version = "1.0"
@@ -59,6 +59,7 @@ version = "1.5"
 path="../../snarkVM/console"
 version = "0.9.11"
 default-features = false
+features = [ "parallel" ]
 
 [dependencies.snarkvm-wasm]
 path="../../snarkVM/wasm"

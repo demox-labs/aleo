@@ -45,7 +45,7 @@ export const SendCredits = () => {
 
         // Build transaction
         worker.postMessage({privateKey, transferProverBytes: transferProver.bytes, amount, toAddress, plaintext});
-        // worker.postMessage({});
+
         console.log('Called web worker');
       } catch (error) { console.error(error) }
     }

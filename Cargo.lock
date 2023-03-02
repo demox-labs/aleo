@@ -1900,7 +1900,6 @@ dependencies = [
  "snarkvm-r1cs",
  "snarkvm-utilities",
  "thiserror",
- "web-sys",
 ]
 
 [[package]]
@@ -1985,7 +1984,6 @@ dependencies = [
  "snarkvm-circuit-types",
  "snarkvm-console-program",
  "snarkvm-utilities",
- "web-sys",
 ]
 
 [[package]]
@@ -2342,7 +2340,6 @@ dependencies = [
  "snarkvm-fields",
  "snarkvm-utilities",
  "tracing",
- "web-sys",
 ]
 
 [[package]]
