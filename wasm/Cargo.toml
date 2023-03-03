@@ -47,12 +47,13 @@ features = [ "preserve_order" ]
 path="../../snarkVM/synthesizer"
 version = "0.9.13"
 default-features = false
-features = [ "wasm" ]
+features = [ "wasm", "parallel" ]
 
 [dependencies.snarkvm-console]
 path="../../snarkVM/console"
 version = "0.9.13"
 default-features = false
+features = ["parallel"]
 
 [dependencies.snarkvm-wasm]
 path="../../snarkVM/wasm"
