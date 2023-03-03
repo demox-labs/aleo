@@ -12,6 +12,10 @@ const appConfig = {
     },
     devServer: {
         port: 3000,
+        headers: {
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp'
+        },
     },
     module: {
         rules: [
@@ -34,7 +38,8 @@ const appConfig = {
         maxAssetSize: 8388608
     },
     experiments: {
-        asyncWebAssembly: true
+        asyncWebAssembly: true,
+        topLevelAwait: true
     },
     devtool: 'source-map',
 }
@@ -51,7 +56,8 @@ const workerConfig = {
         filename: "worker.js"
     },
     experiments: {
-        asyncWebAssembly: true
+        asyncWebAssembly: true,
+        topLevelAwait: true
     },
     devtool: 'source-map',
 };

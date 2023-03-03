@@ -24,3 +24,5 @@ pub mod program;
 pub use program::*;
 
 pub(crate) mod types;
+
+pub use wasm_bindgen_rayon::init_thread_pool;
