@@ -39,7 +39,8 @@ const appConfig = {
         maxAssetSize: 8388608
     },
     experiments: {
-        asyncWebAssembly: true
+        asyncWebAssembly: true,
+        topLevelAwait: true
     },
     devtool: 'source-map',
 }
@@ -56,7 +57,9 @@ const workerConfig = {
         filename: "worker.js"
     },
     experiments: {
-        asyncWebAssembly: true
+        syncWebAssembly: true,
+        asyncWebAssembly: true,
+        topLevelAwait: true
     },
     devtool: 'source-map',
 };

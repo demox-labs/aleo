@@ -46,12 +46,20 @@ version = "1.0"
 path="../../snarkVM/synthesizer"
 version = "0.9.11"
 default-features = false
-features = [ "wasm" ]
+features = [ "wasm", "parallel" ]
+
+[dependencies.wasm-bindgen-rayon]
+version = "1.0"
+path = "../../wasm-bindgen-rayon"
+
+[dependencies.rayon]
+version = "1.5"
 
 [dependencies.snarkvm-console]
 path="../../snarkVM/console"
 version = "0.9.11"
 default-features = false
+features = [ "parallel" ]
 
 [dependencies.snarkvm-wasm]
 path="../../snarkVM/wasm"
@@ -80,4 +88,7 @@ opt-level = 3
 lto = true
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = ["-O4", "--fast-math"]
+wasm-opt = ["-O4"]
+
+# [features]
+# thread_local_internals = [ ]

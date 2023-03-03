@@ -44,7 +44,8 @@ export const SendCredits = () => {
         startTime = performance.now();
 
         // Build transaction
-        worker.postMessage({privateKey, transferProverBytes: transferProver.bytes, amount, toAddress, plaintext})
+        worker.postMessage({privateKey, transferProverBytes: transferProver.bytes, amount, toAddress, plaintext});
+
         console.log('Called web worker');
       } catch (error) { console.error(error) }
     }
