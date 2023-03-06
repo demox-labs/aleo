@@ -32,8 +32,7 @@
     "webpack-dev-server": "^4.7.4"
   },
   "scripts": {
-    "build-wasm": "cd ../wasm && wasm-pack build --release --target web",
-    "start": "yarn build-wasm && yarn upgrade @aleohq/wasm && webpack-dev-server",
+    "start": "yarn upgrade @aleohq/wasm && webpack-dev-server",
     "build": "webpack --config webpack.config.js",
     "predeploy": "yarn build",
     "deploy": "gh-pages -d build",
