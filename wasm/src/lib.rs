@@ -25,4 +25,5 @@ pub use program::*;
 
 pub(crate) mod types;
 
+#[cfg(feature = "frontend-parallel")]
 pub use wasm_bindgen_rayon::init_thread_pool;
