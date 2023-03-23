@@ -135,7 +135,7 @@ impl TransactionBuilder {
         // Compute the inclusion proof and update the execution.
         let rng = &mut rand::thread_rng();
         let execution = inclusion
-            .prove_execution_stateless::<Aleo, _>(inclusion_key.into(), execution, &assignments, rng).unwrap();
+            .prove_execution_stateless::<Aleo, _>(inclusion_key.into(), execution, &assignments, global_state_root, rng).unwrap();
 
         let tx = TransactionNative::from_execution(execution, None).unwrap();
         Ok(tx.to_string())
