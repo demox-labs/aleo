@@ -17,6 +17,15 @@ include = [ "Cargo.toml", "src", "README.md", "LICENSE.md" ]
 license = "GPL-3.0"
 edition = "2021"
 
+[features]
+frontend-parallel = [
+  "rayon",
+  "wasm-bindgen-rayon",
+  "snarkvm-synthesizer/parallel",
+  "snarkvm-synthesizer/web",
+  "snarkvm-console/parallel"
+  ]
+
 [lib]
 crate-type = [ "cdylib", "rlib" ]
 
@@ -47,13 +56,13 @@ features = [ "preserve_order" ]
 path="../../snarkVM/synthesizer"
 version = "0.9.13"
 default-features = false
-features = [ "wasm", "parallel", "web" ]
+features = [ "wasm" ]
 
 [dependencies.snarkvm-console]
 path="../../snarkVM/console"
 version = "0.9.13"
 default-features = false
-features = ["parallel"]
+features = [ ]
 
 [dependencies.snarkvm-wasm]
 path="../../snarkVM/wasm"
@@ -85,9 +94,11 @@ version = "0.3.1"
 
 [dependencies.wasm-bindgen-rayon]
 version = "1.0"
+optional = true
 
 [dependencies.rayon]
 version = "1.5"
+optional = true
 
 [dev-dependencies.wasm-bindgen-test]
 version = "0.3.33"
