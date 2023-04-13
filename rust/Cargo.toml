@@ -52,19 +52,26 @@ optional = true
 [dependencies.serde_json]
 version = "1.0.91"
 
-[dependencies.snarkvm-console]
-features = [ "parallel" ]
-optional = true
+[dependencies.snarkvm-wasm]
 version = "0.9.13"
-
-[dependencies.snarkvm-synthesizer]
-features = [ "parallel" ]
-optional = true
-version = "0.9.13"
+path="../../snarkVM/wasm"
 
 [dependencies.snarkvm-utilities]
-features = [ "parallel" ]
 version = "0.9.13"
+path="../../snarkVM/utilities"
+
+[dependencies.snarkvm-synthesizer]
+version = "0.9.13"
+path = "../../snarkVM/synthesizer"
+default-features = false
+features = [ "wasm" ]
+optional = true
+
+[dependencies.snarkvm-console]
+path = "../../snarkVM/console"
+default-features = false
+version = "0.9.13"
+optional = true
 
 [dev-dependencies.bencher]
 version = "0.1.5"
