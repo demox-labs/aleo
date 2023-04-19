@@ -80,21 +80,15 @@ mod tests {
 
     use wasm_bindgen_test::*;
 
-    const OWNER_PLAINTEXT: &str = r"{
-  owner: aleo1y50whk20gjtltkte2qcqz9dd6uaet8thhlj3t8utewp0j3hhmg8qae7s5a.public,
-  gates: 1159017656332810u64.public,
-  a: 6875465154712544327395236939215127424077297244802949502285127742492653680374field.private,
-  b: 603076889203566020456049671526074557206943911693533670547825725507132399266scalar.private,
-  _nonce: 1635890755607797813652478911794003479783620859881520791852904112255813473142group.public
-}";
-    const OWNER_CIPHERTEXT: &str = "record1qqj3a67efazf0awe09grqqg44htnh9vaw7l729vl309c972x7ldquqq2k2cax8s7qsqqyqtpgvqqyqsq4seyrzvfa98fkggzccqr68af8e9m0q8rzeqh8a8aqql3a854v58sgrygdv4jn9s8ckwfd48vujrmv0rtfasqh8ygn88ch34ftck8szspvfpsqqszqzvxx9t8s9g66teeepgxmvnw5ymgapcwt2lpy9d5eus580k08wpq544jcl437wjv206u5pxst6few9ll4yhufwldgpx80rlwq8nhssqywmfsd85skg564vqhm3gxsp8q6r30udmqxrxmxx2v8xycdg8pn5ps3dhfvv";
-    const OWNER_VIEW_KEY: &str = "AViewKey1ghtvuJQQzQ31xSiVh6X1PK8biEVhQBygRGV4KdYmq4JT";
+    const OWNER_PLAINTEXT: &str = "{\n  owner: aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px.private,\n  microcredits: 374999900000000u64.private,\n  _nonce: 2740969152411805314773998757266754905498340517856884701781803565459552168415group.public\n}";
+    const OWNER_CIPHERTEXT: &str = "record1qyqspsy0qghu8wqmf8wq2w4ccqqg8zsgxc3ge2znf4uklh8tutq2swgqqyxx66trwfhkxun9v35hguerqqpqzq9c6u30j7srax79wdvdqt2ytpne4vyvae6z9fq85rs09nj2f72uqm0kn9tx5t3znnj7hrqffzdcquacgyrqdfuuum2km7wvxcmy258svvkjzsh";
+    const OWNER_VIEW_KEY: &str = "AViewKey1mSnpFFC8Mj4fXbK5YiWgZ3mjiV8CxA79bYNa8ymUpTrw";
     const NON_OWNER_VIEW_KEY: &str = "AViewKey1e2WyreaH5H4RBcioLL2GnxvHk5Ud46EtwycnhTdXLmXp";
 
     #[wasm_bindgen_test]
     pub fn test_from_private_key() {
-        let given_private_key = "APrivateKey1zkp4RyQ8Utj7aRcJgPQGEok8RMzWwUZzBhhgX6rhmBT8dcP";
-        let given_view_key = "AViewKey1i3fn5SECcVBtQMCVtTPSvdApoMYmg3ToJfNDfgHJAuoD";
+        let given_private_key = "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH";
+        let given_view_key = "AViewKey1mSnpFFC8Mj4fXbK5YiWgZ3mjiV8CxA79bYNa8ymUpTrw";
         let private_key = PrivateKey::from_string(given_private_key).unwrap();
         let view_key = ViewKey::from_private_key(&private_key);
         assert_eq!(given_view_key, view_key.to_string());
