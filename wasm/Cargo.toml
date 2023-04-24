@@ -20,9 +20,22 @@ edition = "2021"
 [lib]
 crate-type = [ "cdylib", "rlib" ]
 
+[features]
+default = [
+  "snarkvm-synthesizer/serial",
+  "snarkvm-console/serial",
+  "snarkvm-wasm/serial",
+]
+frontend-parallel = [
+  "wasm-bindgen-rayon",
+  "snarkvm-synthesizer/web",
+]
+
 [dependencies.aleo-rust]
+version = "0.3.4"
+path = "../rust"
 features = [ "wasm" ]
-workspace = true
+default-features = false
 
 [dependencies.anyhow]
 version = "1.0"
@@ -39,17 +52,65 @@ version = "0.8"
 
 [dependencies.serde_json]
 version = "1.0"
+features = [ "preserve_order" ]
+
+[dependencies.snarkvm-synthesizer]
+path="../../snarkVM/synthesizer"
+version = "0.10.2"
+default-features = false
+features = [ "wasm" ]
+
+[dependencies.snarkvm-console]
+path="../../snarkVM/console"
+version = "0.10.2"
+default-features = false
+features = [ ]
 
 [dependencies.snarkvm-wasm]
-workspace = true
-features = [ "console", "fields", "utilities" ]
+path="../../snarkVM/wasm"
+version = "0.10.2"
 
 [dependencies.wasm-bindgen]
 version = "0.2"
 features = [ "serde-serialize" ]
 
+[dependencies.js-sys]
+version = "0.3"
+
+[dependencies.web-sys]
+version = "0.3"
+features = ["console"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+
+[dependencies.serde-wasm-bindgen]
+version = "0.4"
+
 [dependencies.console_error_panic_hook]
 version = "0.1.7"
 
+[dependencies.rand_chacha]
+version = "0.3.1"
+
+[dependencies.wasm-bindgen-rayon]
+version = "1.0"
+optional = true
+
+[dependencies.rayon]
+version = "1.5"
+optional = true
+
 [dev-dependencies.wasm-bindgen-test]
 version = "0.3.33"
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[package.metadata.wasm-pack.profile.debug]
+wasm-opt = ["-O4"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O4"]

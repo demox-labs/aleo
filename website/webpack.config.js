@@ -2,14 +2,21 @@ const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyPlugin = require("copy-webpack-plugin");
 
-module.exports = {
-    mode: 'production',
+const appConfig = {
+    mode: 'development',
+    entry: {
+        index: './src/index.js'
+    },
     output: {
         path: path.join(__dirname, '/dist'),
-        filename: 'index.bundle.js'
+        filename: '[name].bundle.js'
     },
     devServer: {
         port: 3000,
+        headers: {
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp'
+        },
     },
     module: {
         rules: [
@@ -41,7 +48,28 @@ module.exports = {
         maxAssetSize: 8388608
     },
     experiments: {
-        asyncWebAssembly: true
+        asyncWebAssembly: true,
+        topLevelAwait: true
     },
-    devtool: false,
+    devtool: 'source-map',
 }
+
+const workerConfig = {
+    mode: 'development',
+    entry: "./src/workers/worker.js",
+    target: "webworker",
+    resolve: {
+        extensions: [".js", ".wasm"]
+    },
+    output: {
+        path: path.join(__dirname, '/dist'),
+        filename: "worker.js"
+    },
+    experiments: {
+        asyncWebAssembly: true,
+        topLevelAwait: true
+    },
+    devtool: 'source-map',
+};
+
+module.exports = [appConfig, workerConfig];

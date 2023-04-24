@@ -42,11 +42,6 @@ impl RecordPlaintext {
         self.0.to_string()
     }
 
-    /// Returns the amount of gates in the record
-    pub fn gates(&self) -> u64 {
-        ***self.0.gates()
-    }
-
     /// Attempt to get the serial number of a record to determine whether or not is has been spent
     #[wasm_bindgen(js_name = serialNumberString)]
     pub fn serial_number_string(
@@ -108,12 +103,6 @@ mod tests {
         // Ensure we can ingest strings with newlines properly
         let record2 = RecordPlaintext::from_string(expected_string).unwrap();
         assert_eq!(record2.to_string(), expected_string);
-    }
-
-    #[wasm_bindgen_test]
-    fn test_gates_from_string() {
-        let record = RecordPlaintext::from_string(RECORD).unwrap();
-        assert_eq!(record.gates(), 99);
     }
 
     #[wasm_bindgen_test]

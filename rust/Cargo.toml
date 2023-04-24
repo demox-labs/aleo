@@ -49,11 +49,29 @@ version = "2.6.2"
 version = "1.0.91"
 
 [dependencies.snarkvm]
+version = "0.10.2"
+path="../../snarkVM"
+optional=true
+
+[dependencies.snarkvm-wasm]
+version = "0.10.2"
+path="../../snarkVM/wasm"
+
+[dependencies.snarkvm-utilities]
+version = "0.10.2"
+path="../../snarkVM/utilities"
+
+[dependencies.snarkvm-synthesizer]
+version = "0.10.2"
+path = "../../snarkVM/synthesizer"
+default-features = false
+features = [ "wasm" ]
 optional = true
-workspace = true
 
 [dependencies.snarkvm-console]
-workspace = true
+path = "../../snarkVM/console"
+default-features = false
+version = "0.10.2"
 
 [dev-dependencies.bencher]
 version = "0.1.5"
