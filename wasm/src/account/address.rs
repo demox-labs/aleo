@@ -16,11 +16,15 @@
 
 use crate::{
     account::{PrivateKey, Signature, ViewKey},
-    types::AddressNative,
+    types::{AddressNative, CurrentNetwork},
 };
 
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
+use aleo_rust::{Network, Field};
+use js_sys::Array;
+use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Double, Inverse, Pow, AffineCurve}, types::{Group, Scalar}, SquareRootField, PrimeField, FftField, Fp256, Fp256Parameters};
 use wasm_bindgen::prelude::*;
+use snarkvm_algorithms::{msm::standard::msm, fft::EvaluationDomain};
 
 /// Public address of an Aleo account
 #[wasm_bindgen]
@@ -69,6 +73,134 @@ impl Address {
     pub fn verify(&self, message: &[u8], signature: &Signature) -> bool {
         signature.verify(self, message)
     }
+
+    pub fn to_x_coordinate(&self) -> String {
+        self.0.to_x_coordinate().to_string()
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        Self(AddressNative::read_le(&bytes[..]).unwrap())
+    }
+
+    pub fn to_affine(&self) -> String {
+        self.0.to_affine().to_string()
+    }
+
+    pub fn to_projective(&self) -> String {
+        self.0.to_string()
+    }
+
+    pub fn to_group(&self) -> String {
+        self.0.to_string()
+    }
+
+    pub fn add_fields(field1: &str, field2: &str) -> String {
+        let field1 = Field::<CurrentNetwork>::from_str(field1).unwrap();
+        let field2 = Field::<CurrentNetwork>::from_str(field2).unwrap();
+        let result = field1 + field2;
+        result.to_string()
+    }
+
+    pub fn sub_fields(field1: &str, field2: &str) -> String {
+        let field1 = Field::<CurrentNetwork>::from_str(field1).unwrap();
+        let field2 = Field::<CurrentNetwork>::from_str(field2).unwrap();
+        let result = field1 - field2;
+        result.to_string()
+    }
+
+    pub fn invert_field(field: &str) -> String {
+        let field = Field::<CurrentNetwork>::from_str(field).unwrap();
+        let result = field.inverse().unwrap();
+        result.to_string()
+    }
+
+    pub fn double_field(field: &str) -> String {
+        let field = Field::<CurrentNetwork>::from_str(field).unwrap();
+        let result = field.double();
+        result.to_string()
+    }
+
+    pub fn mul_fields(field1: &str, field2: &str) -> String {
+        let field1 = Field::<CurrentNetwork>::from_str(field1).unwrap();
+        let field2 = Field::<CurrentNetwork>::from_str(field2).unwrap();
+        let result = field1 * field2;
+        result.to_string()
+    }
+
+    pub fn pow_field(field1: &str, field2: &str) -> String {
+        let field1 = Field::<CurrentNetwork>::from_str(field1).unwrap();
+        let field2 = Field::<CurrentNetwork>::from_str(field2).unwrap();
+        let result = field1.pow(&field2);
+        result.to_string()
+    }
+
+    pub fn poseidon_hash(field: &str) -> String {
+        let field = Field::<CurrentNetwork>::from_str(field).unwrap();
+        let result = CurrentNetwork::hash_many_psd8(&[CurrentNetwork::encryption_domain(), field], 1);
+        return result[0].to_string();
+    }
+
+    pub fn sqrt(field: &str) -> String {
+        let field = Field::<CurrentNetwork>::from_str(field).unwrap();
+        let result = field.sqrt().unwrap();
+        Field::<CurrentNetwork>::new(result).to_string()
+        // result.to_string()
+    }
+
+    pub fn add_points(group1: &str, group2: &str) -> String {
+        let group1 = Group::<CurrentNetwork>::from_str(group1).unwrap();
+        let group2 = Group::<CurrentNetwork>::from_str(group2).unwrap();
+        let result = group1 + group2;
+        result.to_string()
+    }
+
+    pub fn group_scalar_mul(group: &str, scalar: &str) -> String {
+        let group = Group::<CurrentNetwork>::from_str(group).unwrap();
+        let scalar = Scalar::<CurrentNetwork>::from_str(scalar).unwrap();
+        let result = group * scalar;
+        result.to_string()
+    }
+
+    pub fn msm(groups: Array, scalars: Array) -> String {
+        let mut groups_vec = Vec::new();
+        let mut scalars_vec = Vec::new();
+
+        // convert groups array to groups_vec
+        for i in 0..groups.length() {
+            let group = Group::<CurrentNetwork>::from_str(&groups.get(i).as_string().unwrap()).unwrap();
+            let affine_group = group.to_affine();
+            groups_vec.push(affine_group);
+        }
+        // convert scalars array to scalars_vec
+        for i in 0..scalars.length() {
+            let scalar = Scalar::<CurrentNetwork>::from_str(&scalars.get(i).as_string().unwrap()).unwrap();
+            let bigint_scalar = scalar.to_bigint();
+            scalars_vec.push(bigint_scalar);
+        }
+
+        let result = msm(&groups_vec, &scalars_vec);
+        let affine_result = result.to_affine();
+        let group_result = Group::<CurrentNetwork>::new(affine_result);
+        group_result.to_string()
+    }
+
+    // pub fn ntt(coeffs: Array) -> String {
+    //     let mut coeffs_vec = Vec::new();
+
+    //     // convert coeffs array to coeffs_vec
+    //     for i in 0..coeffs.length() {
+    //         let coeff = Field::<CurrentNetwork>::from_str(&coeffs.get(i).as_string().unwrap()).unwrap();
+    //         coeffs_vec.push(coeff);
+    //     }
+
+    //     let domain = EvaluationDomain::<bls12_377::fr>::new(coeffs_vec.len()).unwrap();
+    //     let result = domain.fft(&coeffs_vec);
+    //     let mut result_vec = Vec::new();
+    //     for i in 0..result.len() {
+    //         result_vec.push(result[i].to_string());
+    //     }
+    //     JsValue::from_serde(&result_vec).unwrap().as_string().unwrap()
+    // }
 }
 
 impl FromStr for Address {

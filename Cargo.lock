@@ -187,6 +187,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "snarkvm-algorithms",
  "snarkvm-wasm",
  "wasm-bindgen",
  "wasm-bindgen-futures",

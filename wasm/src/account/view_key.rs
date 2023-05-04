@@ -68,6 +68,17 @@ impl ViewKey {
             Err(error) => Err(error),
         }
     }
+
+    pub fn to_scalar(&self) -> String {
+        (*self.0).to_string()
+    }
+
+    pub fn view_key_ciphertext_multiply(&self, cipher_text: &str) -> String {
+        let parsed_cipher_text = RecordCiphertext::from_str(cipher_text).map_err(|error| error.to_string()).unwrap();
+        let view_key_scalar = *self.0;
+        let multiplication = *parsed_cipher_text.nonce() * &view_key_scalar;
+        multiplication.to_string()
+    }
 }
 
 impl FromStr for ViewKey {
