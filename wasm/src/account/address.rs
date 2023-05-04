@@ -16,10 +16,12 @@
 
 use crate::{
     account::{PrivateKey, Signature, ViewKey},
-    types::AddressNative,
+    types::{AddressNative, CurrentNetwork},
 };
 
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
+use aleo_rust::{Network, Field};
+use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Environment}};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -47,6 +49,39 @@ impl Address {
 
     pub fn verify(&self, message: &[u8], signature: &Signature) -> bool {
         signature.verify(self, message)
+    }
+
+    pub fn to_x_coordinate(&self) -> String {
+        self.0.to_x_coordinate().to_string()
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        Self(AddressNative::read_le(&bytes[..]).unwrap())
+    }
+
+    pub fn to_affine(&self) -> String {
+        self.0.to_affine().to_string()
+    }
+
+    pub fn to_projective(&self) -> String {
+        self.0.to_string()
+    }
+
+    pub fn to_group(&self) -> String {
+        self.0.to_string()
+    }
+
+    pub fn add_fields(field1: &str, field2: &str) -> String {
+        let field1 = Field::<CurrentNetwork>::from_str(field1).unwrap();
+        let field2 = Field::<CurrentNetwork>::from_str(field2).unwrap();
+        let result = field1 + field2;
+        result.to_string()
+    }
+
+    pub fn poseidon_hash(field: &str) -> String {
+        let field = Field::<CurrentNetwork>::from_str(field).unwrap();
+        let result = CurrentNetwork::hash_many_psd8(&[CurrentNetwork::encryption_domain(), field], 1);
+        return result[0].to_string();
     }
 }
 

@@ -15,9 +15,10 @@
 // along with the Aleo library. If not, see <https://www.gnu.org/licenses/>.
 
 use super::RecordPlaintext;
-use crate::{account::ViewKey, types::RecordCiphertextNative};
+use crate::{account::ViewKey, types::{RecordCiphertextNative, CurrentNetwork}};
 
 use std::{ops::Deref, str::FromStr};
+use snarkvm_wasm::types::Scalar;
 use wasm_bindgen::prelude::*;
 
 /// Encrypted Aleo record
@@ -51,6 +52,17 @@ impl RecordCiphertext {
     #[wasm_bindgen(js_name = isOwner)]
     pub fn is_owner(&self, view_key: &ViewKey) -> bool {
         self.0.is_owner(view_key)
+    }
+
+    pub fn get_nonce(&self) -> String {
+        self.0.nonce().to_string()
+    }
+
+    pub fn point_scalar_mul(&self, scalar: &str) -> String {
+       let scalar = Scalar::<CurrentNetwork>::from_str(scalar).unwrap();
+       let group_result = *self.0.nonce() * scalar;
+       let x_coordinate = group_result.to_x_coordinate();
+       return x_coordinate.to_string();
     }
 }
 
