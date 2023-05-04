@@ -52,7 +52,7 @@ impl ViewKey {
     }
 
     pub fn to_scalar(&self) -> String {
-        self.0.to_string()
+        (*self.0).to_string()
     }
 
     pub fn view_key_ciphertext_multiply(&self, cipher_text: &str) -> String {
