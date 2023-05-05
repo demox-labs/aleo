@@ -21,7 +21,7 @@ use crate::{
 
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
 use aleo_rust::{Network, Field};
-use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Environment}};
+use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Environment, Double}};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -75,6 +75,19 @@ impl Address {
         let field1 = Field::<CurrentNetwork>::from_str(field1).unwrap();
         let field2 = Field::<CurrentNetwork>::from_str(field2).unwrap();
         let result = field1 + field2;
+        result.to_string()
+    }
+
+    pub fn sub_fields(field1: &str, field2: &str) -> String {
+        let field1 = Field::<CurrentNetwork>::from_str(field1).unwrap();
+        let field2 = Field::<CurrentNetwork>::from_str(field2).unwrap();
+        let result = field1 - field2;
+        result.to_string()
+    }
+
+    pub fn double_field(field: &str) -> String {
+        let field = Field::<CurrentNetwork>::from_str(field).unwrap();
+        let result = field.double();
         result.to_string()
     }
 
