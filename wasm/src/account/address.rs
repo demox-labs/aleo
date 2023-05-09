@@ -21,7 +21,7 @@ use crate::{
 
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
 use aleo_rust::{Network, Field};
-use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Environment, Double, Inverse}, types::Group};
+use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Double, Inverse, Pow}, types::Group, SquareRootField};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -104,6 +104,13 @@ impl Address {
         result.to_string()
     }
 
+    pub fn pow_field(field1: &str, field2: &str) -> String {
+        let field1 = Field::<CurrentNetwork>::from_str(field1).unwrap();
+        let field2 = Field::<CurrentNetwork>::from_str(field2).unwrap();
+        let result = field1.pow(&field2);
+        result.to_string()
+    }
+
     pub fn poseidon_hash(field: &str) -> String {
         let field = Field::<CurrentNetwork>::from_str(field).unwrap();
         let result = CurrentNetwork::hash_many_psd8(&[CurrentNetwork::encryption_domain(), field], 1);
@@ -114,6 +121,12 @@ impl Address {
         let group = Group::<CurrentNetwork>::from_str(group).unwrap();
         return group.x.to_string();
         // return "Projective: { x: ".to_string() + &group.x.to_string() + ", y: " + &group.y.to_string() + ", z: " + &group.z.to_string() + ", t: " + &group.t.to_string() + " }";
+    }
+
+    pub fn sqrt(field: &str) -> String {
+        let field = Field::<CurrentNetwork>::from_str(field).unwrap();
+        let result = field.sqrt().unwrap();
+        result.to_string()
     }
 }
 
