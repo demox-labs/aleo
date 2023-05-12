@@ -20,8 +20,9 @@ use crate::{
 };
 
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
+use std::ops::Mul;
 use aleo_rust::{Network, Field};
-use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Double, Inverse, Pow}, types::Group, SquareRootField};
+use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Double, Inverse, Pow}, types::{Group, Scalar}, SquareRootField};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -117,15 +118,24 @@ impl Address {
         return result[0].to_string();
     }
 
-    pub fn affine_to_projective(group: &str) -> String {
-        let group = Group::<CurrentNetwork>::from_str(group).unwrap();
-        return group.x.to_string();
-        // return "Projective: { x: ".to_string() + &group.x.to_string() + ", y: " + &group.y.to_string() + ", z: " + &group.z.to_string() + ", t: " + &group.t.to_string() + " }";
-    }
-
     pub fn sqrt(field: &str) -> String {
         let field = Field::<CurrentNetwork>::from_str(field).unwrap();
         let result = field.sqrt().unwrap();
+        Field::<CurrentNetwork>::new(result).to_string()
+        // result.to_string()
+    }
+
+    pub fn add_points(group1: &str, group2: &str) -> String {
+        let group1 = Group::<CurrentNetwork>::from_str(group1).unwrap();
+        let group2 = Group::<CurrentNetwork>::from_str(group2).unwrap();
+        let result = group1 + group2;
+        result.to_string()
+    }
+
+    pub fn group_scalar_mul(group: &str, scalar: &str) -> String {
+        let group = Group::<CurrentNetwork>::from_str(group).unwrap();
+        let scalar = Scalar::<CurrentNetwork>::from_str(scalar).unwrap();
+        let result = group * scalar;
         result.to_string()
     }
 }
