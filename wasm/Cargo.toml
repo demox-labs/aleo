@@ -43,10 +43,16 @@ version = "0.8"
 [dependencies.reqwest]
 version = "0.11.17"
 
+[dependencies.serde]
+version = "1"
+
 [dependencies.serde_json]
 version = "1.0"
 
 [dependencies.snarkvm-circuit-network]
+workspace = true
+
+[dependencies.snarkvm-console]
 workspace = true
 
 [dependencies.snarkvm-synthesizer]

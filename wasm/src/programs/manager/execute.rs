@@ -28,11 +28,15 @@ use crate::{
         ProgramNative,
         RecordPlaintextNative,
         TransactionNative,
+        FeeNative,
+        InclusionNative,
+        ExecutionNative
     },
     ExecutionResponse,
     PrivateKey,
     RecordPlaintext,
     Transaction,
+    IntermediateTransaction,
 };
 
 use crate::programs::fee::FeeExecution;
@@ -66,27 +70,69 @@ impl ProgramManager {
         Ok(ExecutionResponse::from(response))
     }
 
-    pub fn build_transition(
-        program: String,
-        inputs: Array,
-        function: String,
-        private_key: PrivateKey,
+    // pub async fn build_transition(
+    //     program: String,
+    //     inputs: Array,
+    //     function: String,
+    //     private_key: PrivateKey,
+    // ) -> Result<String, String> {
+    //     console_error_panic_hook::set_once();
+    //     let ((_, execution, _, _), process, authorization) = execute_program!(inputs, program, function, private_key);
+
+    //     let next = authorization.peek_next().unwrap();
+    //     let input_ids = next.input_ids().to_vec();
+
+    //     let mut transitions = execution.transitions();
+    //     let transition = transitions.next().unwrap().to_owned();
+    //     let intermediate_transaction = IntermediateTransaction {
+    //         transition,
+    //         input_ids
+    //     };
+    //     let intermediate_transaction = serde_json::to_string(&intermediate_transaction)
+    //         .map_err(|_| "Could not serialize intermediate transaction".to_string())?;
+    //     Ok(intermediate_transaction)
+    // }
+
+    pub async fn build_transaction(
+        intermediate_transactions: &str,
+        url: String
     ) -> Result<String, String> {
         console_error_panic_hook::set_once();
-        let ((_, execution, _, _), process, authorization) = execute_program!(inputs, program, function, private_key);
 
-        let next = authorization.peek_next().unwrap();
-        let input_ids = next.input_ids().to_vec();
+        // Create Inclusion and Execution from all IntermediateTransactions
+        let mut inclusion = InclusionNative::new();
+        let mut execution = ExecutionNative::new();
 
-        let mut transitions = execution.transitions();
-        let transition = transitions.next().unwrap().to_owned();
-        let intermediate_transaction = IntermediateTransaction {
-            transition,
-            input_ids
-        };
-        let intermediate_transaction = serde_json::to_string(&intermediate_transaction)
-            .map_err(|_| "Could not serialize intermediate transaction".to_string())?;
-        Ok(intermediate_transaction)
+        let intermediate_transactions: Vec<IntermediateTransaction> = serde_json::from_str(intermediate_transactions)
+            .map_err(|_| "Could not deserialize intermediate transactions".to_string())?;
+
+        for IntermediateTransaction { transition, input_ids } in &intermediate_transactions {
+            let transition = transition.to_owned();
+            inclusion.insert_transition(&input_ids, &transition).unwrap();
+            execution.push(transition);
+        }
+
+        let execution = inclusion_proof!(inclusion, execution, url);
+
+        let tx = TransactionNative::from_execution(execution, None).unwrap();
+        Ok(tx.to_string())
+    }
+
+    pub fn add_fee_to_transaction(
+        transaction_string: &str,
+        fee_string: &str
+    ) -> Result<String, String> {
+        console_error_panic_hook::set_once();
+        // Parse Transaction
+        let mut transaction = TransactionNative::from_str(transaction_string).unwrap();
+        let mut fee = FeeNative::from_str(fee_string).unwrap();
+
+        if let TransactionNative::Execute(id, execution, _) = transaction {
+            let tx = TransactionNative::from_execution(execution, Some(fee)).unwrap();
+            Ok(tx.to_string())
+        } else {
+            return Err("Transaction is not an execution".to_string());
+        }
     }
 
     /// Execute Aleo function and create an Aleo execution transaction

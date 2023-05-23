@@ -28,8 +28,9 @@ pub use aleo_rust::{
     ViewKey,
 };
 use snarkvm_circuit_network::AleoV0;
-use snarkvm_synthesizer::{Fee, Process, Program, Transaction, helpers::memory::BlockMemory};
+use snarkvm_synthesizer::{Fee, Inclusion, Execution, Process, Program, Transaction, Transition, helpers::memory::BlockMemory};
 use snarkvm_wasm::program::{ProgramOwner, TransactionLeaf};
+use snarkvm_console::program::InputID;
 pub use snarkvm_wasm::{
     network::Environment,
     program::{Response, TRANSACTION_DEPTH},
@@ -65,3 +66,7 @@ pub type ProgramOwnerNative = ProgramOwner<CurrentNetwork>;
 pub type ResponseNative = Response<CurrentNetwork>;
 pub type TransactionLeafNative = TransactionLeaf<CurrentNetwork>;
 pub type TransactionNative = Transaction<CurrentNetwork>;
+pub type TransitionNative = Transition<CurrentNetwork>;
+pub type InputIDNative = InputID<CurrentNetwork>;
+pub type InclusionNative = Inclusion<CurrentNetwork>;
+pub type ExecutionNative = Execution<CurrentNetwork>;
