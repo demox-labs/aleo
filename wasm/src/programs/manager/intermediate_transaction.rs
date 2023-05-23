@@ -14,22 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo library. If not, see <https://www.gnu.org/licenses/>.
 
-mod macros;
+use crate::types::{
+    InputIDNative,
+    TransitionNative,
+};
 
-pub mod fee;
-pub use fee::*;
+use serde::{Serialize, Deserialize};
 
-pub mod manager;
-pub use manager::*;
-
-pub mod response;
-pub use response::*;
-
-pub mod program;
-pub use program::*;
-
-pub mod transaction;
-pub use transaction::*;
-
-pub mod decrypt;
-pub use decrypt::*;
+#[derive(Clone, Serialize, Deserialize)]
+pub struct IntermediateTransaction {
+    pub transition: TransitionNative,
+    pub input_ids: Vec<InputIDNative>
+}

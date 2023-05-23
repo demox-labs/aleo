@@ -67,7 +67,7 @@ impl ProgramManager {
         inputs.set(1u32, wasm_bindgen::JsValue::from_str(&recipient));
         inputs.set(2u32, wasm_bindgen::JsValue::from_str(&amount_microcredits.to_string().add("u64")));
 
-        let ((_, execution, inclusion, _), process) = execute_program!(inputs, program, "transfer", private_key);
+        let ((_, execution, inclusion, _), process, _) = execute_program!(inputs, program, "transfer", private_key);
 
         // Create the inclusion proof for the execution
         let execution = inclusion_proof!(inclusion, execution, url);

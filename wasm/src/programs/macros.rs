@@ -53,12 +53,12 @@ macro_rules! execute_program {
             .map_err(|err| err.to_string())?;
 
         web_sys::console::log_1(&"Creating authorization".into());
-
         (
             process
                 .execute::<CurrentAleo, _>(authorization, &mut StdRng::from_entropy())
                 .map_err(|err| err.to_string())?,
             process,
+            authorization,
         )
     }};
 }

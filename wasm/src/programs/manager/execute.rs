@@ -66,6 +66,29 @@ impl ProgramManager {
         Ok(ExecutionResponse::from(response))
     }
 
+    pub fn build_transition(
+        program: String,
+        inputs: Array,
+        function: String,
+        private_key: PrivateKey,
+    ) -> Result<String, String> {
+        console_error_panic_hook::set_once();
+        let ((_, execution, _, _), process, authorization) = execute_program!(inputs, program, function, private_key);
+
+        let next = authorization.peek_next().unwrap();
+        let input_ids = next.input_ids().to_vec();
+
+        let mut transitions = execution.transitions();
+        let transition = transitions.next().unwrap().to_owned();
+        let intermediate_transaction = IntermediateTransaction {
+            transition,
+            input_ids
+        };
+        let intermediate_transaction = serde_json::to_string(&intermediate_transaction)
+            .map_err(|_| "Could not serialize intermediate transaction".to_string())?;
+        Ok(intermediate_transaction)
+    }
+
     /// Execute Aleo function and create an Aleo execution transaction
     #[wasm_bindgen]
     #[allow(clippy::too_many_arguments)]
@@ -88,7 +111,8 @@ impl ProgramManager {
         }
 
         // Create the offline execution of the program
-        let ((_, execution, inclusion, _), process) = execute_program!(inputs, program, function, private_key);
+        let ((_, execution, inclusion, _), process, _) = execute_program!(inputs, program, function, private_key);
+        // let (assignments, _) = inclusion.prepare_execution(&execution, global_state_root).unwrap();
 
         // Create the inclusion proof for the execution
         let execution = inclusion_proof!(inclusion, execution, url);
