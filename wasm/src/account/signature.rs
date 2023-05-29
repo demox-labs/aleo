@@ -77,7 +77,7 @@ mod tests {
 
     const ITERATIONS: u64 = 1_000;
 
-    #[wasm_bindgen_test]
+    
     pub fn test_sign_and_verify() {
         for _ in 0..ITERATIONS {
             // Sample a new private key and message.

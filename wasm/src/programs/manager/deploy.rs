@@ -30,6 +30,7 @@ use crate::{
         TransactionLeafNative,
         TransactionNative,
         TRANSACTION_DEPTH,
+        DeploymentNative
     },
     utils::to_bits,
     PrivateKey,
@@ -111,6 +112,99 @@ impl ProgramManager {
         }
 
         let fee = fee_inclusion_proof!(process, private_key, fee_record, fee_microcredits, url);
+
+        // Create the transaction
+        TransactionNative::check_deployment_size(&deployment).map_err(|err| err.to_string())?;
+        let leaves = program
+            .functions()
+            .values()
+            .enumerate()
+            .map(|(index, function)| {
+                // Construct the transaction leaf.
+                let id = CurrentNetwork::hash_bhp1024(&to_bits(function.to_bytes_le()?))?;
+                Ok(TransactionLeafNative::new_deployment(index as u16, id).to_bits_le())
+            })
+            .chain(
+                // Add the transaction fee to the leaves.
+                [Ok(TransactionLeafNative::new_fee(
+                    program.functions().len() as u16, // The last index.
+                    **fee.transition_id(),
+                )
+                    .to_bits_le())]
+                    .into_iter(),
+            );
+
+        let id = CurrentNetwork::merkle_tree_bhp::<TRANSACTION_DEPTH>(
+            &leaves.collect::<anyhow::Result<Vec<_>>>().map_err(|err| err.to_string())?,
+        )
+            .map_err(|err| err.to_string())?;
+        let owner = ProgramOwnerNative::new(&private_key, (*id.root()).into(), &mut StdRng::from_entropy())
+            .map_err(|err| err.to_string())?;
+        Ok(Transaction::from(
+            TransactionNative::from_deployment(owner, deployment, fee).map_err(|err| err.to_string())?,
+        ))
+    }
+
+    /// Build the deployment
+    #[wasm_bindgen]
+    pub async fn build_deploy(
+        &self,
+        program: String,
+        imports: Option<Object>,
+        private_key: PrivateKey,
+    ) -> Result<Transaction, String> {
+        let mut process = ProcessNative::load_web().map_err(|err| err.to_string())?;
+
+        // Check program has a valid name
+        let program = ProgramNative::from_str(&program).map_err(|err| err.to_string())?;
+
+        // If imports are provided, attempt to add them. For this to succeed, the imports must be
+        // valid programs and they must already be deployed on chain if the imports are to succeed.
+        // To ensure this function is as stateless as possible, this function does not check if
+        // imports are deployed on chain, or if they are whether they match programs with the same
+        // name which are already deployed on chain. This is left to the caller to ensure. However
+        // this is trivial to check via an Aleo block explorer or the Aleo API.
+        if let Some(imports) = imports {
+            program
+                .imports()
+                .keys()
+                .try_for_each(|program_id| {
+                    let program_id =
+                        program_id.to_string().parse::<ProgramIDNative>().map_err(|err| err.to_string())?.to_string();
+                    if let Some(import_string) = Reflect::get(&imports, &program_id.into())
+                        .map_err(|_| "Import not found".to_string())?
+                        .as_string()
+                    {
+                        let import = ProgramNative::from_str(&import_string).map_err(|err| err.to_string())?;
+                        process.add_program(&import).map_err(|err| err.to_string())?;
+                    }
+                    Ok::<(), String>(())
+                })
+                .map_err(|_| "Import resolution failed".to_string())?;
+        }
+
+        // Create a deployment
+        let deployment =
+            process.deploy::<CurrentAleo, _>(&program, &mut StdRng::from_entropy()).map_err(|err| err.to_string())?;
+
+        // Ensure the deployment is not empty
+        if deployment.program().functions().is_empty() {
+            return Err("Attempted to create an empty transaction deployment".to_string());
+        }
+
+        Ok(serde_json::to_string(&deployment));
+    }
+
+    pub fn add_fee_to_deployment(
+        &self,
+        deployment_string: &str,
+        fee_string: &str,
+        private_key: PrivateKey,
+    ) -> Result<String, String> {
+        console_error_panic_hook::set_once();
+        // Parse Transaction
+        let mut deployment = DeploymentNative::from_str(deployment_string).unwrap();
+        let mut fee = FeeNative::from_str(fee_string).unwrap();
 
         // Create the transaction
         TransactionNative::check_deployment_size(&deployment).map_err(|err| err.to_string())?;

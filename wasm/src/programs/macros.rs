@@ -16,7 +16,7 @@
 
 #[macro_export]
 macro_rules! execute_program {
-    ($inputs:expr, $program:expr, $function:expr, $private_key:expr) => {{
+    ($inputs:expr, $program:expr, $function:expr, $private_key:expr, $proving_key:expr) => {{
         let mut inputs_native = vec![];
         web_sys::console::log_1(&"parsing inputs".into());
         for input in $inputs.to_vec().iter() {
@@ -41,6 +41,11 @@ macro_rules! execute_program {
             process.add_program(&program).map_err(|_| "Failed to add program".to_string())?;
         }
 
+        if let Some(proving_key) = $proving_key {
+            web_sys::console::log_1(&"Adding proving key to the process".into());
+            process.insert_proving_key(program.id(), &function_name, proving_key.into()).map_err(|_| "Failed insert proving key".to_string())?;
+        }
+
         web_sys::console::log_1(&"Creating authorization".into());
         let authorization = process
             .authorize::<CurrentAleo, _>(
@@ -52,24 +57,27 @@ macro_rules! execute_program {
             )
             .map_err(|err| err.to_string())?;
 
-        web_sys::console::log_1(&"Creating authorization".into());
+        web_sys::console::log_1(&"Created authorization".into());
+        let next = authorization.peek_next().unwrap();
+        let input_ids = next.input_ids().to_vec();
+
         (
             process
                 .execute::<CurrentAleo, _>(authorization, &mut StdRng::from_entropy())
                 .map_err(|err| err.to_string())?,
             process,
-            authorization,
+            input_ids
         )
     }};
 }
 
 #[macro_export]
 macro_rules! inclusion_proof {
-    ($inclusion:expr, $execution:expr, $url:expr) => {{
+    ($inclusion:expr, $execution:expr, $url:expr, $proving_key:expr) => {{
         let (assignments, global_state_root) =
             $inclusion.prepare_execution_async::<CurrentBlockMemory, _>(&$execution, &$url).await.map_err(|err| err.to_string())?;
         let execution = $inclusion
-            .prove_execution::<CurrentAleo, _>($execution, &assignments, global_state_root, &mut StdRng::from_entropy())
+            .prove_execution_web::<CurrentAleo, _>($execution, &assignments, global_state_root, &mut StdRng::from_entropy(), $proving_key)
             .map_err(|err| err.to_string())?;
 
         execution

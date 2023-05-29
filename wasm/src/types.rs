@@ -28,7 +28,7 @@ pub use aleo_rust::{
     ViewKey,
 };
 use snarkvm_circuit_network::AleoV0;
-use snarkvm_synthesizer::{Fee, Inclusion, Execution, Process, Program, Transaction, Transition, helpers::memory::BlockMemory};
+use snarkvm_synthesizer::{snark::ProvingKey, snark::VerifyingKey, Fee, Inclusion, Execution, Process, Program, Transaction, Transition, helpers::memory::BlockMemory, Deployment};
 use snarkvm_wasm::program::{ProgramOwner, TransactionLeaf};
 use snarkvm_console::program::InputID;
 pub use snarkvm_wasm::{
@@ -70,3 +70,6 @@ pub type TransitionNative = Transition<CurrentNetwork>;
 pub type InputIDNative = InputID<CurrentNetwork>;
 pub type InclusionNative = Inclusion<CurrentNetwork>;
 pub type ExecutionNative = Execution<CurrentNetwork>;
+pub type DeploymentNative = Deployment<CurrentNetwork>;
+pub type ProvingKeyNative = ProvingKey<CurrentNetwork>;
+pub type VerifyingKeyNative = VerifyingKey<CurrentNetwork>;

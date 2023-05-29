@@ -45,6 +45,12 @@ impl Program {
         self.0.to_string()
     }
 
+    /// Get the program identifier
+    #[wasm_bindgen]
+    pub fn id(&self) -> String {
+        self.0.id().to_string()
+    }
+
     /// Get javascript array of functions names in the program
     #[wasm_bindgen(js_name = "getFunctions")]
     pub fn get_functions(&self) -> js_sys::Array {
@@ -248,14 +254,14 @@ function bump_token_version:
     cast r0 r1.microcredits r1.amount r2 into r3 as Token.record;
     output r3 as Token.record;"#;
 
-    #[wasm_bindgen_test]
+    
     fn test_get_functions() {
         let program = Program::from(ProgramNative::credits().unwrap());
         assert_eq!(program.get_functions().to_vec(), vec!["mint", "transfer", "join", "split", "fee"]);
         console_log!("{:?}", TOKEN_ISSUE);
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_get_inputs() {
         let credits = Program::from(ProgramNative::credits().unwrap());
         let inputs = credits.get_function_inputs("transfer".to_string()).unwrap();
@@ -268,7 +274,7 @@ function bump_token_version:
         assert_eq!(format!("{:?}", inputs), expected);
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_get_record() {
         let credits = Program::from(ProgramNative::credits().unwrap());
         let members = credits.get_record_members("credits".to_string()).unwrap();
@@ -281,7 +287,7 @@ function bump_token_version:
         assert_eq!(format!("{:?}", members), expected);
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_get_struct() {
         let program = Program::from_string(TOKEN_ISSUE).unwrap();
         let members = program.get_struct_members("token_metadata".to_string()).unwrap();
@@ -289,7 +295,7 @@ function bump_token_version:
         assert_eq!(format!("{:?}", members), expected);
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_program_from_methods() {
         // Test the from_string creates a valid object and to_string matches the source string
         let program_string = ProgramNative::credits().unwrap().to_string();

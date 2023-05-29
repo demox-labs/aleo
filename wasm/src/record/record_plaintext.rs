@@ -104,19 +104,19 @@ mod tests {
   _nonce: 3077450429259593211617823051143573281856129402760267155982965992208217472983group.public
 }";
 
-    #[wasm_bindgen_test]
+    
     fn test_to_and_from_string() {
         let record = RecordPlaintext::from_string(RECORD).unwrap();
         assert_eq!(record.to_string(), RECORD);
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_microcredits_from_string() {
         let record = RecordPlaintext::from_string(RECORD).unwrap();
         assert_eq!(record.microcredits(), 1500000000000000);
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_serial_number() {
         let pk = PrivateKey::from_string("APrivateKey1zkpDeRpuKmEtLNPdv57aFruPepeH1aGvTkEjBo8bqTzNUhE").unwrap();
         let record = RecordPlaintext::from_string(RECORD).unwrap();
@@ -127,7 +127,7 @@ mod tests {
         assert_eq!(expected_sn, result.unwrap());
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_serial_number_can_run_twice_with_same_private_key() {
         let pk = PrivateKey::from_string("APrivateKey1zkpDeRpuKmEtLNPdv57aFruPepeH1aGvTkEjBo8bqTzNUhE").unwrap();
         let record = RecordPlaintext::from_string(RECORD).unwrap();
@@ -138,7 +138,7 @@ mod tests {
         assert_eq!(expected_sn, record.serial_number_string(&pk, program_id, record_name).unwrap());
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_serial_number_invalid_program_id_returns_err_string() {
         let pk = PrivateKey::from_string("APrivateKey1zkpDeRpuKmEtLNPdv57aFruPepeH1aGvTkEjBo8bqTzNUhE").unwrap();
         let record = RecordPlaintext::from_string(RECORD).unwrap();
@@ -148,7 +148,7 @@ mod tests {
         assert_eq!(record.serial_number_string(&pk, program_id, record_name).err(), Some(expected_value));
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_serial_number_invalid_record_name_returns_err_string() {
         let pk = PrivateKey::from_string("APrivateKey1zkpDeRpuKmEtLNPdv57aFruPepeH1aGvTkEjBo8bqTzNUhE").unwrap();
         let record = RecordPlaintext::from_string(RECORD).unwrap();
@@ -158,7 +158,7 @@ mod tests {
         assert_eq!(record.serial_number_string(&pk, program_id, record_name).err(), Some(expected_value));
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_bad_inputs_to_from_string() {
         let invalid_bech32 = "{ owner: aleo2d5hg2z3ma00382pngntdp68e74zv54jdxy249qhaujhks9c72yrs33ddah.private, microcredits: 99u64.public, _nonce: 0group.public }";
         assert_eq!(

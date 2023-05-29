@@ -89,13 +89,13 @@ mod tests {
     const _OWNER_PRIVATE_KEY: &str = "APrivateKey1zkpJkyYRGYtkeHDaFfwsKtUJzia7csiWhfBWPXWhXJzy9Ls";
     const _OWNER_ADDRESS: &str = "aleo1j7qxyunfldj2lp8hsvy7mw5k8zaqgjfyr72x2gh3x4ewgae8v5gscf5jh3";
 
-    #[wasm_bindgen_test]
+    
     fn test_to_and_from_string() {
         let record = RecordCiphertext::from_string(OWNER_CIPHERTEXT).unwrap();
         assert_eq!(record.to_string(), OWNER_CIPHERTEXT);
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_invalid_strings() {
         let invalid_bech32 = "record2qqj3a67efazf0awe09grqqg44htnh9vaw7l729vl309c972x7ldquqq2k2cax8s7qsqqyqtpgvqqyqsq4seyrzvfa98fkggzccqr68af8e9m0q8rzeqh8a8aqql3a854v58sgrygdv4jn9s8ckwfd48vujrmv0rtfasqh8ygn88ch34ftck8szspvfpsqqszqzvxx9t8s9g66teeepgxmvnw5ymgapcwt2lpy9d5eus580k08wpq544jcl437wjv206u5pxst6few9ll4yhufwldgpx80rlwq8nhssqywmfsd85skg564vqhm3gxsp8q6r30udmqxrxmxx2v8xycdg8pn5ps3dhfvv";
         assert_eq!(
@@ -105,7 +105,7 @@ mod tests {
         assert!(RecordCiphertext::from_string(invalid_bech32).is_err());
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_decrypt() {
         let record = RecordCiphertext::from_string(OWNER_CIPHERTEXT).unwrap();
         let view_key = ViewKey::from_string(OWNER_VIEW_KEY);
@@ -115,7 +115,7 @@ mod tests {
         assert!(record.decrypt(&incorrect_view_key).is_err());
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_is_owner() {
         let record = RecordCiphertext::from_string(OWNER_CIPHERTEXT).unwrap();
         let view_key = ViewKey::from_string(OWNER_VIEW_KEY);

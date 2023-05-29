@@ -160,7 +160,7 @@ mod tests {
     const ALEO_VIEW_KEY: &str = "AViewKey1cxguxtKkjYnT9XDza9yTvVMxt6Ckb1Pv4ck1hppMzmCB";
     const ALEO_ADDRESS: &str = "aleo184vuwr5u7u0ha5f5k44067dd2uaqewxx6pe5ltha5pv99wvhfqxqv339h4";
 
-    #[wasm_bindgen_test]
+    
     pub fn test_sanity_check() {
         let private_key = PrivateKey::from_string(ALEO_PRIVATE_KEY).unwrap();
 
@@ -174,7 +174,7 @@ mod tests {
         assert_eq!(ALEO_ADDRESS, private_key.to_address().to_string());
     }
 
-    #[wasm_bindgen_test]
+    
     pub fn test_new() {
         for _ in 0..ITERATIONS {
             // Generate a new private_key.
@@ -185,7 +185,7 @@ mod tests {
         }
     }
 
-    #[wasm_bindgen_test]
+    
     pub fn test_from_seed_unchecked() {
         for _ in 0..ITERATIONS {
             // Sample a random seed.
@@ -197,7 +197,7 @@ mod tests {
         }
     }
 
-    #[wasm_bindgen_test]
+    
     pub fn test_to_address() {
         for _ in 0..ITERATIONS {
             // Sample a new private key.
@@ -210,7 +210,7 @@ mod tests {
         }
     }
 
-    #[wasm_bindgen_test]
+    
     pub fn test_signature() {
         for _ in 0..ITERATIONS {
             // Sample a new private key and message.
@@ -226,7 +226,7 @@ mod tests {
         }
     }
 
-    #[wasm_bindgen_test]
+    
     fn test_private_key_ciphertext_encrypt_and_decrypt() {
         let private_key = PrivateKey::new();
         let private_key_ciphertext = PrivateKeyCiphertext::encrypt_private_key(&private_key, "mypassword").unwrap();

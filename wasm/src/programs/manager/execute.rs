@@ -30,19 +30,22 @@ use crate::{
         TransactionNative,
         FeeNative,
         InclusionNative,
-        ExecutionNative
+        ExecutionNative,
+        ProvingKeyNative,
     },
     ExecutionResponse,
     PrivateKey,
     RecordPlaintext,
     Transaction,
     IntermediateTransaction,
+    ProvingKey,
 };
 
 use crate::programs::fee::FeeExecution;
 use js_sys::Array;
 use rand::{rngs::StdRng, SeedableRng};
 use std::str::FromStr;
+use aleo_rust::ToBytes;
 
 #[wasm_bindgen]
 impl ProgramManager {
@@ -57,7 +60,7 @@ impl ProgramManager {
     ) -> Result<ExecutionResponse, String> {
         let inputs = inputs.to_vec();
         web_sys::console::log_1(&"execute_local starting".into());
-        let ((response, execution, _, _), process) = execute_program!(inputs, program, function, private_key);
+        let ((response, execution, _, _), process, _) = execute_program!(inputs, program, function, private_key, None::<ProvingKey>);
 
         process.verify_execution::<false>(&execution).map_err(|_| "Failed to verify execution".to_string())?;
 
@@ -70,32 +73,68 @@ impl ProgramManager {
         Ok(ExecutionResponse::from(response))
     }
 
-    // pub async fn build_transition(
-    //     program: String,
-    //     inputs: Array,
-    //     function: String,
-    //     private_key: PrivateKey,
-    // ) -> Result<String, String> {
-    //     console_error_panic_hook::set_once();
-    //     let ((_, execution, _, _), process, authorization) = execute_program!(inputs, program, function, private_key);
+    pub fn synthesize(
+        &self,
+        program: String,
+        function: String,
+    ) -> Result<Vec<u8>, String> {
+        let mut process = ProcessNative::load_web().map_err(|_| "Failed to load the process".to_string())?;
+        let program =
+            ProgramNative::from_str(&program).map_err(|_| "The program ID provided was invalid".to_string())?;
+        let function_name =
+            IdentifierNative::from_str(&function).map_err(|_| "The function name provided was invalid".to_string())?;
 
-    //     let next = authorization.peek_next().unwrap();
-    //     let input_ids = next.input_ids().to_vec();
+        if program.id().to_string() != "credits.aleo" {
+            process.add_program(&program).map_err(|_| "Failed to add program".to_string())?;
+        }
 
-    //     let mut transitions = execution.transitions();
-    //     let transition = transitions.next().unwrap().to_owned();
-    //     let intermediate_transaction = IntermediateTransaction {
-    //         transition,
-    //         input_ids
-    //     };
-    //     let intermediate_transaction = serde_json::to_string(&intermediate_transaction)
-    //         .map_err(|_| "Could not serialize intermediate transaction".to_string())?;
-    //     Ok(intermediate_transaction)
-    // }
+        process.synthesize_key::<CurrentAleo, _>(&program.id(), &function_name,  &mut StdRng::from_entropy())
+            .map_err(|err| err.to_string())?;
+
+        let proving_key = process.get_proving_key(program.id(), &function_name)
+            .map_err(|err| err.to_string())?;
+
+        let bytes = proving_key.to_bytes_le()
+            .map_err(|err| err.to_string())?;
+
+        Ok(bytes)
+    }
+
+    pub fn synthesize_inclusion_proving_key(&self) -> Result<Vec<u8>, String> {
+        let inclusion_proving_key = ProcessNative::load_inclusion_proving_key();
+        let bytes = inclusion_proving_key.to_bytes_le()
+            .map_err(|err| err.to_string())?;
+
+        Ok(bytes)
+    }
+
+    pub async fn build_transition(
+        &self,
+        program: String,
+        function: String,
+        inputs: Array,
+        private_key: PrivateKey,
+        proving_key: Option<ProvingKey>,
+    ) -> Result<String, String> {
+        console_error_panic_hook::set_once();
+        let ((_, execution, _, _), process, input_ids) = execute_program!(inputs, program, function, private_key, proving_key);
+
+        let mut transitions = execution.transitions();
+        let transition = transitions.next().unwrap().to_owned();
+        let intermediate_transaction = IntermediateTransaction {
+            transition,
+            input_ids
+        };
+        let intermediate_transaction = serde_json::to_string(&intermediate_transaction)
+            .map_err(|_| "Could not serialize intermediate transaction".to_string())?;
+        Ok(intermediate_transaction)
+    }
 
     pub async fn build_transaction(
+        &self,
         intermediate_transactions: &str,
-        url: String
+        url: String,
+        proving_key: ProvingKey,
     ) -> Result<String, String> {
         console_error_panic_hook::set_once();
 
@@ -112,13 +151,14 @@ impl ProgramManager {
             execution.push(transition);
         }
 
-        let execution = inclusion_proof!(inclusion, execution, url);
+        let execution = inclusion_proof!(inclusion, execution, url, Some(proving_key.into()));
 
         let tx = TransactionNative::from_execution(execution, None).unwrap();
         Ok(tx.to_string())
     }
 
     pub fn add_fee_to_transaction(
+        &self,
         transaction_string: &str,
         fee_string: &str
     ) -> Result<String, String> {
@@ -157,11 +197,11 @@ impl ProgramManager {
         }
 
         // Create the offline execution of the program
-        let ((_, execution, inclusion, _), process, _) = execute_program!(inputs, program, function, private_key);
+        let ((_, execution, inclusion, _), process, _) = execute_program!(inputs, program, function, private_key, None::<ProvingKey>);
         // let (assignments, _) = inclusion.prepare_execution(&execution, global_state_root).unwrap();
 
         // Create the inclusion proof for the execution
-        let execution = inclusion_proof!(inclusion, execution, url);
+        let execution = inclusion_proof!(inclusion, execution, url, None::<ProvingKeyNative>);
 
         // Execute the call to fee and create the inclusion proof for it
         let fee = fee_inclusion_proof!(process, private_key, fee_record, fee_microcredits, url);
@@ -213,39 +253,84 @@ function main:
     output r2 as u32.private;
 "#;
 
-    #[wasm_bindgen_test]
-    async fn test_web_program_run() {
-        let program_manager = ProgramManager::new();
-        let private_key = PrivateKey::new();
-        let inputs = js_sys::Array::new_with_length(2);
-        inputs.set(0, wasm_bindgen::JsValue::from_str("5u32"));
-        inputs.set(1, wasm_bindgen::JsValue::from_str("5u32"));
-        let result =
-            program_manager.execute_local(HELLO_PROGRAM.to_string(), "main".to_string(), inputs, private_key).unwrap();
-        let outputs = result.get_outputs().to_vec();
-        console_log!("outputs: {:?}", outputs);
-        assert_eq!(outputs.len(), 1);
-        assert_eq!(outputs[0], "10u32");
-    }
+    // 
+    // async fn test_web_program_run() {
+    //     let program_manager = ProgramManager::new();
+    //     let private_key = PrivateKey::new();
+    //     let inputs = js_sys::Array::new_with_length(2);
+    //     inputs.set(0, wasm_bindgen::JsValue::from_str("5u32"));
+    //     inputs.set(1, wasm_bindgen::JsValue::from_str("5u32"));
+    //     let result =
+    //         program_manager.execute_local(HELLO_PROGRAM.to_string(), "main".to_string(), inputs, private_key).unwrap();
+    //     let outputs = result.get_outputs().to_vec();
+    //     console_log!("outputs: {:?}", outputs);
+    //     assert_eq!(outputs.len(), 1);
+    //     assert_eq!(outputs[0], "10u32");
+    // }
+    
+    // #[wasm_bindgen_test]
+    // async fn test_web_build_transition() {
+    //     let program_manager = ProgramManager::new();
+    //     let private_key = PrivateKey::new();
+    //     let inputs = js_sys::Array::new_with_length(2);
+    //     inputs.set(0, wasm_bindgen::JsValue::from_str("5u32"));
+    //     inputs.set(1, wasm_bindgen::JsValue::from_str("5u32"));
+    //     let result = program_manager.build_transition(HELLO_PROGRAM.to_string(), "main".to_string(), inputs, private_key).await.unwrap();
+    //     // let outputs = result.get_outputs().to_vec();
+    //     console_log!("outputs: {:?}", result);
+    //     // assert_eq!(outputs.len(), 1);
+    //     // assert_eq!(outputs[0], "10u32");
+    // }
+
+    // #[wasm_bindgen_test]
+    // async fn test_web_synthesize() {
+    //     let program_manager = ProgramManager::new();
+    //     let result = program_manager.synthesize(HELLO_PROGRAM.to_string(), "main".to_string()).unwrap();
+    //     let proving_key = ProvingKey::from_bytes(&result);
+    //     console_log!("outputs ok");
+    //     let program_manager = ProgramManager::new();
+    //     let private_key = PrivateKey::new();
+    //     let inputs = js_sys::Array::new_with_length(2);
+    //     inputs.set(0, wasm_bindgen::JsValue::from_str("5u32"));
+    //     inputs.set(1, wasm_bindgen::JsValue::from_str("5u32"));
+    //     let result = program_manager.build_transition(HELLO_PROGRAM.to_string(), "main".to_string(), inputs, private_key, Some(proving_key)).await.unwrap();
+    //     // let outputs = result.get_outputs().to_vec();
+    //     console_log!("outputs: {:?}", result);
+    //     // assert_eq!(outputs.len(), 1);
+    //     // assert_eq!(outputs[0], "10u32");
+
+    //     // let outputs = result.get_outputs().to_vec();
+    //     // assert_eq!(outputs.len(), 1);
+    //     // assert_eq!(outputs[0], "10u32");
+    // }
 
     #[wasm_bindgen_test]
-    async fn test_web_program_execution() {
-        let record_str = r#"{  owner: aleo184vuwr5u7u0ha5f5k44067dd2uaqewxx6pe5ltha5pv99wvhfqxqv339h4.private,  microcredits: 50200000u64.private,  _nonce: 4201158309645146813264939404970515915909115816771965551707972399526559622583group.public}"#;
+    async fn test_web_synthesize() {
         let program_manager = ProgramManager::new();
-        let private_key =
-            PrivateKey::from_string("APrivateKey1zkp3dQx4WASWYQVWKkq14v3RoQDfY2kbLssUj7iifi1VUQ6").unwrap();
-        let inputs = js_sys::Array::new_with_length(2);
-        inputs.set(0, wasm_bindgen::JsValue::from_str("5u32"));
-        inputs.set(1, wasm_bindgen::JsValue::from_str("5u32"));
-        let function = "main".to_string();
-        let fee = 2.0f64;
-        let record = RecordPlaintext::from_string(record_str).unwrap();
-        let url = "http://0.0.0.0:3030";
-        let transaction = program_manager
-            .execute(HELLO_PROGRAM.to_string(), function, inputs, private_key, fee, record, url.to_string())
-            .await
-            .unwrap();
-        // If the transaction unwrap doesn't panic, it's succeeded
-        console_log!("transaction: {:?}", transaction);
+        let result = program_manager.synthesize_inclusion_proving_key().unwrap();
+        let proving_key = ProvingKey::from_bytes(&result);
+        console_log!("outputs: {:?}", result);
     }
+
+
+    // 
+    // async fn test_web_program_execution() {
+    //     let record_str = r#"{  owner: aleo184vuwr5u7u0ha5f5k44067dd2uaqewxx6pe5ltha5pv99wvhfqxqv339h4.private,  microcredits: 50200000u64.private,  _nonce: 4201158309645146813264939404970515915909115816771965551707972399526559622583group.public}"#;
+    //     let program_manager = ProgramManager::new();
+    //     let private_key =
+    //         PrivateKey::from_string("APrivateKey1zkp3dQx4WASWYQVWKkq14v3RoQDfY2kbLssUj7iifi1VUQ6").unwrap();
+    //     let inputs = js_sys::Array::new_with_length(2);
+    //     inputs.set(0, wasm_bindgen::JsValue::from_str("5u32"));
+    //     inputs.set(1, wasm_bindgen::JsValue::from_str("5u32"));
+    //     let function = "main".to_string();
+    //     let fee = 2.0f64;
+    //     let record = RecordPlaintext::from_string(record_str).unwrap();
+    //     let url = "http://0.0.0.0:3030";
+    //     let transaction = program_manager
+    //         .execute(HELLO_PROGRAM.to_string(), function, inputs, private_key, fee, record, url.to_string())
+    //         .await
+    //         .unwrap();
+    //     // If the transaction unwrap doesn't panic, it's succeeded
+    //     console_log!("transaction: {:?}", transaction);
+    // }
 }

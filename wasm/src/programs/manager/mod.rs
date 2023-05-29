@@ -17,6 +17,9 @@
 pub mod intermediate_transaction;
 pub use intermediate_transaction::*;
 
+pub mod proving_key;
+pub use proving_key::*;
+
 pub mod deploy;
 pub use deploy::*;
 
