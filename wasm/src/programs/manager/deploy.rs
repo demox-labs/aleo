@@ -30,7 +30,8 @@ use crate::{
         TransactionLeafNative,
         TransactionNative,
         TRANSACTION_DEPTH,
-        DeploymentNative
+        DeploymentNative,
+        FeeNative,
     },
     utils::to_bits,
     PrivateKey,
@@ -152,7 +153,7 @@ impl ProgramManager {
         program: String,
         imports: Option<Object>,
         private_key: PrivateKey,
-    ) -> Result<Transaction, String> {
+    ) -> Result<String, String> {
         let mut process = ProcessNative::load_web().map_err(|err| err.to_string())?;
 
         // Check program has a valid name
@@ -192,7 +193,7 @@ impl ProgramManager {
             return Err("Attempted to create an empty transaction deployment".to_string());
         }
 
-        Ok(serde_json::to_string(&deployment));
+        Ok(deployment.to_string())
     }
 
     pub fn add_fee_to_deployment(
@@ -207,6 +208,7 @@ impl ProgramManager {
         let mut fee = FeeNative::from_str(fee_string).unwrap();
 
         // Create the transaction
+        let program = deployment.program().clone();
         TransactionNative::check_deployment_size(&deployment).map_err(|err| err.to_string())?;
         let leaves = program
             .functions()
@@ -235,6 +237,6 @@ impl ProgramManager {
             .map_err(|err| err.to_string())?;
         Ok(Transaction::from(
             TransactionNative::from_deployment(owner, deployment, fee).map_err(|err| err.to_string())?,
-        ))
+        ).to_string())
     }
 }
