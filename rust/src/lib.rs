@@ -216,7 +216,7 @@ pub mod snarkvm_types {
         },
         types::Field,
     };
-    pub use snarkvm_ledger_block::{Block, Deployment, Execution, Transaction};
+    pub use snarkvm_ledger_block::{Block, Deployment, Execution, Transaction, Transition};
     pub use snarkvm_ledger_query::Query;
     pub use snarkvm_ledger_store::{
         helpers::memory::{BlockMemory, ConsensusMemory},
@@ -232,6 +232,7 @@ pub mod snarkvm_types {
         Program,
         Trace,
         VM,
+        Trace,
     };
 }
 #[cfg(feature = "full")]

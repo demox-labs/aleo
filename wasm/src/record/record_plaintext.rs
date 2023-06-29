@@ -88,6 +88,12 @@ impl From<RecordPlaintextNative> for RecordPlaintext {
     }
 }
 
+impl From<RecordPlaintext> for RecordPlaintextNative {
+    fn from(record: RecordPlaintext) -> Self {
+        record.0
+    }
+}
+
 impl FromStr for RecordPlaintext {
     type Err = anyhow::Error;
 
