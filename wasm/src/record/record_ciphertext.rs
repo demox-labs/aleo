@@ -66,6 +66,18 @@ impl RecordCiphertext {
     }
 }
 
+impl From<RecordCiphertextNative> for RecordCiphertext {
+    fn from(record: RecordCiphertextNative) -> Self {
+        Self(record)
+    }
+}
+
+impl From<RecordCiphertext> for RecordCiphertextNative {
+    fn from(record: RecordCiphertext) -> Self {
+        record.0
+    }
+}
+
 impl FromStr for RecordCiphertext {
     type Err = anyhow::Error;
 

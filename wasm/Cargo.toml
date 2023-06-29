@@ -23,28 +23,39 @@ doctest = false
 
 [dependencies.snarkvm-circuit-network]
 version = "0.15.0"
+path="../../snarkVM/circuit/network"
 
 [dependencies.snarkvm-console]
 version = "0.15.0"
 features = [ "wasm" ]
+path="../../snarkVM/console"
+
+[dependencies.snarkvm-fields]
+version = "0.15.0"
+path="../../snarkVM/fields"
 
 [dependencies.snarkvm-ledger-block]
 version = "0.15.0"
+path="../../snarkVM/ledger/block"
 
 [dependencies.snarkvm-ledger-query]
 version = "0.15.0"
+path="../../snarkVM/ledger/query"
 features = [ "async" ]
 
 [dependencies.snarkvm-ledger-store]
 version = "0.15.0"
+path="../../snarkVM/ledger/store"
 
 [dependencies.snarkvm-synthesizer]
 version = "0.15.0"
 features = [ "async" ]
+path="../../snarkVM/synthesizer"
 
 [dependencies.snarkvm-wasm]
 version = "0.15.0"
 features = [ "console", "fields", "utilities" ]
+path="../../snarkVM/wasm"
 
 [dependencies.anyhow]
 version = "1.0"

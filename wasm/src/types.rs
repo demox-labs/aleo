@@ -34,7 +34,7 @@ pub use snarkvm_console::{
     },
     types::Field,
 };
-pub use snarkvm_ledger_block::{Execution, Transaction};
+pub use snarkvm_ledger_block::{Execution, Transaction, Transition};
 pub use snarkvm_ledger_query::Query;
 pub use snarkvm_ledger_store::helpers::memory::BlockMemory;
 pub use snarkvm_synthesizer::{
@@ -44,6 +44,7 @@ pub use snarkvm_synthesizer::{
     Process,
     Program,
     VM,
+    Trace
 };
 pub use snarkvm_wasm::{
     console::network::Environment,
@@ -83,4 +84,6 @@ pub type ProvingKeyNative = ProvingKey<CurrentNetwork>;
 pub type QueryNative = Query<CurrentNetwork, CurrentBlockMemory>;
 pub type ResponseNative = Response<CurrentNetwork>;
 pub type TransactionNative = Transaction<CurrentNetwork>;
+pub type TransitionNative = Transition<CurrentNetwork>;
 pub type VerifyingKeyNative = VerifyingKey<CurrentNetwork>;
+pub type TraceNative = Trace<CurrentNetwork>;

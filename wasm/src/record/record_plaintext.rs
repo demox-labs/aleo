@@ -16,9 +16,12 @@
 
 use crate::{
     account::PrivateKey,
+    account::ViewKey,
     types::{IdentifierNative, ProgramIDNative, RecordPlaintextNative},
     Credits,
+    RecordCiphertext,
 };
+use crate::record_ciphertext;
 
 use std::{ops::Deref, str::FromStr};
 use wasm_bindgen::prelude::*;
@@ -63,6 +66,16 @@ impl RecordPlaintext {
         self.0.nonce().to_string()
     }
 
+    /// Decrypt the record ciphertext into plaintext using the view key. The record will only
+    /// decrypt if the record was encrypted by the account corresponding to the view key
+    ///
+    /// @param {ViewKey} view_key View key used to decrypt the ciphertext
+    /// @returns {RecordPlaintext | Error} Record plaintext object
+    pub fn encrypt(&self, view_key: &ViewKey) -> Result<RecordCiphertext, String> {
+        Ok(RecordCiphertext::from(self.0.encrypt(***view_key).map_err(|_| "Encryption failed - view key did not match record".to_string())?
+        ))
+    }
+
     /// Attempt to get the serial number of a record to determine whether or not is has been spent
     ///
     /// @param {PrivateKey} private_key Private key of the account that owns the record
@@ -93,6 +106,12 @@ impl RecordPlaintext {
 impl From<RecordPlaintextNative> for RecordPlaintext {
     fn from(record: RecordPlaintextNative) -> Self {
         Self(record)
+    }
+}
+
+impl From<RecordPlaintext> for RecordPlaintextNative {
+    fn from(record: RecordPlaintext) -> Self {
+        record.0
     }
 }
 
