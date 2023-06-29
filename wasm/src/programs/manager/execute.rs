@@ -34,12 +34,13 @@ use crate::{
     ExecutionResponse,
     PrivateKey,
     RecordPlaintext,
-    Transaction,
+    Transaction, verifying_key,
 };
 
 use js_sys::Array;
 use rand::{rngs::StdRng, SeedableRng};
 use std::str::FromStr;
+use aleo_rust::ToBytes;
 
 #[wasm_bindgen]
 impl ProgramManager {
@@ -172,6 +173,159 @@ impl ProgramManager {
 
         // Verify the execution
         process.verify_execution(&execution).map_err(|err| err.to_string())?;
+
+        log("Creating execution transaction");
+        let transaction = TransactionNative::from_execution(execution, Some(fee)).map_err(|err| err.to_string())?;
+        Ok(Transaction::from(transaction))
+    }
+
+    #[wasm_bindgen]
+    pub fn synthesize(
+        &mut self,
+        program_string: &str,
+        function: &str,
+        cache: bool,
+    ) -> Result<(), String> {
+        let mut new_process;
+        let process = get_process!(self, cache, new_process);
+
+        let program =
+            ProgramNative::from_str(program_string).map_err(|err| err.to_string())?;
+        let function_name =
+            IdentifierNative::from_str(function).map_err(|err| err.to_string())?;
+
+        if program.id().to_string() != "credits.aleo" {
+            process.add_program(&program).map_err(|_| "Failed to add program".to_string())?;
+        }
+
+        process.synthesize_key::<CurrentAleo, _>(&program.id(), &function_name,  &mut StdRng::from_entropy())
+            .map_err(|err| err.to_string())?;
+
+        Ok(())
+    }
+
+    #[wasm_bindgen]
+    pub fn get_proving_key(
+        &mut self,
+        program_str: &str,
+        function: &str,
+        cache: bool,
+    ) -> Result<Vec<u8>, String> {
+        let mut new_process;
+        let process = get_process!(self, cache, new_process);
+
+        let program =
+            ProgramNative::from_str(&program_str).map_err(|err| err.to_string())?;
+        let function_name =
+            IdentifierNative::from_str(&function).map_err(|err| err.to_string())?;
+
+        let proving_key = process.get_proving_key(program.id(), &function_name)
+            .map_err(|err| err.to_string())?;
+
+        let proving_bytes = proving_key.to_bytes_le()
+            .map_err(|err| err.to_string())?;
+
+        Ok(proving_bytes)
+    }
+
+    #[wasm_bindgen]
+    pub fn get_verifying_key(
+        &mut self,
+        program_str: &str,
+        function: &str,
+        cache: bool,
+    ) -> Result<Vec<u8>, String> {
+        let mut new_process;
+        let process = get_process!(self, cache, new_process);
+
+        let program =
+            ProgramNative::from_str(&program_str).map_err(|err| err.to_string())?;
+        let function_name =
+            IdentifierNative::from_str(&function).map_err(|err| err.to_string())?;
+
+        let verifying_key = process.get_verifying_key(program.id(), &function_name)
+            .map_err(|err| err.to_string())?;
+
+        let verifying_bytes = verifying_key.to_bytes_le()
+            .map_err(|err| err.to_string())?;
+
+        Ok(verifying_bytes)
+    }
+
+    #[wasm_bindgen]
+    #[allow(clippy::too_many_arguments)]
+    pub async fn execute_transaction(
+        &mut self,
+        private_key: PrivateKey,
+        program: String,
+        function: String,
+        inputs: Array,
+        fee_credits: f64,
+        fee_record: RecordPlaintext,
+        url: String,
+        cache: bool,
+        proving_key: Option<ProvingKey>,
+        verifying_key: Option<VerifyingKey>,
+        fee_proving_key: Option<ProvingKey>,
+        fee_verifying_key: Option<VerifyingKey>,
+        inclusion_key: ProvingKey,
+    ) -> Result<Transaction, String> {
+        log(&format!("Executing function: {function} on-chain"));
+        let fee_microcredits = Self::validate_amount(fee_credits, &fee_record, true)?;
+
+        let mut new_process;
+        let process = get_process!(self, cache, new_process);
+        let stack = process.get_stack("credits.aleo").map_err(|e| e.to_string())?;
+        let fee_identifier = IdentifierNative::from_str("fee").map_err(|e| e.to_string())?;
+        if !stack.contains_proving_key(&fee_identifier) && fee_proving_key.is_some() && fee_verifying_key.is_some() {
+            let fee_proving_key = fee_proving_key.unwrap();
+            let fee_verifying_key = fee_verifying_key.unwrap();
+            stack
+                .insert_proving_key(&fee_identifier, ProvingKeyNative::from(fee_proving_key))
+                .map_err(|e| e.to_string())?;
+            stack
+                .insert_verifying_key(&fee_identifier, VerifyingKeyNative::from(fee_verifying_key))
+                .map_err(|e| e.to_string())?;
+        }
+
+        let (_, mut trace) =
+            execute_program!(process, inputs, program, function, private_key, proving_key, verifying_key);
+
+        log("Creating inclusion");
+        // Prepare the inclusion proofs for the fee & execution
+        let query = QueryNative::from(&url);
+        trace.prepare_async(query).await.map_err(|err| err.to_string())?;
+
+        // Prove the execution and fee
+        let program = ProgramNative::from_str(&program).map_err(|err| err.to_string())?;
+        let locator = program.id().to_string().add("/").add(&function);
+        let execution = trace
+            .prove_execution_web::<CurrentAleo, _>(&locator, inclusion_key.clone().into(), &mut StdRng::from_entropy())
+            .map_err(|e| e.to_string())?;
+
+        log("Created inclusion");
+        let execution_id = execution.to_execution_id().map_err(|e| e.to_string())?;
+
+        let (_, _, mut trace) = process.execute_fee::<CurrentAleo, _>(
+                &private_key,
+                fee_record.into(),
+                fee_microcredits,
+                execution_id,
+                &mut StdRng::from_entropy(),
+            )
+            .map_err(|err| err.to_string())?;
+
+        log("Created fee");
+        let query = QueryNative::from(&url);
+        trace.prepare_async(query).await.map_err(|err| err.to_string())?;
+        log("Prepared fee");
+        let fee = trace.prove_fee_web::<CurrentAleo, _>(inclusion_key.into(), &mut StdRng::from_entropy()).map_err(|e| e.to_string())?;
+
+        log("Proved fee");
+
+        // Verify the execution and fee
+        process.verify_execution(&execution).map_err(|err| err.to_string())?;
+        process.verify_fee(&fee, execution_id).map_err(|err| err.to_string())?;
 
         log("Creating execution transaction");
         let transaction = TransactionNative::from_execution(execution, Some(fee)).map_err(|err| err.to_string())?;

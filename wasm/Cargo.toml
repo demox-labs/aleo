@@ -57,6 +57,15 @@ version = "0.11.18"
 [dependencies.serde_json]
 version = "1.0"
 
+[dependencies.snarkvm-console]
+workspace = true
+
+[dependencies.snarkvm-synthesizer]
+workspace = true
+
+[dependencies.snarkvm-ledger-block]
+workspace = true
+
 [dependencies.snarkvm-wasm]
 workspace = true
 features = [ "console", "fields", "utilities" ]

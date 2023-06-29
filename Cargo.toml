@@ -26,31 +26,40 @@ path = "rust"
 default-features = false
 
 [workspace.dependencies.snarkvm]
-version = "=0.14.1"
+version = "=0.14.2"
+path="../snarkVM"
 
 [workspace.dependencies.snarkvm-circuit-network]
-version = "=0.14.1"
+version = "=0.14.2"
+path="../snarkVM/circuit/network"
 
 [workspace.dependencies.snarkvm-console]
-version = "=0.14.1"
+version = "=0.14.2"
+path="../snarkVM/console"
 
 [workspace.dependencies.snarkvm-console-network]
-version = "=0.14.1"
+version = "=0.14.2"
+path="../snarkVM/console/network"
 
 [workspace.dependencies.snarkvm-synthesizer]
-version = "=0.14.1"
+version = "=0.14.2"
+path="../snarkVM/synthesizer"
 
 [workspace.dependencies.snarkvm-ledger-block]
-version = "=0.14.1"
+version = "=0.14.2"
+path="../snarkVM/ledger/block"
 
 [workspace.dependencies.snarkvm-ledger-store]
-version = "=0.14.1"
+version = "=0.14.2"
+path="../snarkVM/ledger/store"
 
 [workspace.dependencies.snarkvm-ledger-query]
-version = "=0.14.1"
+version = "=0.14.2"
+path="../snarkVM/ledger/query"
 
 [workspace.dependencies.snarkvm-wasm]
-version = "=0.14.1"
+version = "=0.14.2"
+path="../snarkVM/wasm"
 
 [lib]
 path = "cli/lib.rs"

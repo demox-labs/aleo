@@ -39,6 +39,8 @@ pub use aleo_rust::{
     Transaction,
     VerifyingKey,
     ViewKey,
+    Transition,
+    Trace
 };
 
 pub use snarkvm_wasm::{network::Environment, FromBytes, PrimeField, ToBytes};
@@ -71,4 +73,6 @@ pub type ProvingKeyNative = ProvingKey<CurrentNetwork>;
 pub type QueryNative = Query<CurrentNetwork, CurrentBlockMemory>;
 pub type ResponseNative = Response<CurrentNetwork>;
 pub type TransactionNative = Transaction<CurrentNetwork>;
+pub type TransitionNative = Transition<CurrentNetwork>;
 pub type VerifyingKeyNative = VerifyingKey<CurrentNetwork>;
+pub type TraceNative = Trace<CurrentNetwork>;
