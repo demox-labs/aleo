@@ -20,10 +20,11 @@ use crate::{
 };
 
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
-use std::ops::Mul;
 use aleo_rust::{Network, Field};
-use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Double, Inverse, Pow}, types::{Group, Scalar}, SquareRootField};
+use js_sys::Array;
+use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Double, Inverse, Pow, AffineCurve}, types::{Group, Scalar}, SquareRootField, PrimeField};
 use wasm_bindgen::prelude::*;
+use snarkvm_algorithms::msm::standard::msm;
 
 #[wasm_bindgen]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -137,6 +138,29 @@ impl Address {
         let scalar = Scalar::<CurrentNetwork>::from_str(scalar).unwrap();
         let result = group * scalar;
         result.to_string()
+    }
+
+    pub fn msm(groups: Array, scalars: Array) -> String {
+        let mut groups_vec = Vec::new();
+        let mut scalars_vec = Vec::new();
+
+        // convert groups array to groups_vec
+        for i in 0..groups.length() {
+            let group = Group::<CurrentNetwork>::from_str(&groups.get(i).as_string().unwrap()).unwrap();
+            let affine_group = group.to_affine();
+            groups_vec.push(affine_group);
+        }
+        // convert scalars array to scalars_vec
+        for i in 0..scalars.length() {
+            let scalar = Scalar::<CurrentNetwork>::from_str(&scalars.get(i).as_string().unwrap()).unwrap();
+            let bigint_scalar = scalar.to_bigint();
+            scalars_vec.push(bigint_scalar);
+        }
+
+        let result = msm(&groups_vec, &scalars_vec);
+        let affine_result = result.to_affine();
+        let group_result = Group::<CurrentNetwork>::new(affine_result);
+        group_result.to_string()
     }
 }
 

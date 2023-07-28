@@ -167,6 +167,7 @@ dependencies = [
  "rand",
  "reqwest",
  "serde_json",
+ "snarkvm-algorithms",
  "snarkvm-synthesizer",
  "snarkvm-wasm",
  "wasm-bindgen",

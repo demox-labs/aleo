@@ -54,6 +54,9 @@ features = [ "wasm", "serial" ]
 workspace = true
 features = [ "console", "fields", "utilities" ]
 
+[dependencies.snarkvm-algorithms]
+workspace = true
+
 [dependencies.wasm-bindgen]
 version = "0.2"
 features = [ "serde-serialize" ]
