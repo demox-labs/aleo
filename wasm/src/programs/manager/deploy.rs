@@ -218,6 +218,7 @@ impl ProgramManager {
         log("Creating deployment transaction");
         // Convert fee to microcredits and check that the fee record has enough credits to pay it
         let fee_microcredits = Self::validate_amount(fee_credits, &fee_record, true)?;
+        log(&("Fee microcredits: ".to_owned() + &fee_microcredits.to_string()));
         if fee_record.microcredits() < fee_microcredits {
             return Err("Fee record does not have enough credits to pay the specified fee".to_string());
         }
@@ -239,9 +240,18 @@ impl ProgramManager {
         }
 
         log("Ensure the fee is sufficient to pay for the deployment");
-        let (minimum_deployment_cost, (_, _)) =
+        let (mut minimum_deployment_cost, (_, _)) =
             deployment_cost::<CurrentNetwork>(&deployment).map_err(|err| err.to_string())?;
+        log(&(format!(
+            "Minimum deployment cost: {}",
+            minimum_deployment_cost
+        )));
         if fee_microcredits < minimum_deployment_cost {
+            log("Fee is too low to pay for the deployment");
+            log("Provided fee:");;
+            log(&fee_microcredits.to_string());
+            log("Minimum fee:");
+            log(&minimum_deployment_cost.to_string());
             return Err(format!(
                 "Fee is too low to pay for the deployment. The minimum fee is {} credits",
                 minimum_deployment_cost as f64 / 1_000_000.0

@@ -303,6 +303,7 @@ impl ProgramManager {
         program_string: &str,
         function: &str,
         cache: bool,
+        imports: Option<Object>,
     ) -> Result<(), String> {
         let mut new_process;
         let process = get_process!(self, cache, new_process);
@@ -312,7 +313,11 @@ impl ProgramManager {
         let function_name =
             IdentifierNative::from_str(function).map_err(|err| err.to_string())?;
 
+        log("Check program imports are valid and add them to the process");
+        ProgramManager::resolve_imports(process, &program, imports)?;
+
         if program.id().to_string() != "credits.aleo" {
+            log(&format!("Adding program: {}", program.id().to_string()));
             process.add_program(&program).map_err(|_| "Failed to add program".to_string())?;
         }
 

@@ -232,7 +232,6 @@ pub mod snarkvm_types {
         Program,
         Trace,
         VM,
-        Trace,
     };
 }
 #[cfg(feature = "full")]
