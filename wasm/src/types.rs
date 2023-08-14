@@ -22,6 +22,7 @@ pub use aleo_rust::{
     BlockMemory,
     Ciphertext,
     Encryptor,
+    Execution,
     Identifier,
     Plaintext,
     PrivateKey,
@@ -75,3 +76,4 @@ pub type TransactionNative = Transaction<CurrentNetwork>;
 pub type TransitionNative = Transition<CurrentNetwork>;
 pub type VerifyingKeyNative = VerifyingKey<CurrentNetwork>;
 pub type TraceNative = Trace<CurrentNetwork>;
+pub type ExecutionNative = Execution<CurrentNetwork>;

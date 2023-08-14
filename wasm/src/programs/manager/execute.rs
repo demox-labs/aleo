@@ -22,7 +22,7 @@ use crate::{
     execute_program,
     get_process,
     log,
-    types::{CurrentAleo, IdentifierNative, ProcessNative, ProgramNative, RecordPlaintextNative, TransactionNative},
+    types::{CurrentAleo, ExecutionNative, IdentifierNative, ProcessNative, ProgramNative, RecordPlaintextNative, TransactionNative},
     ExecutionResponse,
     PrivateKey,
     RecordPlaintext,
@@ -461,5 +461,95 @@ impl ProgramManager {
         log("Creating execution transaction");
         let transaction = TransactionNative::from_execution(execution, Some(fee)).map_err(|err| err.to_string())?;
         Ok(Transaction::from(transaction))
+    }
+
+    #[wasm_bindgen]
+    #[allow(clippy::too_many_arguments)]
+    pub async fn build_execution(
+        &mut self,
+        private_key: PrivateKey,
+        program: String,
+        function: String,
+        inputs: Array,
+        url: String,
+        cache: bool,
+        imports: Option<Object>,
+        proving_key: Option<ProvingKey>,
+        verifying_key: Option<VerifyingKey>,
+        inclusion_key: ProvingKey,
+    ) -> Result<String, String> {
+        log(&format!("Executing function: {function} on-chain"));
+        let mut new_process;
+        let process = get_process!(self, cache, new_process);
+
+        log("Check program imports are valid and add them to the process");
+        let program_native = ProgramNative::from_str(&program).map_err(|e| e.to_string())?;
+        ProgramManager::resolve_imports(process, &program_native, imports)?;
+
+        let (_, mut trace) =
+            execute_program!(process, inputs, program, function, private_key, proving_key, verifying_key);
+
+        log("Creating inclusion");
+        // Prepare the inclusion proofs for the fee & execution
+        let query = QueryNative::from(&url);
+        trace.prepare_async(query).await.map_err(|err| err.to_string())?;
+
+        // Prove the execution and fee
+        let program = ProgramNative::from_str(&program).map_err(|err| err.to_string())?;
+        let locator = program.id().to_string().add("/").add(&function);
+        let execution = trace
+            .prove_execution_web::<CurrentAleo, _>(&locator, inclusion_key.clone().into(), &mut StdRng::from_entropy())
+            .map_err(|e| e.to_string())?;
+
+        log("Created inclusion");
+
+        process.verify_execution(&execution).map_err(|err| err.to_string())?;
+
+        let execution_string = serde_json::to_string(&execution)
+            .map_err(|_| "Could not serialize execution".to_string())?;
+
+        Ok(execution_string)
+    }
+
+    #[wasm_bindgen]
+    #[allow(clippy::too_many_arguments)]
+    pub async fn verify_execution(
+        &mut self,
+        execution: String,
+        program: String,
+        function: String,
+        cache: bool,
+        imports: Option<Object>,
+        verifying_key: VerifyingKey
+    ) -> Result<(), String> {
+        let execution = ExecutionNative::from_str(&execution).map_err(|err| err.to_string())?;
+
+        let mut new_process;
+        let process = get_process!(self, cache, new_process);
+
+        log("Loading program");
+        let program =
+            ProgramNative::from_str(&program).map_err(|_| "The program ID provided was invalid".to_string())?;
+        ProgramManager::resolve_imports(process, &program, imports)?;
+
+        let program_id = program.id().to_string();
+
+        if program_id != "credits.aleo" {
+            log("Adding program to the process");
+            if let Ok(stored_program) = process.get_program(program.id()) {
+                if stored_program != &program {
+                    return Err("The program provided does not match the program stored in the cache, please clear the cache before proceeding".to_string());
+                }
+            } else {
+                process.add_program(&program).map_err(|e| e.to_string())?;
+            }
+        }
+        let function_name = IdentifierNative::from_str(function.as_str())
+            .map_err(|_| "The function name provided was invalid".to_string())?;
+        process.insert_verifying_key(program.id(), &function_name, VerifyingKeyNative::from(verifying_key)).map_err(|e| e.to_string())?;
+
+        process.verify_execution(&execution).map_err(|err| err.to_string())?;
+
+        Ok(())
     }
 }
