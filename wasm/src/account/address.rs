@@ -22,9 +22,12 @@ use crate::{
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
 use aleo_rust::{Network, Field};
 use js_sys::Array;
-use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Double, Inverse, Pow, AffineCurve}, types::{Group, Scalar}, SquareRootField, PrimeField, FftField, Fp256, Fp256Parameters};
+use snarkvm_wasm::{FromBytes, account::{ProjectiveCurve, Inverse, Double, Pow}, types::{Group, Scalar}, SquareRootField, PrimeField, TestRng, Fp256Parameters};
+// use snarkvm_wasm::{FromBytes, program::{ProjectiveCurve, Double, Inverse, Pow, AffineCurve}, types::{Group, Scalar}, SquareRootField, PrimeField, FftField, Fp256, Fp256Parameters};
 use wasm_bindgen::prelude::*;
-use snarkvm_algorithms::{msm::standard::msm, fft::EvaluationDomain};
+use snarkvm_algorithms::{msm::standard::msm, fft::EvaluationDomain, r1cs::Fr, fft::DensePolynomial};
+// use snarkvm_curves::{};
+// use snarkvm_wasm::snarkvmcurves::ProjectiveCurve;
 
 /// Public address of an Aleo account
 #[wasm_bindgen]
@@ -184,23 +187,56 @@ impl Address {
         group_result.to_string()
     }
 
-    // pub fn ntt(coeffs: Array) -> String {
-    //     let mut coeffs_vec = Vec::new();
+    pub fn ntt(coeffs: Array) -> Array {
+        let mut coeffs_vec = Vec::new();
 
-    //     // convert coeffs array to coeffs_vec
-    //     for i in 0..coeffs.length() {
-    //         let coeff = Field::<CurrentNetwork>::from_str(&coeffs.get(i).as_string().unwrap()).unwrap();
-    //         coeffs_vec.push(coeff);
-    //     }
+        // convert coeffs array to coeffs_vec
+        for i in 0..coeffs.length() {
+            let coeff = Fr::from_str(&coeffs.get(i).as_string().unwrap()).unwrap();
+            coeffs_vec.push(coeff);
+        }
 
-    //     let domain = EvaluationDomain::<bls12_377::fr>::new(coeffs_vec.len()).unwrap();
-    //     let result = domain.fft(&coeffs_vec);
-    //     let mut result_vec = Vec::new();
-    //     for i in 0..result.len() {
-    //         result_vec.push(result[i].to_string());
-    //     }
-    //     JsValue::from_serde(&result_vec).unwrap().as_string().unwrap()
-    // }
+        let domain = EvaluationDomain::<Fr>::new(coeffs_vec.len()).unwrap();
+        let result = domain.fft(&coeffs_vec);
+
+        let array = Array::new_with_length(result.len() as u32);
+        for i in 0..result.len() {
+            array.set(i as u32, JsValue::from(result[i].to_string()));
+        }
+        array
+    }
+
+    pub fn ntt_test(coeffs: Array) -> () {
+        let mut coeffs_vec = Vec::new();
+
+        // convert coeffs array to coeffs_vec
+        for i in 0..coeffs.length() {
+            let coeff = Fr::from_str(&coeffs.get(i).as_string().unwrap()).unwrap();
+            coeffs_vec.push(coeff);
+        }
+
+        let domain = EvaluationDomain::<Fr>::new(coeffs_vec.len()).unwrap();
+        let result = domain.fft(&coeffs_vec);
+        println!("{:?}", result);
+
+        // let array = Array::new_with_length(result.len() as u32);
+        // for i in 0..result.len() {
+        //     array.set(i as u32, JsValue::from(result[i].to_string()));
+        // }
+        // array
+    }
+
+    pub fn get_random_dense_polynomial(degree: u64) -> Array {
+        let degree = degree as usize;
+        // let domain = EvaluationDomain::<Fr>::new(degree).unwrap();
+        let a = DensePolynomial::<Fr>::rand(degree - 1, &mut TestRng::default()).coeffs().to_vec();
+        // println!("{:?}", a);
+        let array = Array::new_with_length(a.len() as u32);
+        for i in 0..a.len() {
+            array.set(i as u32, JsValue::from(a[i].to_string()));
+        }
+        array
+    }
 }
 
 impl FromStr for Address {
@@ -230,6 +266,7 @@ mod tests {
     use super::*;
     use crate::account::PrivateKey;
 
+    use snarkvm_wasm::Field;
     use wasm_bindgen_test::*;
 
     const ITERATIONS: u64 = 1_000;
@@ -246,4 +283,45 @@ mod tests {
             assert_eq!(expected, Address::from_view_key(&view_key));
         }
     }
+
+    #[test]
+    pub fn test_ntt() {
+        let coeffs = vec![
+            Fr::from_str("7515664177567080701944377593230321669289095918125174032001494379953660081856").unwrap(),
+            Fr::from_str("932305868196571085425113112904523441263611676863879956777887083393943129618").unwrap(),
+            Fr::from_str("7515664177567080701944377593230321669289095918125174032001494379953660081856").unwrap(),
+            Fr::from_str("932305868196571085425113112904523441263611676863879956777887083393943129618").unwrap(),
+            Fr::from_str("7515664177567080701944377593230321669289095918125174032001494379953660081856").unwrap(),
+            Fr::from_str("932305868196571085425113112904523441263611676863879956777887083393943129614").unwrap(),
+            Fr::from_str("7515664177567080701944377593230321669289095918125174032001494379953660081857").unwrap(),
+            Fr::from_str("932305868196571085425113112904523441263611676863879956777887083393943129617").unwrap(),
+        ];
+        let domain = EvaluationDomain::<Fr>::new(coeffs.len()).unwrap();
+        let result = domain.fft(&coeffs);
+        let mut result_vec = Vec::new();
+        for i in 0..result.len() {
+            result_vec.push(result[i].to_string());
+        }
+        println!("{:?}", result_vec);
+        println!("{:?}", domain.group_gen);
+        println!("{:?}", domain.size);
+        println!("{:?}", domain.group_gen.pow([domain.size as u64]));
+        println!("{:?}", domain.size_as_field_element);
+
+        for i in 0..32 {
+            // let random_poly = DensePolynomial::<Fr>::rand(i, &mut TestRng::default());
+            let domain = EvaluationDomain::<Fr>::new(2u64.pow(i) as usize).unwrap();
+            println!("{i} : BigInt('{:?}'),", domain.group_gen);
+        }
+        // let result_str = JsValue::from_serde(&result_vec).unwrap().as_string().unwrap();
+        // assert_eq!(result_str, "[\"36\",\"-4\",\"-4\",\"-4\",\"-4\",\"-4\",\"-4\",\"-4\"]");
+    }
+
+
+    // #[test]
+    // pub fn test_rand_polynomial() {
+    //     let poly = Address::get_random_dense_polynomial(32768);
+    //     println!("{:?}", poly);
+    // w^n - 1 = 0
+    // }
 }

@@ -59,9 +59,12 @@ version = "1.0"
 
 [dependencies.snarkvm-wasm]
 workspace = true
-features = [ "console", "fields", "utilities" ]
+features = [ "console", "curves", "fields", "utilities" ]
 
 [dependencies.snarkvm-algorithms]
+workspace = true
+
+[depedencies.snarkvm-curves]
 workspace = true
 
 [dependencies.wasm-bindgen]
