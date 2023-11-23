@@ -14,7 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{account::PrivateKey, types::Field, Credits};
+use crate::{
+    account::PrivateKey,
+    account::ViewKey,
+    types::Field,
+    Credits,
+    RecordCiphertext,
+};
 
 use crate::types::native::{IdentifierNative, ProgramIDNative, RecordPlaintextNative};
 use std::{ops::Deref, str::FromStr};
@@ -73,6 +79,16 @@ impl RecordPlaintext {
         self.0.nonce().to_string()
     }
 
+    /// Decrypt the record ciphertext into plaintext using the view key. The record will only
+    /// decrypt if the record was encrypted by the account corresponding to the view key
+    ///
+    /// @param {ViewKey} view_key View key used to decrypt the ciphertext
+    /// @returns {RecordPlaintext | Error} Record plaintext object
+    pub fn encrypt(&self, view_key: &ViewKey) -> Result<RecordCiphertext, String> {
+        Ok(RecordCiphertext::from(self.0.encrypt(***view_key).map_err(|_| "Encryption failed - view key did not match record".to_string())?
+        ))
+    }
+
     /// Attempt to get the serial number of a record to determine whether or not is has been spent
     ///
     /// @param {PrivateKey} private_key Private key of the account that owns the record
@@ -97,6 +113,12 @@ impl RecordPlaintext {
 impl From<RecordPlaintextNative> for RecordPlaintext {
     fn from(record: RecordPlaintextNative) -> Self {
         Self(record)
+    }
+}
+
+impl From<RecordPlaintext> for RecordPlaintextNative {
+    fn from(record: RecordPlaintext) -> Self {
+        record.0
     }
 }
 
