@@ -60,6 +60,10 @@ impl Address {
         self.0.to_string()
     }
 
+    pub fn to_x_coordinate(&self) -> String {
+        self.0.to_x_coordinate().to_string()
+    }
+
     /// Verify a signature for a message signed by the address
     ///
     /// @param {Uint8Array} Byte array representing a message signed by the address

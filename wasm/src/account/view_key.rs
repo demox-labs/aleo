@@ -17,7 +17,7 @@
 use super::{Address, PrivateKey};
 use crate::record::RecordCiphertext;
 
-use crate::types::native::ViewKeyNative;
+use crate::types::native::{ViewKeyNative, RecordCiphertextNative, FieldNative, GroupNative};
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
 use wasm_bindgen::prelude::*;
 
@@ -41,6 +41,18 @@ impl ViewKey {
     /// @returns {ViewKey} View key
     pub fn from_string(view_key: &str) -> Self {
         Self::from_str(view_key).unwrap()
+    }
+
+    pub fn is_owner(&self, address_x_coordinate: &str, record_nonce: &str, record_owner_x_coordinate: &str) -> bool {
+        let x_field = FieldNative::from_str(address_x_coordinate).unwrap();
+        let nonce_group = GroupNative::from_str(record_nonce).unwrap();
+        let owner_x_field = FieldNative::from_str(record_owner_x_coordinate).unwrap();
+        RecordCiphertextNative::is_owner_direct(
+            x_field,
+            *self.0,
+            nonce_group,
+            owner_x_field,
+        )
     }
 
     /// Get a string representation of a view key

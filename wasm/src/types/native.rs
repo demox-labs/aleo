@@ -32,7 +32,7 @@ pub use snarkvm_console::{
         Response,
         ValueType,
     },
-    types::Field,
+    types::{Field, Group},
 };
 pub use snarkvm_ledger_block::{Execution, Transaction, Transition};
 pub use snarkvm_ledger_query::Query;
@@ -60,6 +60,7 @@ pub type ViewKeyNative = ViewKey<CurrentNetwork>;
 
 // Algebraic types
 pub type FieldNative = Field<CurrentNetwork>;
+pub type GroupNative = Group<CurrentNetwork>;
 
 // Network types
 pub type CurrentNetwork = Testnet3;
