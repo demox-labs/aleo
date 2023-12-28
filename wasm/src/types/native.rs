@@ -32,7 +32,7 @@ pub use snarkvm_console::{
         Response,
         ValueType,
     },
-    types::{Field, Group},
+    types::{Field, Group, Scalar},
 };
 pub use snarkvm_ledger_block::{Execution, Transaction, Transition};
 pub use snarkvm_ledger_query::Query;
@@ -48,7 +48,7 @@ pub use snarkvm_synthesizer::{
 };
 pub use snarkvm_wasm::{
     console::network::Environment,
-    fields::PrimeField,
+    fields::{PrimeField, SquareRootField},
     utilities::{FromBytes, ToBytes, Uniform},
 };
 
@@ -61,6 +61,7 @@ pub type ViewKeyNative = ViewKey<CurrentNetwork>;
 // Algebraic types
 pub type FieldNative = Field<CurrentNetwork>;
 pub type GroupNative = Group<CurrentNetwork>;
+pub type ScalarNative = Scalar<CurrentNetwork>;
 
 // Network types
 pub type CurrentNetwork = Testnet3;

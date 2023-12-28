@@ -14,11 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::account::{PrivateKey, Signature, ViewKey};
+use crate::{
+    account::{PrivateKey, Signature, ViewKey},
+};
 
-use crate::types::native::AddressNative;
+use crate::types::native::{AddressNative, FieldNative, GroupNative, ScalarNative, CurrentNetwork};
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
+use js_sys::Array;
 use wasm_bindgen::prelude::*;
+use snarkvm_algorithms::msm::standard::msm;
+use snarkvm_console::prelude::{FromBytes, ProjectiveCurve, Inverse, Double, Pow, Network};
+use snarkvm_wasm::fields::{SquareRootField, PrimeField};
 
 /// Public address of an Aleo account
 #[wasm_bindgen]
@@ -70,6 +76,112 @@ impl Address {
     /// @returns {boolean} Boolean representing whether or not the signature is valid
     pub fn verify(&self, message: &[u8], signature: &Signature) -> bool {
         signature.verify(self, message)
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        Self(AddressNative::read_le(&bytes[..]).unwrap())
+    }
+
+    pub fn to_affine(&self) -> String {
+        self.0.to_affine().to_string()
+    }
+
+    pub fn to_projective(&self) -> String {
+        self.0.to_string()
+    }
+
+    pub fn to_group(&self) -> String {
+        self.0.to_string()
+    }
+
+    pub fn add_fields(field1: &str, field2: &str) -> String {
+        let field1 = FieldNative::from_str(field1).unwrap();
+        let field2 = FieldNative::from_str(field2).unwrap();
+        let result = field1 + field2;
+        result.to_string()
+    }
+
+    pub fn sub_fields(field1: &str, field2: &str) -> String {
+        let field1 = FieldNative::from_str(field1).unwrap();
+        let field2 = FieldNative::from_str(field2).unwrap();
+        let result = field1 - field2;
+        result.to_string()
+    }
+
+    pub fn invert_field(field: &str) -> String {
+        let field = FieldNative::from_str(field).unwrap();
+        let result = field.inverse().unwrap();
+        result.to_string()
+    }
+
+    pub fn double_field(field: &str) -> String {
+        let field = FieldNative::from_str(field).unwrap();
+        let result = field.double();
+        result.to_string()
+    }
+
+    pub fn mul_fields(field1: &str, field2: &str) -> String {
+        let field1 = FieldNative::from_str(field1).unwrap();
+        let field2 = FieldNative::from_str(field2).unwrap();
+        let result = field1 * field2;
+        result.to_string()
+    }
+
+    pub fn pow_field(field1: &str, field2: &str) -> String {
+        let field1 = FieldNative::from_str(field1).unwrap();
+        let field2 = FieldNative::from_str(field2).unwrap();
+        let result = field1.pow(&field2);
+        result.to_string()
+    }
+
+    pub fn poseidon_hash(field: &str) -> String {
+        let field = FieldNative::from_str(field).unwrap();
+        let result = CurrentNetwork::hash_many_psd8(&[CurrentNetwork::encryption_domain(), field], 1);
+        return result[0].to_string();
+    }
+
+    pub fn sqrt(field: &str) -> String {
+        let field = FieldNative::from_str(field).unwrap();
+        let result = field.sqrt().unwrap();
+        FieldNative::new(result).to_string()
+        // result.to_string()
+    }
+
+    pub fn add_points(group1: &str, group2: &str) -> String {
+        let group1 = GroupNative::from_str(group1).unwrap();
+        let group2 = GroupNative::from_str(group2).unwrap();
+        let result = group1 + group2;
+        result.to_string()
+    }
+
+    pub fn group_scalar_mul(group: &str, scalar: &str) -> String {
+        let group = GroupNative::from_str(group).unwrap();
+        let scalar = ScalarNative::from_str(scalar).unwrap();
+        let result = group * scalar;
+        result.to_string()
+    }
+
+    pub fn msm(groups: Array, scalars: Array) -> String {
+        let mut groups_vec = Vec::new();
+        let mut scalars_vec = Vec::new();
+
+        // convert groups array to groups_vec
+        for i in 0..groups.length() {
+            let group = GroupNative::from_str(&groups.get(i).as_string().unwrap()).unwrap();
+            let affine_group = group.to_affine();
+            groups_vec.push(affine_group);
+        }
+        // convert scalars array to scalars_vec
+        for i in 0..scalars.length() {
+            let scalar = ScalarNative::from_str(&scalars.get(i).as_string().unwrap()).unwrap();
+            let bigint_scalar = scalar.to_bigint();
+            scalars_vec.push(bigint_scalar);
+        }
+
+        let result = msm(&groups_vec, &scalars_vec);
+        let affine_result = result.to_affine();
+        let group_result = GroupNative::new(affine_result);
+        group_result.to_string()
     }
 }
 

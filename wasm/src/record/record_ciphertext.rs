@@ -17,7 +17,7 @@
 use super::RecordPlaintext;
 use crate::account::ViewKey;
 
-use crate::types::native::RecordCiphertextNative;
+use crate::types::native::{RecordCiphertextNative, CurrentNetwork, ScalarNative};
 use std::{ops::Deref, str::FromStr};
 use wasm_bindgen::prelude::*;
 
@@ -64,6 +64,17 @@ impl RecordCiphertext {
     #[wasm_bindgen(js_name = isOwner)]
     pub fn is_owner(&self, view_key: &ViewKey) -> bool {
         self.0.is_owner(view_key)
+    }
+
+    pub fn get_nonce(&self) -> String {
+        self.0.nonce().to_string()
+    }
+
+    pub fn point_scalar_mul(&self, scalar: &str) -> String {
+       let scalar = ScalarNative::from_str(scalar).unwrap();
+       let group_result = *self.0.nonce() * scalar;
+       let x_coordinate = group_result.to_x_coordinate();
+       return x_coordinate.to_string();
     }
 }
 

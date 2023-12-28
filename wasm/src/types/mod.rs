@@ -20,4 +20,7 @@ pub use field::*;
 pub mod group;
 pub use group::*;
 
+pub mod scalar;
+pub use scalar::*;
+
 pub(crate) mod native;
