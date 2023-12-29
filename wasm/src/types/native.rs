@@ -32,11 +32,12 @@ pub use snarkvm_console::{
         Response,
         ValueType,
     },
-    types::Field,
+    types::{Field, Group},
 };
-pub use snarkvm_ledger_block::{Execution, Transaction};
+pub use snarkvm_ledger_block::{Execution, Transaction, Transition};
 pub use snarkvm_ledger_query::Query;
 pub use snarkvm_ledger_store::helpers::memory::BlockMemory;
+use snarkvm_synthesizer::Authorization;
 pub use snarkvm_synthesizer::{
     cost_in_microcredits,
     deployment_cost,
@@ -44,6 +45,7 @@ pub use snarkvm_synthesizer::{
     Process,
     Program,
     VM,
+    Trace
 };
 pub use snarkvm_wasm::{
     console::network::Environment,
@@ -59,6 +61,7 @@ pub type ViewKeyNative = ViewKey<CurrentNetwork>;
 
 // Algebraic types
 pub type FieldNative = Field<CurrentNetwork>;
+pub type GroupNative = Group<CurrentNetwork>;
 
 // Network types
 pub type CurrentNetwork = Testnet3;
@@ -72,6 +75,7 @@ pub type RecordPlaintextNative = Record<CurrentNetwork, PlaintextNative>;
 
 // Program types
 type CurrentBlockMemory = BlockMemory<CurrentNetwork>;
+pub type AuthorizationNative = Authorization<CurrentNetwork>;
 pub type ExecutionNative = Execution<CurrentNetwork>;
 pub type IdentifierNative = Identifier<CurrentNetwork>;
 pub type LiteralNative = Literal<CurrentNetwork>;
@@ -83,4 +87,5 @@ pub type ProvingKeyNative = ProvingKey<CurrentNetwork>;
 pub type QueryNative = Query<CurrentNetwork, CurrentBlockMemory>;
 pub type ResponseNative = Response<CurrentNetwork>;
 pub type TransactionNative = Transaction<CurrentNetwork>;
+pub type TransitionNative = Transition<CurrentNetwork>;
 pub type VerifyingKeyNative = VerifyingKey<CurrentNetwork>;

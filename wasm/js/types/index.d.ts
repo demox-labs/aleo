@@ -23,4 +23,5 @@ export {
     ViewKey,
     VerifyingKey,
     verifyFunctionExecution,
+    DecryptTransition,
 } from "./crates/aleo_wasm";

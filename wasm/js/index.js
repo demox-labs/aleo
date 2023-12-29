@@ -20,6 +20,7 @@ const {
     ViewKey,
     VerifyingKey,
     verifyFunctionExecution,
+    DecryptTransition,
 } = await wasm({
     importHook: () => {
         return new URL("assets/aleo_wasm.wasm", import.meta.url);
@@ -55,4 +56,5 @@ export {
     ViewKey,
     VerifyingKey,
     verifyFunctionExecution,
+    DecryptTransition,
 };
