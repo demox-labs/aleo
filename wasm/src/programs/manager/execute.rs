@@ -503,7 +503,7 @@ impl ProgramManager {
         fee_record: Option<RecordPlaintext>,
         imports: Option<Object>,
     ) -> Result<String, String> {
-        log(&format!("Executing function: {function} on-chain"));
+        log(&format!("Authorizing function: {function} on-chain"));
         let fee_microcredits = match &fee_record {
             Some(fee_record) => Self::validate_amount(fee_credits, fee_record, true)?,
             None => (fee_credits * 1_000_000.0) as u64,
@@ -520,7 +520,7 @@ impl ProgramManager {
             process.add_program(&program_native).map_err(|e| e.to_string())?;
         }
         
-        log("Executing program");
+        log("Creating authorization");
         let rng = &mut StdRng::from_entropy();
         let authorization = process
             .authorize::<CurrentAleo, _>(
@@ -577,7 +577,7 @@ impl ProgramManager {
         fee_verifying_key: Option<VerifyingKey>,
         inclusion_key: ProvingKey,
     ) -> Result<Transaction, String> {
-        log(&format!("Executing function: {function} on-chain"));
+        log(&format!("Authorizing function: {function} on-chain"));
         let authorization = AuthorizationNative::from_str(&authorization).map_err(|err| err.to_string())?;
         let fee_authorization = match fee_authorization {
             Some(fee_authorization) => Some(AuthorizationNative::from_str(&fee_authorization).map_err(|err| err.to_string())?),
@@ -590,11 +590,6 @@ impl ProgramManager {
         log("Check program imports are valid and add them to the process");
         let program_native = ProgramNative::from_str(&program).map_err(|e| e.to_string())?;
         ProgramManager::resolve_imports(process, &program_native, imports)?;
-
-        let program_id = program_native.id();
-        if program_id.to_string() != "credits.aleo" {
-            process.add_program(&program_native).map_err(|e| e.to_string())?;
-        }
 
         let stack = process.get_stack("credits.aleo").map_err(|e| e.to_string())?;
 
@@ -614,6 +609,11 @@ impl ProgramManager {
             stack
                 .insert_verifying_key(&fee_identifier, VerifyingKeyNative::from(fee_verifying_key))
                 .map_err(|e| e.to_string())?;
+        }
+
+        let program_id = program_native.id();
+        if program_id.to_string() != "credits.aleo" {
+            process.add_program(&program_native).map_err(|e| e.to_string())?;
         }
 
         let function_name = IdentifierNative::from_str(function).map_err(|err| err.to_string())?;
