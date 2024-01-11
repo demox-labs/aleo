@@ -18,13 +18,14 @@ use crate::{
     account::{PrivateKey, Signature, ViewKey},
 };
 
-use crate::types::native::{AddressNative, FieldNative, GroupNative, ScalarNative, CurrentNetwork};
+use crate::types::native::{AddressNative, FieldNative, G1AffineNative, G1BaseFieldNative, GroupNative, ScalarNative, CurrentNetwork};
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
 use js_sys::Array;
 use wasm_bindgen::prelude::*;
 use snarkvm_algorithms::msm::standard::msm;
 use snarkvm_console::prelude::{FromBytes, ProjectiveCurve, Inverse, Double, Pow, Network};
 use snarkvm_wasm::fields::{SquareRootField, PrimeField};
+use snarkvm_curves::templates::bls12::Bls12Parameters;
 
 /// Public address of an Aleo account
 #[wasm_bindgen]
@@ -182,6 +183,29 @@ impl Address {
         let affine_result = result.to_affine();
         let group_result = GroupNative::new(affine_result);
         group_result.to_string()
+    }
+
+    pub fn bls12_377_msm(g1xs: Array, g1ys: Array, scalars: Array) -> String {
+        let mut groups_vec = Vec::new();
+        let mut scalars_vec = Vec::new();
+
+        // convert groups array to groups_vec
+        for i in 0..g1xs.length() {
+            let g1x = G1BaseFieldNative::from_str(&g1xs.get(i).as_string().unwrap()).unwrap();
+            let g1y = G1BaseFieldNative::from_str(&g1ys.get(i).as_string().unwrap()).unwrap();
+            let g1 = G1AffineNative::new(g1x, g1y, false);
+            groups_vec.push(g1);
+        }
+        // convert scalars array to scalars_vec
+        for i in 0..scalars.length() {
+            let scalar = ScalarNative::from_str(&scalars.get(i).as_string().unwrap()).unwrap();
+            let bigint_scalar = scalar.to_bigint();
+            scalars_vec.push(bigint_scalar);
+        }
+
+        let result = msm(&groups_vec, &scalars_vec);
+        let affine_result = result.to_affine();
+        affine_result.to_string()
     }
 }
 
