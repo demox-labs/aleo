@@ -1,5 +1,5 @@
 {
-  "name": "@demox-labs/aleo-sdk-web",
+  "name": "@demox-labs/gpu-wasm-expose",
   "version": "0.3.25",
   "description": "Wasm build for the SDK",
   "collaborators": [

@@ -55,6 +55,7 @@ pub use snarkvm_curves::bls12_377::{G1Affine, Bls12_377G1Parameters};
 pub use snarkvm_curves::templates::bls12::Bls12Parameters;
 pub use snarkvm_curves::ModelParameters;
 pub use snarkvm_curves::templates::short_weierstrass_jacobian::Affine;
+pub use snarkvm_curves::bls12_377::{Fr, Fq};
 
 // Account types
 pub type AddressNative = Address<CurrentNetwork>;
@@ -66,7 +67,9 @@ pub type ViewKeyNative = ViewKey<CurrentNetwork>;
 pub type FieldNative = Field<CurrentNetwork>;
 pub type GroupNative = Group<CurrentNetwork>;
 pub type G1AffineNative = Affine<Bls12_377G1Parameters>;
-pub type G1BaseFieldNative = <Bls12_377G1Parameters as ModelParameters>::BaseField;
+pub type G1Native = G1Affine;
+pub type G1BaseFieldNative = Fq;
+pub type G1FrFieldNative = Fr;
 pub type ScalarNative = Scalar<CurrentNetwork>;
 
 // Network types

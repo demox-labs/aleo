@@ -18,7 +18,7 @@ use crate::{
     account::{PrivateKey, Signature, ViewKey},
 };
 
-use crate::types::native::{AddressNative, FieldNative, G1AffineNative, G1BaseFieldNative, GroupNative, ScalarNative, CurrentNetwork};
+use crate::types::native::{AddressNative, FieldNative, G1AffineNative, G1BaseFieldNative, G1FrFieldNative, G1Native, GroupNative, ScalarNative, CurrentNetwork};
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
 use js_sys::Array;
 use wasm_bindgen::prelude::*;
@@ -26,6 +26,10 @@ use snarkvm_algorithms::msm::standard::msm;
 use snarkvm_console::prelude::{FromBytes, ProjectiveCurve, Inverse, Double, Pow, Network};
 use snarkvm_wasm::fields::{SquareRootField, PrimeField};
 use snarkvm_curves::templates::bls12::Bls12Parameters;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
+use snarkvm_console::prelude::Uniform;
+use crate::log;
 
 /// Public address of an Aleo account
 #[wasm_bindgen]
@@ -174,6 +178,7 @@ impl Address {
         }
         // convert scalars array to scalars_vec
         for i in 0..scalars.length() {
+            let scalar_string = &scalars.get(i).as_string().unwrap();
             let scalar = ScalarNative::from_str(&scalars.get(i).as_string().unwrap()).unwrap();
             let bigint_scalar = scalar.to_bigint();
             scalars_vec.push(bigint_scalar);
@@ -195,17 +200,23 @@ impl Address {
             let g1y = G1BaseFieldNative::from_str(&g1ys.get(i).as_string().unwrap()).unwrap();
             let g1 = G1AffineNative::new(g1x, g1y, false);
             groups_vec.push(g1);
-        }
-        // convert scalars array to scalars_vec
-        for i in 0..scalars.length() {
-            let scalar = ScalarNative::from_str(&scalars.get(i).as_string().unwrap()).unwrap();
+
+            let scalar_string = &scalars.get(i).as_string().unwrap();
+            let scalar = G1FrFieldNative::from_str(scalar_string).unwrap();
             let bigint_scalar = scalar.to_bigint();
+
             scalars_vec.push(bigint_scalar);
         }
 
         let result = msm(&groups_vec, &scalars_vec);
         let affine_result = result.to_affine();
         affine_result.to_string()
+    }
+
+    pub fn random_g1_point() -> String {
+        let rng = &mut StdRng::from_entropy();
+        let g1 = G1Native::rand(rng);
+        g1.to_string()
     }
 }
 
