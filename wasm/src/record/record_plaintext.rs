@@ -84,10 +84,10 @@ impl RecordPlaintext {
     ///
     /// @param {ViewKey} view_key View key used to decrypt the ciphertext
     /// @returns {RecordPlaintext | Error} Record plaintext object
-    pub fn encrypt(&self, view_key: &ViewKey) -> Result<RecordCiphertext, String> {
-        Ok(RecordCiphertext::from(self.0.encrypt(***view_key).map_err(|_| "Encryption failed - view key did not match record".to_string())?
-        ))
-    }
+    // pub fn encrypt(&self, view_key: &ViewKey) -> Result<RecordCiphertext, String> {
+    //     Ok(RecordCiphertext::from(self.0.encrypt(***view_key).map_err(|_| "Encryption failed - view key did not match record".to_string())?
+    //     ))
+    // }
 
     /// Attempt to get the serial number of a record to determine whether or not is has been spent
     ///

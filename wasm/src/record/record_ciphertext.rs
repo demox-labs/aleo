@@ -19,6 +19,7 @@ use crate::account::ViewKey;
 
 use crate::types::native::RecordCiphertextNative;
 use std::{ops::Deref, str::FromStr};
+use snarkvm_console::program::{Owner, ToFields};
 use wasm_bindgen::prelude::*;
 
 /// Encrypted Aleo record
@@ -65,17 +66,28 @@ impl RecordCiphertext {
     pub fn is_owner(&self, view_key: &ViewKey) -> bool {
         self.0.is_owner(view_key)
     }
-}
 
-impl From<RecordCiphertextNative> for RecordCiphertext {
-    fn from(record: RecordCiphertextNative) -> Self {
-        Self(record)
+    #[wasm_bindgen(js_name = getOwnerX)]
+    pub fn get_owner_x(&self) -> String {
+        let owner = self.0.owner();
+        match owner {
+            Owner::Public(owner) => {
+                owner.to_x_coordinate().to_string() 
+            }
+            Owner::Private(owner) => {
+                owner.to_fields().unwrap().first().unwrap().to_string()
+            }
+        }
     }
-}
 
-impl From<RecordCiphertext> for RecordCiphertextNative {
-    fn from(record: RecordCiphertext) -> Self {
-        record.0
+    #[wasm_bindgen(js_name = getNonceX)]
+    pub fn get_nonce_x(&self) -> String {
+        self.0.nonce().to_x_coordinate().to_string()
+    }
+
+    #[wasm_bindgen(js_name = getNonceY)]
+    pub fn get_nonce_y(&self) -> String {
+        self.0.nonce().to_y_coordinate().to_string()
     }
 }
 
@@ -113,6 +125,15 @@ mod tests {
     // Related material for use in future tests
     const _OWNER_PRIVATE_KEY: &str = "APrivateKey1zkpJkyYRGYtkeHDaFfwsKtUJzia7csiWhfBWPXWhXJzy9Ls";
     const _OWNER_ADDRESS: &str = "aleo1j7qxyunfldj2lp8hsvy7mw5k8zaqgjfyr72x2gh3x4ewgae8v5gscf5jh3";
+
+    #[test]
+    fn test_from_string() {
+        let record_ciphertext_string = "record1qyqsqcznnug9rmrdnqc2sqp8ycss5szk6y356pguxpqf2vsxpa6lhrgfqgzhgmmtv4hyxqqzqgqz7w6vhxqdug0akcwlu8etvpg8htz2ghdrpwam3mafyxpgxlg32pm5xnp9zjyrelm7fj8v3lt48xvgs3ympvxdc7xy8httn2streepqvrxzmt0w4h8ggcqqgqsqfadmznhnwslhav2l3k9p6jvyejrr3segxpeear9hgla4zn8vzqxz9yu572mhc39ef942w60rgk35a5qu2xfwek8upg4ldv8rpcwwc9snk80zq";
+        let record = RecordCiphertext::from_string(record_ciphertext_string).unwrap();
+        println!("{}", record.get_nonce_x());
+        println!("{}", record.get_nonce_y());
+        println!("{}", record.get_owner_x());
+    }
 
     #[wasm_bindgen_test]
     fn test_to_and_from_string() {
