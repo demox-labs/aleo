@@ -19,6 +19,7 @@ use crate::types::native::{CurrentNetwork, EntryType, IdentifierNative, Plaintex
 use js_sys::{Array, Object, Reflect};
 use std::{ops::Deref, str::FromStr};
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
+use crate::types::native::ProgramIDNative;
 
 /// Webassembly Representation of an Aleo program
 #[wasm_bindgen]
@@ -43,6 +44,20 @@ impl Program {
     #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         self.0.to_string()
+    }
+
+    #[wasm_bindgen(js_name = "toAddress")]
+    pub fn to_address(&self) -> String {
+        let program_id = self.0.id();
+        let address = program_id.to_address().unwrap();
+        address.to_string()
+    }
+
+    #[wasm_bindgen(js_name = "programIdToAddress")]
+    pub fn program_id_to_address(program_id: &str) -> String {
+        let program_id = ProgramIDNative::from_str(program_id).unwrap();
+        let address = program_id.to_address().unwrap();
+        address.to_string()
     }
 
     /// Determine if a function is present in the program
