@@ -19,18 +19,19 @@ use super::*;
 use crate::{execute_fee, log, OfflineQuery, PrivateKey, RecordPlaintext, Transaction};
 
 use crate::types::native::{
-    CurrentAleo,
-    CurrentNetwork,
-    ProcessNative,
-    ProgramIDNative,
-    ProgramNative,
-    ProgramOwnerNative,
-    RecordPlaintextNative,
-    TransactionNative,
+    CurrentAleo, CurrentNetwork, DeploymentNative, ProcessNative, ProgramIDNative, ProgramNative, ProgramOwnerNative, RecordPlaintextNative, TransactionNative
 };
 use js_sys::Object;
 use rand::{rngs::StdRng, SeedableRng};
+use serde::Serialize;
 use std::str::FromStr;
+
+#[derive(Serialize)]
+pub struct DeployAuthorizationResponse {
+    pub deployment: String,
+    pub fee_authorization: String,
+    pub owner: String
+}
 
 #[wasm_bindgen]
 impl ProgramManager {
@@ -310,5 +311,66 @@ impl ProgramManager {
         Ok(Transaction::from(
             TransactionNative::from_deployment(owner, deployment, fee).map_err(|err| err.to_string())?,
         ))
+    }
+
+    #[wasm_bindgen]
+    pub async fn authorize_deploy(
+        private_key: &PrivateKey,
+        deployment: &str,
+        fee_credits: f64,
+        fee_record: Option<RecordPlaintext>
+    ) -> Result<String, String> {
+        log("Creating deployment transaction");
+        // Convert fee to microcredits and check that the fee record has enough credits to pay it
+        let fee_microcredits = match &fee_record {
+            Some(fee_record) => Self::validate_amount(fee_credits, fee_record, true)?,
+            None => (fee_credits * 1_000_000.0) as u64,
+        };
+
+        log("Create and validate deployment");
+        let deployment = DeploymentNative::from_str(deployment).map_err(|e| e.to_string())?;
+        let deployment_id = deployment.to_deployment_id().map_err(|e| e.to_string())?;
+
+        let mut process_native = ProcessNative::load_web().map_err(|err| err.to_string())?;
+        let process = &mut process_native;
+
+        let stack = process.get_stack("credits.aleo").map_err(|e| e.to_string())?;
+        let fee_identifier = if fee_record.is_some() {
+            IdentifierNative::from_str("fee_private").unwrap()
+        } else {
+            IdentifierNative::from_str("fee_public").unwrap()
+        };
+
+        log("Build fee execution");
+        let fee_authorization = match fee_record {
+            Some(fee_record) => {
+                process.authorize_fee_private::<CurrentAleo, _>(
+                    &private_key,
+                    fee_record.into(),
+                    fee_microcredits,
+                    0u64,
+                    deployment_id,
+                    &mut StdRng::from_entropy()
+                ).map_err(|e| e.to_string())?
+            }
+            None => {
+                process.authorize_fee_public::<CurrentAleo, _>(&private_key, fee_microcredits, 0u64, deployment_id, &mut StdRng::from_entropy()).map_err(|e| e.to_string())?
+            }
+        };
+
+        log("Create the program owner");
+        let owner = ProgramOwnerNative::new(&private_key, deployment_id, &mut StdRng::from_entropy())
+            .map_err(|err| err.to_string())?;
+
+        let authorization_response = DeployAuthorizationResponse {
+            deployment: deployment.to_string(),
+            fee_authorization: fee_authorization.to_string(),
+            owner: owner.to_string()
+        };
+
+        let authorization_response = serde_json::to_string(&authorization_response)
+            .map_err(|_| "Could not serialize authorization response".to_string())?;
+
+        Ok(authorization_response)
     }
 }
