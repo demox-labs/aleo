@@ -1,5 +1,5 @@
 {
-  "name": "@demox-labs/aleo-sdk-web",
+  "name": "@demox-labs/aleo-sdk-staging",
   "version": "0.3.30",
   "description": "Wasm build for the SDK",
   "collaborators": [

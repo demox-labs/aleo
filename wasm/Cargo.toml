@@ -22,11 +22,11 @@ crate-type = [ "cdylib", "rlib" ]
 doctest = false
 
 [dependencies.snarkvm-circuit-network]
-version = "0.16.12"
+version = "0.16.19"
 path="../../snarkVM/circuit/network"
 
 [dependencies.snarkvm-console]
-version = "=0.16.12"
+version = "=0.16.19"
 features = [ "wasm" ]
 path="../../snarkVM/console"
 
@@ -35,31 +35,31 @@ version = "0.16.10"
 path="../../snarkVM/fields"
 
 [dependencies.snarkvm-ledger-block]
-version = "0.16.12"
+version = "0.16.19"
 path="../../snarkVM/ledger/block"
 features = [ "wasm" ]
 
 [dependencies.snarkvm-ledger-query]
-version = "0.16.12"
+version = "0.16.19"
 path="../../snarkVM/ledger/query"
 features = [ "async", "wasm" ]
 
 [dependencies.snarkvm-ledger-store]
-version = "0.16.12"
+version = "0.16.19"
 path="../../snarkVM/ledger/store"
 
 [dependencies.snarkvm-parameters]
-version = "=0.16.12"
+version = "=0.16.19"
 features = [ "wasm" ]
 path="../../snarkVM/parameters"
 
 [dependencies.snarkvm-synthesizer]
-version = "=0.16.12"
+version = "=0.16.19"
 features = [ "async", "wasm" ]
 path="../../snarkVM/synthesizer"
 
 [dependencies.snarkvm-wasm]
-version = "0.16.12"
+version = "0.16.19"
 features = [ "console", "fields", "utilities" ]
 path="../../snarkVM/wasm"
 

@@ -89,16 +89,6 @@ impl ProgramManager {
             return Err("Attempted to create an empty transaction deployment".to_string());
         }
 
-        log("Ensuring the fee is sufficient to pay for the deployment");
-        let (minimum_deployment_cost, (_, _)) =
-            deployment_cost::<CurrentNetwork>(&deployment).map_err(|err| err.to_string())?;
-        if fee_microcredits < minimum_deployment_cost {
-            return Err(format!(
-                "Fee is too low to pay for the deployment. The minimum fee is {} credits",
-                minimum_deployment_cost as f64 / 1_000_000.0
-            ));
-        }
-
         let deployment_id = deployment.to_deployment_id().map_err(|e| e.to_string())?;
 
         let fee = execute_fee!(
@@ -127,43 +117,6 @@ impl ProgramManager {
         Ok(Transaction::from(
             TransactionNative::from_deployment(owner, deployment, fee).map_err(|err| err.to_string())?,
         ))
-    }
-
-    /// Estimate the fee for a program deployment
-    ///
-    /// Disclaimer: Fee estimation is experimental and may not represent a correct estimate on any current or future network
-    ///
-    /// @param program The source code of the program being deployed
-    /// @param imports (optional) Provide a list of imports to use for the deployment fee estimation
-    /// in the form of a javascript object where the keys are a string of the program name and the values
-    /// are a string representing the program source code \{ "hello.aleo": "hello.aleo source code" \}
-    /// @returns {u64 | Error}
-    #[wasm_bindgen(js_name = estimateDeploymentFee)]
-    pub async fn estimate_deployment_fee(program: &str, imports: Option<Object>) -> Result<u64, String> {
-        log(
-            "Disclaimer: Fee estimation is experimental and may not represent a correct estimate on any current or future network",
-        );
-        let mut process_native = ProcessNative::load_web().map_err(|err| err.to_string())?;
-        let process = &mut process_native;
-
-        log("Check program has a valid name");
-        let program = ProgramNative::from_str(program).map_err(|err| err.to_string())?;
-
-        log("Check program imports are valid and add them to the process");
-        ProgramManager::resolve_imports(process, &program, imports)?;
-
-        log("Create sample deployment");
-        let deployment =
-            process.deploy::<CurrentAleo, _>(&program, &mut StdRng::from_entropy()).map_err(|err| err.to_string())?;
-        if deployment.program().functions().is_empty() {
-            return Err("Attempted to create an empty transaction deployment".to_string());
-        }
-
-        log("Estimate the deployment fee");
-        let (minimum_deployment_cost, (_, _)) =
-            deployment_cost::<CurrentNetwork>(&deployment).map_err(|err| err.to_string())?;
-
-        Ok(minimum_deployment_cost)
     }
 
     /// Estimate the component of the deployment cost which comes from the fee for the program name.
@@ -221,25 +174,6 @@ impl ProgramManager {
             process.deploy::<CurrentAleo, _>(&program, &mut StdRng::from_entropy()).map_err(|err| err.to_string())?;
         if deployment.program().functions().is_empty() {
             return Err("Attempted to create an empty transaction deployment".to_string());
-        }
-
-        log("Ensure the fee is sufficient to pay for the deployment");
-        let (mut minimum_deployment_cost, (_, _)) =
-            deployment_cost::<CurrentNetwork>(&deployment).map_err(|err| err.to_string())?;
-        log(&(format!(
-            "Minimum deployment cost: {}",
-            minimum_deployment_cost
-        )));
-        if fee_microcredits < minimum_deployment_cost {
-            log("Fee is too low to pay for the deployment");
-            log("Provided fee:");
-            log(&fee_microcredits.to_string());
-            log("Minimum fee:");
-            log(&minimum_deployment_cost.to_string());
-            return Err(format!(
-                "Fee is too low to pay for the deployment. The minimum fee is {} credits",
-                minimum_deployment_cost as f64 / 1_000_000.0
-            ));
         }
 
         log("Verify the deployment and fees");

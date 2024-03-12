@@ -158,7 +158,8 @@ impl DecryptTransition {
       decrypted_inputs,
       decrypted_outputs,
       *transition.tpk(),
-      *transition.tcm()
+      *transition.tcm(),
+      *transition.scm()
     ).unwrap();
 
     let transition_output = serde_json::to_string(&decrypted_transition)
