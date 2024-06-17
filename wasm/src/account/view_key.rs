@@ -55,6 +55,10 @@ impl ViewKey {
         )
     }
 
+    pub fn to_scalar(&self) -> String {
+      (*self.0).to_string()
+    }
+
     /// Get a string representation of a view key
     ///
     /// @returns {string} String representation of a view key
