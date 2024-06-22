@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-pub use snarkvm_circuit_network::AleoTestnetV0;
+pub use snarkvm_circuit_network::{AleoTestnetV0, AleoV0};
 pub use snarkvm_console::{
     account::{Address, PrivateKey, Signature, ViewKey},
-    network::{Network, TestnetV0},
+    network::{Network, TestnetV0, MainnetV0},
     program::{
         Ciphertext,
         Entry,
@@ -52,39 +52,35 @@ pub use snarkvm_wasm::{
 };
 
 // Account types
-pub type AddressNative = Address<CurrentNetwork>;
-pub type PrivateKeyNative = PrivateKey<CurrentNetwork>;
-pub type SignatureNative = Signature<CurrentNetwork>;
-pub type ViewKeyNative = ViewKey<CurrentNetwork>;
+pub type AddressNative<N> = Address<N>;
+pub type PrivateKeyNative<N> = PrivateKey<N>;
+pub type SignatureNative<N> = Signature<N>;
+pub type ViewKeyNative<N> = ViewKey<N>;
 
 // Algebraic types
-pub type FieldNative = Field<CurrentNetwork>;
-pub type GroupNative = Group<CurrentNetwork>;
-
-// Network types
-pub type CurrentNetwork = TestnetV0;
-pub type CurrentAleo = AleoTestnetV0;
+pub type FieldNative<N> = Field<N>;
+pub type GroupNative<N> = Group<N>;
 
 // Record types
-pub type CiphertextNative = Ciphertext<CurrentNetwork>;
-pub type PlaintextNative = Plaintext<CurrentNetwork>;
-pub type RecordCiphertextNative = Record<CurrentNetwork, CiphertextNative>;
-pub type RecordPlaintextNative = Record<CurrentNetwork, PlaintextNative>;
+pub type CiphertextNative<N> = Ciphertext<N>;
+pub type PlaintextNative<N> = Plaintext<N>;
+pub type RecordCiphertextNative<N> = Record<N, CiphertextNative<N>>;
+pub type RecordPlaintextNative<N> = Record<N, PlaintextNative<N>>;
 
 // Program types
-type CurrentBlockMemory = BlockMemory<CurrentNetwork>;
-pub type AuthorizationNative = Authorization<CurrentNetwork>;
-pub type ExecutionNative = Execution<CurrentNetwork>;
-pub type DeploymentNative = Deployment<CurrentNetwork>;
-pub type IdentifierNative = Identifier<CurrentNetwork>;
-pub type LiteralNative = Literal<CurrentNetwork>;
-pub type ProcessNative = Process<CurrentNetwork>;
-pub type ProgramIDNative = ProgramID<CurrentNetwork>;
-pub type ProgramNative = Program<CurrentNetwork>;
-pub type ProgramOwnerNative = ProgramOwner<CurrentNetwork>;
-pub type ProvingKeyNative = ProvingKey<CurrentNetwork>;
-pub type QueryNative = Query<CurrentNetwork, CurrentBlockMemory>;
-pub type ResponseNative = Response<CurrentNetwork>;
-pub type TransactionNative = Transaction<CurrentNetwork>;
-pub type TransitionNative = Transition<CurrentNetwork>;
-pub type VerifyingKeyNative = VerifyingKey<CurrentNetwork>;
+type CurrentBlockMemory<N> = BlockMemory<N>;
+pub type AuthorizationNative<N> = Authorization<N>;
+pub type ExecutionNative<N> = Execution<N>;
+pub type DeploymentNative<N> = Deployment<N>;
+pub type IdentifierNative<N> = Identifier<N>;
+pub type LiteralNative<N> = Literal<N>;
+pub type ProcessNative<N> = Process<N>;
+pub type ProgramIDNative<N> = ProgramID<N>;
+pub type ProgramNative<N> = Program<N>;
+pub type ProgramOwnerNative<N> = ProgramOwner<N>;
+pub type ProvingKeyNative<N> = ProvingKey<N>;
+pub type QueryNative<N> = Query<N, CurrentBlockMemory<N>>;
+pub type ResponseNative<N> = Response<N>;
+pub type TransactionNative<N> = Transaction<N>;
+pub type TransitionNative<N> = Transition<N>;
+pub type VerifyingKeyNative<N> = VerifyingKey<N>;

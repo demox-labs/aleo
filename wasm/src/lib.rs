@@ -150,19 +150,16 @@
 //! Further documentation and tutorials as to how to use the modules built from this crate to build web apps  will be built
 //! in the future. However - in the meantime, the [aleo.tools](https://aleo.tools) website is a good
 //! example of how to use these modules to build a web app. Its source code can be found in the
-//!
+
+#[macro_use]
+mod macros;
 
 pub mod account;
 pub use account::*;
 
-pub mod programs;
-pub use programs::*;
-
-pub mod record;
-pub use record::*;
-
 pub mod types;
 pub use types::Field;
+pub use types::Group;
 
 #[cfg(not(test))]
 mod thread_pool;
@@ -184,30 +181,30 @@ extern "C" {
     pub fn log(s: &str);
 }
 
-/// A trait providing convenient methods for accessing the amount of Aleo present in a record
-pub trait Credits {
-    /// Get the amount of credits in the record if the record possesses Aleo credits
-    fn credits(&self) -> Result<f64, String> {
-        Ok(self.microcredits()? as f64 / 1_000_000.0)
-    }
+// /// A trait providing convenient methods for accessing the amount of Aleo present in a record
+// pub trait Credits {
+//     /// Get the amount of credits in the record if the record possesses Aleo credits
+//     fn credits(&self) -> Result<f64, String> {
+//         Ok(self.microcredits()? as f64 / 1_000_000.0)
+//     }
 
-    /// Get the amount of microcredits in the record if the record possesses Aleo credits
-    fn microcredits(&self) -> Result<u64, String>;
-}
+//     /// Get the amount of microcredits in the record if the record possesses Aleo credits
+//     fn microcredits(&self) -> Result<u64, String>;
+// }
 
-impl Credits for RecordPlaintextNative {
-    fn microcredits(&self) -> Result<u64, String> {
-        match self
-            .find(&[native::IdentifierNative::from_str("microcredits").map_err(|e| e.to_string())?])
-            .map_err(|e| e.to_string())?
-        {
-            native::Entry::Private(native::PlaintextNative::Literal(native::LiteralNative::U64(amount), _)) => {
-                Ok(*amount)
-            }
-            _ => Err("The record provided does not contain a microcredits field".to_string()),
-        }
-    }
-}
+// impl Credits for RecordPlaintextNative {
+//     fn microcredits(&self) -> Result<u64, String> {
+//         match self
+//             .find(&[native::IdentifierNative::from_str("microcredits").map_err(|e| e.to_string())?])
+//             .map_err(|e| e.to_string())?
+//         {
+//             native::Entry::Private(native::PlaintextNative::Literal(native::LiteralNative::U64(amount), _)) => {
+//                 Ok(*amount)
+//             }
+//             _ => Err("The record provided does not contain a microcredits field".to_string()),
+//         }
+//     }
+// }
 
 #[cfg(not(test))]
 #[doc(hidden)]
