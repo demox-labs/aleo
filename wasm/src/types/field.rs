@@ -43,7 +43,7 @@ impl Field {
 }
 
 pub fn from_string_impl<N: Network>(field: &str) -> Result<String, String> {
-    Ok(FieldNative::<N>::from_str(field).map_err(|e| e.to_string())?.to_string())
+  Ok(FieldNative::<N>::from_str(field).map_err(|e| e.to_string())?.to_string())
 }
 
 impl<N: Network> From<FieldNative<N>> for Field {

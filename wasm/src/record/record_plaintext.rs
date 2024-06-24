@@ -19,31 +19,27 @@ use crate::{
     account::ViewKey,
     types::Field,
     Credits,
-    RecordCiphertext,
+    // RecordCiphertext,
 };
 
 use crate::types::native::{IdentifierNative, ProgramIDNative, RecordPlaintextNative};
+use crate::native::Network;
 use std::{ops::Deref, str::FromStr};
 use wasm_bindgen::prelude::*;
 
 /// Plaintext representation of an Aleo record
 #[wasm_bindgen]
 #[derive(Clone)]
-pub struct RecordPlaintext(RecordPlaintextNative);
+pub struct RecordPlaintext(String);
 
 #[wasm_bindgen]
 impl RecordPlaintext {
     #[wasm_bindgen]
-    pub fn commitment(&self, program_id: &str, record_name: &str) -> Result<Field, String> {
-        Ok(Field::from(
-            self.to_commitment(
-                &ProgramIDNative::from_str(program_id)
-                    .map_err(|_| format!("{program_id} is an invalid program name"))?,
-                &IdentifierNative::from_str(record_name)
-                    .map_err(|_| format!("{record_name} is an invalid identifier"))?,
-            )
-            .map_err(|e| e.to_string())?,
-        ))
+    pub fn commitment(&self, network: &str, program_id: &str, record_name: &str) -> Result<Field, String> {
+      match dispatch_network!(network, commitment_impl, &self.0, program_id, record_name) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
     /// Return a record plaintext from a string.
@@ -51,8 +47,11 @@ impl RecordPlaintext {
     /// @param {string} record String representation of a plaintext representation of an Aleo record
     /// @returns {RecordPlaintext | Error} Record plaintext
     #[wasm_bindgen(js_name = fromString)]
-    pub fn from_string(record: &str) -> Result<RecordPlaintext, String> {
-        Self::from_str(record).map_err(|_| "The record plaintext string provided was invalid".into())
+    pub fn from_string(network: &str, record: &str) -> Result<RecordPlaintext, String> {
+      match dispatch_network!(network, from_string_impl, record) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
     /// Returns the record plaintext string
@@ -67,23 +66,29 @@ impl RecordPlaintext {
     /// Returns the amount of microcredits in the record
     ///
     /// @returns {u64} Amount of microcredits in the record
-    pub fn microcredits(&self) -> u64 {
-        self.0.microcredits().unwrap_or(0)
+    pub fn microcredits(&self, network: &str) -> Result<u64, String> {
+      match dispatch_network!(network, microcredits_impl, &self.0) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
     /// Returns the nonce of the record. This can be used to uniquely identify a record.
     ///
     /// @returns {string} Nonce of the record
     #[wasm_bindgen(js_name = nonce)]
-    pub fn nonce(&self) -> String {
-        self.0.nonce().to_string()
+    pub fn nonce(&self, network: &str) -> Result<String, String> {
+      match dispatch_network!(network, nonce_impl, &self.0) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
-    /// Decrypt the record ciphertext into plaintext using the view key. The record will only
-    /// decrypt if the record was encrypted by the account corresponding to the view key
-    ///
-    /// @param {ViewKey} view_key View key used to decrypt the ciphertext
-    /// @returns {RecordPlaintext | Error} Record plaintext object
+    // /// Decrypt the record ciphertext into plaintext using the view key. The record will only
+    // /// decrypt if the record was encrypted by the account corresponding to the view key
+    // ///
+    // /// @param {ViewKey} view_key View key used to decrypt the ciphertext
+    // /// @returns {RecordPlaintext | Error} Record plaintext object
     // pub fn encrypt(&self, view_key: &ViewKey) -> Result<RecordCiphertext, String> {
     //     Ok(RecordCiphertext::from(self.0.encrypt(***view_key).map_err(|_| "Encryption failed - view key did not match record".to_string())?
     //     ))
@@ -98,27 +103,66 @@ impl RecordPlaintext {
     #[wasm_bindgen(js_name = serialNumberString)]
     pub fn serial_number_string(
         &self,
+        network: &str,
         private_key: &PrivateKey,
         program_id: &str,
         record_name: &str,
     ) -> Result<String, String> {
-        let commitment = self.commitment(program_id, record_name)?;
-
-        let serial_number = RecordPlaintextNative::serial_number(private_key.into(), commitment.into())
-            .map_err(|_| "Serial number derivation failed".to_string())?;
-        Ok(serial_number.to_string())
+      match dispatch_network!(network, serial_number_string_impl, &self.0, private_key, program_id, record_name) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 }
 
-impl From<RecordPlaintextNative> for RecordPlaintext {
-    fn from(record: RecordPlaintextNative) -> Self {
-        Self(record)
+pub fn commitment_impl<N: Network>(record: &str, program_id: &str, record_name: &str) -> Result<Field, String> {
+    Ok(Field::from(
+        RecordPlaintextNative::<N>::from_str(record)
+            .map_err(|_| "Invalid record".to_string())?
+            .to_commitment(
+                &ProgramIDNative::from_str(program_id)
+                    .map_err(|_| format!("{program_id} is an invalid program name"))?,
+                &IdentifierNative::from_str(record_name)
+                    .map_err(|_| format!("{record_name} is an invalid identifier"))?,
+            )
+            .map_err(|e| e.to_string())?,
+    ))
+}
+
+pub fn serial_number_string_impl<N: Network>(
+  record_string: &str,
+  private_key: &PrivateKey,
+  program_id: &str,
+  record_name: &str,
+) -> Result<String, String> {
+    let commitment = commitment_impl::<N>(record_string, program_id, record_name).unwrap();
+
+    let serial_number = RecordPlaintextNative::<N>::serial_number(private_key.into(), commitment.into())
+        .map_err(|_| "Serial number derivation failed".to_string())?;
+    Ok(serial_number.to_string())
+}
+
+pub fn nonce_impl<N: Network>(record: &str) -> Result<String, String> {
+    Ok(RecordPlaintextNative::<N>::from_str(record).unwrap().nonce().to_string())
+}
+
+pub fn microcredits_impl<N: Network>(record: &str) -> Result<u64, String> {
+    Ok(RecordPlaintextNative::<N>::from_str(record).unwrap().microcredits().unwrap_or(0))
+}
+
+pub fn from_string_impl<N: Network>(record: &str) -> Result<RecordPlaintext, String> {
+    Ok(RecordPlaintext(RecordPlaintextNative::<N>::from_str(record).map_err(|_| "Invalid record".to_string())?.to_string()))
+}
+
+impl<N: Network> From<RecordPlaintextNative<N>> for RecordPlaintext {
+    fn from(record: RecordPlaintextNative<N>) -> Self {
+        Self(record.to_string())
     }
 }
 
-impl From<RecordPlaintext> for RecordPlaintextNative {
+impl<N: Network> From<RecordPlaintext> for RecordPlaintextNative<N> {
     fn from(record: RecordPlaintext) -> Self {
-        record.0
+        RecordPlaintextNative::<N>::from_str(&record.0).unwrap()
     }
 }
 
@@ -126,12 +170,12 @@ impl FromStr for RecordPlaintext {
     type Err = anyhow::Error;
 
     fn from_str(plaintext: &str) -> Result<Self, Self::Err> {
-        Ok(Self(RecordPlaintextNative::from_str(plaintext)?))
+        Ok(Self(plaintext.to_string()))
     }
 }
 
 impl Deref for RecordPlaintext {
-    type Target = RecordPlaintextNative;
+    type Target = String;
 
     fn deref(&self) -> &Self::Target {
         &self.0

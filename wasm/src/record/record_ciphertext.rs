@@ -17,15 +17,16 @@
 use super::RecordPlaintext;
 use crate::account::ViewKey;
 
-use crate::types::native::RecordCiphertextNative;
+use crate::types::native::{RecordCiphertextNative, ViewKeyNative, RecordPlaintextNative};
 use std::{ops::Deref, str::FromStr};
 use snarkvm_console::program::{Owner, ToFields};
 use wasm_bindgen::prelude::*;
+use crate::Network;
 
 /// Encrypted Aleo record
 #[wasm_bindgen]
 #[derive(Clone)]
-pub struct RecordCiphertext(RecordCiphertextNative);
+pub struct RecordCiphertext(String);
 
 #[wasm_bindgen]
 impl RecordCiphertext {
@@ -34,8 +35,11 @@ impl RecordCiphertext {
     /// @param {string} record String representation of a record ciphertext
     /// @returns {RecordCiphertext | Error} Record ciphertext
     #[wasm_bindgen(js_name = fromString)]
-    pub fn from_string(record: &str) -> Result<RecordCiphertext, String> {
-        Self::from_str(record).map_err(|_| "The record ciphertext string provided was invalid".to_string())
+    pub fn from_string(network: &str, record: &str) -> Result<RecordCiphertext, String> {
+      match dispatch_network!(network, from_string_impl, record) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
     /// Return the string reprensentation of the record ciphertext
@@ -52,10 +56,11 @@ impl RecordCiphertext {
     ///
     /// @param {ViewKey} view_key View key used to decrypt the ciphertext
     /// @returns {RecordPlaintext | Error} Record plaintext object
-    pub fn decrypt(&self, view_key: &ViewKey) -> Result<RecordPlaintext, String> {
-        Ok(RecordPlaintext::from(
-            self.0.decrypt(view_key).map_err(|_| "Decryption failed - view key did not match record".to_string())?,
-        ))
+    pub fn decrypt(&self, network: &str, view_key: &ViewKey) -> Result<RecordPlaintext, String> {
+      match dispatch_network!(network, decrypt_impl, &self, view_key) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
     /// Determines if the account corresponding to the view key is the owner of the record
@@ -63,44 +68,91 @@ impl RecordCiphertext {
     /// @param {ViewKey} view_key View key used to decrypt the ciphertext
     /// @returns {boolean}
     #[wasm_bindgen(js_name = isOwner)]
-    pub fn is_owner(&self, view_key: &ViewKey) -> bool {
-        self.0.is_owner(view_key)
+    pub fn is_owner(&self, network: &str, view_key: &ViewKey) -> Result<bool, String> {
+      match dispatch_network!(network, is_owner_impl, &self, view_key) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
     #[wasm_bindgen(js_name = getOwnerX)]
-    pub fn get_owner_x(&self) -> String {
-        let owner = self.0.owner();
-        match owner {
-            Owner::Public(owner) => {
-                owner.to_x_coordinate().to_string() 
-            }
-            Owner::Private(owner) => {
-                owner.to_fields().unwrap().first().unwrap().to_string()
-            }
-        }
+    pub fn get_owner_x(&self, network: &str) -> Result<String, String> {
+      match dispatch_network!(network, get_owner_x_impl, &self) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
     #[wasm_bindgen(js_name = getNonceX)]
-    pub fn get_nonce_x(&self) -> String {
-        self.0.nonce().to_x_coordinate().to_string()
+    pub fn get_nonce_x(&self, network: &str) -> Result<String, String> {
+      match dispatch_network!(network, get_nonce_x_impl, &self) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
     #[wasm_bindgen(js_name = getNonceY)]
-    pub fn get_nonce_y(&self) -> String {
-        self.0.nonce().to_y_coordinate().to_string()
+    pub fn get_nonce_y(&self, network: &str) -> Result<String, String> {
+      match dispatch_network!(network, get_nonce_y_impl, &self) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
+}
+
+pub fn get_nonce_y_impl<N: Network>(record: &RecordCiphertext) -> Result<String, String> {
+  let rc_native = RecordCiphertextNative::<N>::from_str(&*record).unwrap();
+  Ok(rc_native.nonce().to_y_coordinate().to_string())
+}
+
+pub fn get_nonce_x_impl<N: Network>(record: &RecordCiphertext) -> Result<String, String> {
+  let rc_native = RecordCiphertextNative::<N>::from_str(&*record).unwrap();
+  Ok(rc_native.nonce().to_x_coordinate().to_string())
+}
+
+pub fn get_owner_x_impl<N: Network>(record: &RecordCiphertext) -> Result<String, String> {
+    let rc_native = RecordCiphertextNative::<N>::from_str(&*record).unwrap();
+    let owner = rc_native.owner();
+    match owner {
+        Owner::Public(owner) => {
+            Ok(owner.to_x_coordinate().to_string())
+        }
+        Owner::Private(owner) => {
+            Ok(owner.to_fields().unwrap().first().unwrap().to_string())
+        }
+    }
+}
+
+pub fn is_owner_impl<N: Network>(record: &RecordCiphertext, view_key: &ViewKey) -> Result<bool, String> {
+    let rc_native = RecordCiphertextNative::<N>::from_str(&*record).unwrap();
+    let vk_native = ViewKeyNative::<N>::from_str(&*view_key).unwrap();
+    Ok(rc_native.is_owner(&vk_native))
+}
+
+pub fn from_string_impl<N: Network>(record: &str) -> Result<RecordCiphertext, String> {
+    let rc_native = RecordCiphertextNative::<N>::from_str(record).map_err(|_| "The record ciphertext string provided was invalid".to_string());
+    Ok(RecordCiphertext(rc_native.unwrap().to_string()))
+}
+
+pub fn decrypt_impl<N: Network>(record: &RecordCiphertext, view_key: &ViewKey) -> Result<RecordPlaintext, String> {
+  let rc_native = RecordCiphertextNative::<N>::from_str(&*record).map_err(|_| "The record ciphertext string provided was invalid".to_string())?;
+  let vk_native = ViewKeyNative::<N>::from_str(&*view_key).map_err(|_| "The view key string provided was invalid".to_string())?;
+  let rp_native = RecordPlaintextNative::<N>::from(rc_native.decrypt(&vk_native).map_err(|_| "Decryption failed - view key did not match record".to_string())?);
+  RecordPlaintext::from_str(
+    &rp_native.to_string()
+  ).map_err(|_| "The record plaintext string provided was invalid".to_string())
 }
 
 impl FromStr for RecordCiphertext {
     type Err = anyhow::Error;
 
     fn from_str(ciphertext: &str) -> Result<Self, Self::Err> {
-        Ok(Self(RecordCiphertextNative::from_str(ciphertext)?))
+        Ok(Self(ciphertext.to_string()))
     }
 }
 
 impl Deref for RecordCiphertext {
-    type Target = RecordCiphertextNative;
+    type Target = String;
 
     fn deref(&self) -> &Self::Target {
         &self.0

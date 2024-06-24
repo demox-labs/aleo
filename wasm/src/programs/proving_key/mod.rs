@@ -14,10 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-mod credits;
-pub use credits::*;
+// mod credits;
+// pub use credits::*;
 
 use crate::types::native::{FromBytes, ProvingKeyNative, ToBytes};
+use crate::Network;
 
 use sha2::Digest;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -27,15 +28,18 @@ use std::{ops::Deref, str::FromStr};
 /// Proving key for a function within an Aleo program
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
-pub struct ProvingKey(ProvingKeyNative);
+pub struct ProvingKey(String);
 
 #[wasm_bindgen]
 impl ProvingKey {
     /// Return the checksum of the proving key
     ///
     /// @returns {string} Checksum of the proving key
-    pub fn checksum(&self) -> String {
-        hex::encode(sha2::Sha256::digest(self.to_bytes().unwrap()))
+    pub fn checksum(&self, network: &str) -> Result<String, String> {
+      match dispatch_network!(network, checksum_impl, &self) {
+        Ok(checksum) => Ok(checksum),
+        Err(e) => Err(e),
+      }
     }
 
     /// Create a copy of the proving key
@@ -43,7 +47,7 @@ impl ProvingKey {
     /// @returns {ProvingKey} A copy of the proving key
     #[wasm_bindgen]
     pub fn copy(&self) -> ProvingKey {
-        self.0.clone().into()
+        ProvingKey(self.0.clone())
     }
 
     /// Construct a new proving key from a byte array
@@ -51,24 +55,33 @@ impl ProvingKey {
     /// @param {Uint8Array} bytes Byte array representation of a proving key
     /// @returns {ProvingKey | Error}
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &[u8]) -> Result<ProvingKey, String> {
-        Ok(Self(ProvingKeyNative::from_bytes_le(bytes).map_err(|e| e.to_string())?))
+    pub fn from_bytes(network: &str, bytes: &[u8]) -> Result<ProvingKey, String> {
+      match dispatch_network!(network, from_bytes_impl, bytes) {
+        Ok(proving_key) => Ok(proving_key),
+        Err(e) => Err(e),
+      }
     }
 
     /// Create a proving key from string
     ///
     /// @param {string | Error} String representation of the proving key
     #[wasm_bindgen(js_name = "fromString")]
-    pub fn from_string(string: &str) -> Result<ProvingKey, String> {
-        Ok(Self(ProvingKeyNative::from_str(string).map_err(|e| e.to_string())?))
+    pub fn from_string(network: &str, string: &str) -> Result<ProvingKey, String> {
+      match dispatch_network!(network, from_string_impl, string) {
+        Ok(proving_key) => Ok(proving_key),
+        Err(e) => Err(e),
+      }
     }
 
     /// Return the byte representation of a proving key
     ///
     /// @returns {Uint8Array | Error} Byte array representation of a proving key
     #[wasm_bindgen(js_name = "toBytes")]
-    pub fn to_bytes(&self) -> Result<Vec<u8>, String> {
-        self.0.to_bytes_le().map_err(|_| "Failed to serialize proving key".to_string())
+    pub fn to_bytes(&self, network: &str) -> Result<Vec<u8>, String> {
+      match dispatch_network!(network, to_bytes_impl, &self) {
+        Ok(bytes) => Ok(bytes),
+        Err(e) => Err(e),
+      }
     }
 
     /// Get a string representation of the proving key
@@ -81,23 +94,43 @@ impl ProvingKey {
     }
 }
 
+pub fn to_bytes_impl<N: Network>(proving_key: &ProvingKey) -> Result<Vec<u8>, String> {
+  let pk_native = ProvingKeyNative::<N>::from_str(&proving_key.0).map_err(|e| e.to_string())?;
+  pk_native.to_bytes_le().map_err(|_| "Failed to serialize proving key".to_string())
+}
+
+pub fn from_string_impl<N: Network>(proving_key: &str) -> Result<ProvingKey, String> {
+  let pk_native = ProvingKeyNative::<N>::from_str(proving_key).map_err(|e| e.to_string())?;
+  Ok(ProvingKey(pk_native.to_string()))
+}
+
+pub fn from_bytes_impl<N: Network>(bytes: &[u8]) -> Result<ProvingKey, String> {
+  let pk_native = ProvingKeyNative::<N>::from_bytes_le(bytes).map_err(|e| e.to_string())?;
+  Ok(ProvingKey(pk_native.to_string()))
+}
+
+pub fn checksum_impl<N: Network>(proving_key: &ProvingKey) -> Result<String, String> {
+  let pk_native = ProvingKeyNative::<N>::from_str(&proving_key.0).map_err(|e| e.to_string())?;
+  Ok(hex::encode(sha2::Sha256::digest(pk_native.to_bytes_le().unwrap())))
+}
+
 impl Deref for ProvingKey {
-    type Target = ProvingKeyNative;
+    type Target = String;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<ProvingKey> for ProvingKeyNative {
-    fn from(proving_key: ProvingKey) -> ProvingKeyNative {
-        proving_key.0
+impl<N: Network> From<ProvingKey> for ProvingKeyNative<N> {
+    fn from(proving_key: ProvingKey) -> ProvingKeyNative<N> {
+        ProvingKeyNative::<N>::from_str(&proving_key.0).unwrap()
     }
 }
 
-impl From<ProvingKeyNative> for ProvingKey {
-    fn from(proving_key: ProvingKeyNative) -> ProvingKey {
-        ProvingKey(proving_key)
+impl<N: Network> From<ProvingKeyNative<N>> for ProvingKey {
+    fn from(proving_key: ProvingKeyNative<N>) -> ProvingKey {
+        ProvingKey(proving_key.to_string())
     }
 }
 

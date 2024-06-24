@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-// use crate::account::{Address, Signature, ViewKey};
+use crate::account::{Address, ViewKey};
 
-use crate::types::native::{Environment, FromBytes, PrimeField, PrivateKeyNative, ToBytes};
+use crate::types::native::{Environment, FromBytes, PrimeField, PrivateKeyNative, ToBytes, AddressNative, ViewKeyNative};
 use core::{convert::TryInto, fmt, ops::Deref, str::FromStr};
 use rand::{rngs::StdRng, SeedableRng};
 use crate::native::Network;
@@ -72,19 +72,25 @@ impl PrivateKey {
         self.0.to_string()
     }
 
-    // /// Get the view key corresponding to the private key
-    // ///
-    // /// @returns {ViewKey}
-    // pub fn to_view_key(&self) -> ViewKey {
-    //     ViewKey::from_private_key(self)
-    // }
+    /// Get the view key corresponding to the private key
+    ///
+    /// @returns {ViewKey}
+    pub fn to_view_key(&self, network: &str) -> Result<ViewKey, String> {
+      match dispatch_network!(network, to_view_key_impl, &self.0) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
+    }
 
-    // /// Get the address corresponding to the private key
-    // ///
-    // /// @returns {Address}
-    // pub fn to_address(&self) -> Address {
-    //     Address::from_private_key(self)
-    // }
+    /// Get the address corresponding to the private key
+    ///
+    /// @returns {Address}
+    pub fn to_address(&self, network: &str) -> Result<Address, String> {
+      match dispatch_network!(network, to_address_impl, &self.0) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
+    }
 
     // /// Sign a message with the private key
     // ///
@@ -93,6 +99,14 @@ impl PrivateKey {
     // pub fn sign(&self, message: &[u8]) -> Signature {
     //     Signature::sign(self, message)
     // }
+}
+
+pub fn to_address_impl<N: Network>(private_key: &str) -> Result<Address, String> {
+  crate::address::from_private_key_impl::<N>(&PrivateKey(private_key.to_string()))
+}
+
+pub fn to_view_key_impl<N: Network>(private_key: &str) -> Result<ViewKey, String> {
+  crate::view_key::from_private_key_impl::<N>(&PrivateKey(private_key.to_string()))
 }
 
 pub fn new_impl<N: Network>() -> Result<PrivateKey, String> {

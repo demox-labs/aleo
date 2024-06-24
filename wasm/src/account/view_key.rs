@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-// use super::{Address, PrivateKey};
-use super::{PrivateKey};
-use crate::record::RecordCiphertext;
+use super::{Address, PrivateKey};
+// use crate::record::RecordCiphertext;
 
-use crate::types::native::{ViewKeyNative, RecordCiphertextNative, FieldNative, GroupNative};
+use crate::types::native::{ViewKeyNative, RecordCiphertextNative, AddressNative, FieldNative, GroupNative};
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
 use crate::native::Network;
 use crate::native::PrivateKeyNative;
@@ -34,7 +33,7 @@ impl ViewKey {
     ///
     /// @param {PrivateKey} private_key Private key
     /// @returns {ViewKey} View key
-    pub fn from_private_key(network: &str, private_key: &PrivateKey) -> Result<Self, String> {
+    pub fn from_private_key(network: &str, private_key: &PrivateKey) -> Result<ViewKey, String> {
       match dispatch_network!(network, from_private_key_impl, private_key) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e.to_string())
@@ -45,7 +44,7 @@ impl ViewKey {
     ///
     /// @param {string} view_key String representation of a view key
     /// @returns {ViewKey} View key
-    pub fn from_string(network: &str, view_key: &str) -> Result<Self, String> {
+    pub fn from_string(network: &str, view_key: &str) -> Result<ViewKey, String> {
       match dispatch_network!(network, from_string_impl, view_key) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e.to_string())
@@ -74,24 +73,31 @@ impl ViewKey {
         self.0.to_string()
     }
 
-    // /// Get the address corresponding to a view key
-    // ///
-    // /// @returns {Address} Address
-    // pub fn to_address(&self) -> Address {
-    //     Address::from_view_key(self)
-    // }
-
-    /// Decrypt a record ciphertext with a view key
+    /// Get the address corresponding to a view key
     ///
-    /// @param {string} ciphertext String representation of a record ciphertext
-    /// @returns {string} String representation of a record plaintext
-    pub fn decrypt(&self, network: &str, ciphertext: &str) -> Result<String, String> {
-        let ciphertext = RecordCiphertext::from_str(ciphertext).map_err(|error| error.to_string())?;
-        match ciphertext.decrypt(self) {
-            Ok(plaintext) => Ok(plaintext.to_string()),
-            Err(error) => Err(error),
-        }
+    /// @returns {Address} Address
+    pub fn to_address(&self, network: &str) -> Result<Address, String> {
+      match dispatch_network!(network, to_address_impl, &self.0) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
+
+    // /// Decrypt a record ciphertext with a view key
+    // ///
+    // /// @param {string} ciphertext String representation of a record ciphertext
+    // /// @returns {string} String representation of a record plaintext
+    // pub fn decrypt(&self, network: &str, ciphertext: &str) -> Result<String, String> {
+    //     let ciphertext = RecordCiphertext::from_str(ciphertext).map_err(|error| error.to_string())?;
+    //     match ciphertext.decrypt(self) {
+    //         Ok(plaintext) => Ok(plaintext.to_string()),
+    //         Err(error) => Err(error),
+    //     }
+    // }
+}
+
+pub fn to_address_impl<N: Network>(view_key: &str) -> Result<Address, String> {
+  crate::address::from_view_key_impl::<N>(&ViewKey(view_key.to_string()))
 }
 
 pub fn from_private_key_impl<N: Network>(private_key: &PrivateKey) -> Result<ViewKey, String> {
