@@ -24,7 +24,7 @@ use crate::types::native::ProgramIDNative;
 /// Webassembly Representation of an Aleo program
 #[wasm_bindgen]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Program(ProgramNative);
+pub struct Program(String);
 
 #[wasm_bindgen]
 impl Program {
@@ -475,22 +475,22 @@ impl Program {
 }
 
 impl Deref for Program {
-    type Target = ProgramNative;
+    type Target = String;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<ProgramNative> for Program {
-    fn from(value: ProgramNative) -> Self {
-        Self(value)
+impl<N: Network> From<ProgramNative<N>> for Program {
+    fn from(value: ProgramNative<N>) -> Self {
+        Self(value.to_string())
     }
 }
 
-impl From<Program> for ProgramNative {
+impl<N: Network> From<Program> for ProgramNative<N> {
     fn from(program: Program) -> Self {
-        program.0
+        ProgramNative::<N>::from_str(&*program).unwrap()
     }
 }
 

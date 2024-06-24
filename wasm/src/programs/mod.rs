@@ -30,5 +30,5 @@ pub use proving_key::*;
 pub mod verifying_key;
 pub use verifying_key::*;
 
-// pub mod decrypt;
-// pub use decrypt::*;
+pub mod decrypt;
+pub use decrypt::*;
