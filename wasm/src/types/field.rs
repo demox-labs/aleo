@@ -23,37 +23,42 @@ use std::str::FromStr;
 
 #[wasm_bindgen]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Field(String);
+pub struct Field{
+  network: String,
+  as_string: String
+}
 
 #[wasm_bindgen]
 impl Field {
     #[wasm_bindgen(js_name = "toString")]
     #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
-      self.0.clone()
+      self.as_string.clone()
     }
 
     #[wasm_bindgen(js_name = "fromString")]
     pub fn from_string(network: &str, field: &str) -> Result<Field, String> {
-      match dispatch_network!(network, from_string_impl, field) {
-        Ok(result) => Ok(Self(result)),
+      match dispatch_network!(network, field_from_string_impl, field) {
+        Ok(result) => Ok(Self{ network: network.to_string(), as_string: result}),
         Err(e) => return Err(e)
       }
     }
 }
 
-pub fn from_string_impl<N: Network>(field: &str) -> Result<String, String> {
-  Ok(FieldNative::<N>::from_str(field).map_err(|e| e.to_string())?.to_string())
+pub fn field_from_string_impl<N: Network>(field: &str) -> Result<String, String> {
+  let field_string = FieldNative::<N>::from_str(field).map_err(|e| e.to_string())?.to_string();
+  Ok(field_string)
 }
 
 impl<N: Network> From<FieldNative<N>> for Field {
     fn from(native: FieldNative<N>) -> Self {
-        Self(native.to_string())
+      let network = network_string_id!(N::ID).unwrap().to_string();
+      Self { network, as_string: native.to_string() }
     }
 }
 
 impl<N: Network> From<Field> for FieldNative<N> {
     fn from(field: Field) -> Self {
-      FieldNative::<N>::from_str(&field.0).unwrap()
+      FieldNative::<N>::from_str(&field.as_string).unwrap()
     }
 }

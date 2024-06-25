@@ -16,10 +16,13 @@
 
 mod macros;
 
-// #[cfg(feature = "browser")]
-// pub mod manager;
-// #[cfg(feature = "browser")]
-// pub use manager::*;
+pub mod keypair;
+pub use keypair::*;
+
+#[cfg(feature = "browser")]
+pub mod manager;
+#[cfg(feature = "browser")]
+pub use manager::*;
 
 pub mod program;
 pub use program::*;

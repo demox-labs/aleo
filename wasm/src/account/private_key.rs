@@ -25,7 +25,11 @@ use wasm_bindgen::prelude::*;
 /// Private key of an Aleo account
 #[wasm_bindgen]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct PrivateKey(String);
+pub struct PrivateKey {
+  #[wasm_bindgen(skip)]
+  pub network: String,
+  as_string: String
+}
 
 #[wasm_bindgen]
 impl PrivateKey {
@@ -35,8 +39,8 @@ impl PrivateKey {
     #[wasm_bindgen(constructor)]
     #[allow(clippy::new_without_default)]
     pub fn new(network: &str) -> Result<PrivateKey, String> {
-      match dispatch_network!(network, new_impl) {
-        Ok(result) => Ok(result),
+      match dispatch_network!(network, private_key_new_impl) {
+        Ok(result) => Ok(PrivateKey { network: network.to_string(), as_string: result }),
         Err(e) => return Err(e.to_string())
       }
     }
@@ -46,8 +50,8 @@ impl PrivateKey {
     /// @param {Uint8Array} seed Unchecked 32 byte long Uint8Array acting as the seed for the private key
     /// @returns {PrivateKey}
     pub fn from_seed_unchecked(network: &str, seed: &[u8]) -> Result<PrivateKey, String> {
-      match dispatch_network!(network, from_seed_unchecked_impl, seed) {
-        Ok(result) => Ok(result),
+      match dispatch_network!(network, private_key_from_seed_unchecked_impl, seed) {
+        Ok(result) => Ok(PrivateKey { network: network.to_string(), as_string: result }),
         Err(e) => return Err(e)
       }
     }
@@ -57,8 +61,8 @@ impl PrivateKey {
     /// @param {string} seed String representation of a private key
     /// @returns {PrivateKey}
     pub fn from_string(network: &str, private_key: &str) -> Result<PrivateKey, String> {
-      match dispatch_network!(network, from_string_impl, private_key) {
-        Ok(result) => Ok(result),
+      match dispatch_network!(network, private_key_from_string_impl, private_key) {
+        Ok(result) => Ok(PrivateKey { network: network.to_string(), as_string: result }),
         Err(e) => return Err(e)
       }
     }
@@ -69,14 +73,14 @@ impl PrivateKey {
     /// @returns {string} String representation of a private key
     #[allow(clippy::inherent_to_string_shadow_display)]
     pub fn to_string(&self) -> String {
-        self.0.to_string()
+        self.as_string.clone()
     }
 
     /// Get the view key corresponding to the private key
     ///
     /// @returns {ViewKey}
-    pub fn to_view_key(&self, network: &str) -> Result<ViewKey, String> {
-      match dispatch_network!(network, to_view_key_impl, &self.0) {
+    pub fn to_view_key(&self) -> Result<ViewKey, String> {
+      match dispatch_network!(self.network.as_str(), private_key_to_view_key_impl, &self.as_string) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e)
       }
@@ -85,8 +89,8 @@ impl PrivateKey {
     /// Get the address corresponding to the private key
     ///
     /// @returns {Address}
-    pub fn to_address(&self, network: &str) -> Result<Address, String> {
-      match dispatch_network!(network, to_address_impl, &self.0) {
+    pub fn to_address(&self) -> Result<Address, String> {
+      match dispatch_network!(self.network.as_str(), private_key_to_address_impl, &self.as_string) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e)
       }
@@ -101,53 +105,56 @@ impl PrivateKey {
     // }
 }
 
-pub fn to_address_impl<N: Network>(private_key: &str) -> Result<Address, String> {
-  crate::address::from_private_key_impl::<N>(&PrivateKey(private_key.to_string()))
+pub fn private_key_to_address_impl<N: Network>(private_key: &str) -> Result<Address, String> {
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  crate::address::address_from_private_key_impl::<N>(&PrivateKey { network, as_string: private_key.to_string() })
 }
 
-pub fn to_view_key_impl<N: Network>(private_key: &str) -> Result<ViewKey, String> {
-  crate::view_key::from_private_key_impl::<N>(&PrivateKey(private_key.to_string()))
+pub fn private_key_to_view_key_impl<N: Network>(private_key: &str) -> Result<ViewKey, String> {
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  crate::view_key::view_key_from_private_key_impl::<N>(&PrivateKey { network, as_string: private_key.to_string() })
 }
 
-pub fn new_impl<N: Network>() -> Result<PrivateKey, String> {
-  Ok(PrivateKey(PrivateKeyNative::<N>::new(&mut StdRng::from_entropy()).unwrap().to_string()))
+pub fn private_key_new_impl<N: Network>() -> Result<String, String> {
+  Ok(PrivateKeyNative::<N>::new(&mut StdRng::from_entropy()).unwrap().to_string())
 }
 
-pub fn from_string_impl<N: Network>(private_key: &str) -> Result<PrivateKey, String> {
-  Ok(PrivateKey(PrivateKeyNative::<N>::from_str(private_key).map_err(|_| "Invalid private key".to_string())?.to_string()))
+pub fn private_key_from_string_impl<N: Network>(private_key: &str) -> Result<String, String> {
+  Ok(PrivateKeyNative::<N>::from_str(private_key).map_err(|_| "Invalid private key".to_string())?.to_string())
 }
 
-pub fn from_seed_unchecked_impl<N: Network>(seed: &[u8]) -> Result<PrivateKey, String> {
+pub fn private_key_from_seed_unchecked_impl<N: Network>(seed: &[u8]) -> Result<String, String> {
   // Cast into a fixed-size byte array. Note: This is a **hard** requirement for security.
   let seed: [u8; 32] = seed.try_into().unwrap();
   // Recover the field element deterministically.
   let field = <N as Environment>::Field::from_bytes_le_mod_order(&seed);
   // Cast and recover the private key from the seed.
   let bytes = FromBytes::read_le(&*field.to_bytes_le().unwrap()).unwrap();
-  Ok(PrivateKey(PrivateKeyNative::<N>::try_from(bytes).unwrap().to_string()))
+  Ok(PrivateKeyNative::<N>::try_from(bytes).unwrap().to_string())
 }
 
 impl<N: Network> From<PrivateKeyNative<N>> for PrivateKey {
     fn from(private_key: PrivateKeyNative<N>) -> Self {
-        Self(private_key.to_string())
+      let network = network_string_id!(N::ID).unwrap().to_string();
+      Self { network, as_string: private_key.to_string() }
     }
 }
 
 impl<N: Network> From<PrivateKey> for PrivateKeyNative<N> {
     fn from(private_key: PrivateKey) -> Self {
-      PrivateKeyNative::<N>::from_str(&private_key.0).unwrap()
+      PrivateKeyNative::<N>::from_str(&private_key.as_string).unwrap()
     }
 }
 
 impl<N: Network> From<&PrivateKey> for PrivateKeyNative<N> {
     fn from(private_key: &PrivateKey) -> Self {
-        PrivateKeyNative::<N>::from_str(&private_key.0).unwrap()
+        PrivateKeyNative::<N>::from_str(&private_key.as_string).unwrap()
     }
 }
 
 impl fmt::Display for PrivateKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}", self.as_string)
     }
 }
 
@@ -155,7 +162,7 @@ impl Deref for PrivateKey {
     type Target = String;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.as_string
     }
 }
 

@@ -30,13 +30,16 @@ use wasm_bindgen::prelude::*;
 /// Plaintext representation of an Aleo record
 #[wasm_bindgen]
 #[derive(Clone)]
-pub struct RecordPlaintext(String);
+pub struct RecordPlaintext{
+  network: String,
+  as_string: String
+}
 
 #[wasm_bindgen]
 impl RecordPlaintext {
     #[wasm_bindgen]
-    pub fn commitment(&self, network: &str, program_id: &str, record_name: &str) -> Result<Field, String> {
-      match dispatch_network!(network, commitment_impl, &self.0, program_id, record_name) {
+    pub fn commitment(&self, program_id: &str, record_name: &str) -> Result<Field, String> {
+      match dispatch_network!(self.network.as_str(), record_plaintext_commitment_impl, &self.as_string, program_id, record_name) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e)
       }
@@ -48,7 +51,7 @@ impl RecordPlaintext {
     /// @returns {RecordPlaintext | Error} Record plaintext
     #[wasm_bindgen(js_name = fromString)]
     pub fn from_string(network: &str, record: &str) -> Result<RecordPlaintext, String> {
-      match dispatch_network!(network, from_string_impl, record) {
+      match dispatch_network!(network, record_plaintext_from_string_impl, record) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e)
       }
@@ -60,14 +63,14 @@ impl RecordPlaintext {
     #[allow(clippy::inherent_to_string)]
     #[wasm_bindgen(js_name = toString)]
     pub fn to_string(&self) -> String {
-        self.0.to_string()
+        self.as_string.clone()
     }
 
     /// Returns the amount of microcredits in the record
     ///
     /// @returns {u64} Amount of microcredits in the record
-    pub fn microcredits(&self, network: &str) -> Result<u64, String> {
-      match dispatch_network!(network, microcredits_impl, &self.0) {
+    pub fn microcredits(&self) -> Result<u64, String> {
+      match dispatch_network!(self.network.as_str(), record_plaintext_microcredits_impl, &self.as_string) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e)
       }
@@ -77,8 +80,8 @@ impl RecordPlaintext {
     ///
     /// @returns {string} Nonce of the record
     #[wasm_bindgen(js_name = nonce)]
-    pub fn nonce(&self, network: &str) -> Result<String, String> {
-      match dispatch_network!(network, nonce_impl, &self.0) {
+    pub fn nonce(&self) -> Result<String, String> {
+      match dispatch_network!(self.network.as_str(), record_plaintext_nonce_impl, &self.as_string) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e)
       }
@@ -103,19 +106,18 @@ impl RecordPlaintext {
     #[wasm_bindgen(js_name = serialNumberString)]
     pub fn serial_number_string(
         &self,
-        network: &str,
         private_key: &PrivateKey,
         program_id: &str,
         record_name: &str,
     ) -> Result<String, String> {
-      match dispatch_network!(network, serial_number_string_impl, &self.0, private_key, program_id, record_name) {
+      match dispatch_network!(self.network.as_str(), record_plaintext_serial_number_string_impl, &self.as_string, private_key, program_id, record_name) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e)
       }
     }
 }
 
-pub fn commitment_impl<N: Network>(record: &str, program_id: &str, record_name: &str) -> Result<Field, String> {
+pub fn record_plaintext_commitment_impl<N: Network>(record: &str, program_id: &str, record_name: &str) -> Result<Field, String> {
     Ok(Field::from(
         RecordPlaintextNative::<N>::from_str(record)
             .map_err(|_| "Invalid record".to_string())?
@@ -129,48 +131,43 @@ pub fn commitment_impl<N: Network>(record: &str, program_id: &str, record_name: 
     ))
 }
 
-pub fn serial_number_string_impl<N: Network>(
+pub fn record_plaintext_serial_number_string_impl<N: Network>(
   record_string: &str,
   private_key: &PrivateKey,
   program_id: &str,
   record_name: &str,
 ) -> Result<String, String> {
-    let commitment = commitment_impl::<N>(record_string, program_id, record_name).unwrap();
+    let commitment = record_plaintext_commitment_impl::<N>(record_string, program_id, record_name).unwrap();
 
     let serial_number = RecordPlaintextNative::<N>::serial_number(private_key.into(), commitment.into())
         .map_err(|_| "Serial number derivation failed".to_string())?;
     Ok(serial_number.to_string())
 }
 
-pub fn nonce_impl<N: Network>(record: &str) -> Result<String, String> {
+pub fn record_plaintext_nonce_impl<N: Network>(record: &str) -> Result<String, String> {
     Ok(RecordPlaintextNative::<N>::from_str(record).unwrap().nonce().to_string())
 }
 
-pub fn microcredits_impl<N: Network>(record: &str) -> Result<u64, String> {
+pub fn record_plaintext_microcredits_impl<N: Network>(record: &str) -> Result<u64, String> {
     Ok(RecordPlaintextNative::<N>::from_str(record).unwrap().microcredits().unwrap_or(0))
 }
 
-pub fn from_string_impl<N: Network>(record: &str) -> Result<RecordPlaintext, String> {
-    Ok(RecordPlaintext(RecordPlaintextNative::<N>::from_str(record).map_err(|_| "Invalid record".to_string())?.to_string()))
+pub fn record_plaintext_from_string_impl<N: Network>(record: &str) -> Result<RecordPlaintext, String> {
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  let record_string = RecordPlaintextNative::<N>::from_str(record).map_err(|_| "Invalid record".to_string())?.to_string();
+  Ok(RecordPlaintext { network, as_string: record_string })
 }
 
 impl<N: Network> From<RecordPlaintextNative<N>> for RecordPlaintext {
     fn from(record: RecordPlaintextNative<N>) -> Self {
-        Self(record.to_string())
+      let network = network_string_id!(N::ID).unwrap().to_string();
+        Self { network, as_string: record.to_string() }
     }
 }
 
 impl<N: Network> From<RecordPlaintext> for RecordPlaintextNative<N> {
     fn from(record: RecordPlaintext) -> Self {
-        RecordPlaintextNative::<N>::from_str(&record.0).unwrap()
-    }
-}
-
-impl FromStr for RecordPlaintext {
-    type Err = anyhow::Error;
-
-    fn from_str(plaintext: &str) -> Result<Self, Self::Err> {
-        Ok(Self(plaintext.to_string()))
+        RecordPlaintextNative::<N>::from_str(&record.as_string).unwrap()
     }
 }
 
@@ -178,7 +175,7 @@ impl Deref for RecordPlaintext {
     type Target = String;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.as_string
     }
 }
 

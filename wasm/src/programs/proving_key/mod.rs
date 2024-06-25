@@ -28,15 +28,18 @@ use std::{ops::Deref, str::FromStr};
 /// Proving key for a function within an Aleo program
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
-pub struct ProvingKey(String);
+pub struct ProvingKey {
+  network: String,
+  as_string: String
+}
 
 #[wasm_bindgen]
 impl ProvingKey {
     /// Return the checksum of the proving key
     ///
     /// @returns {string} Checksum of the proving key
-    pub fn checksum(&self, network: &str) -> Result<String, String> {
-      match dispatch_network!(network, checksum_impl, &self) {
+    pub fn checksum(&self) -> Result<String, String> {
+      match dispatch_network!(self.network.as_str(), proving_key_checksum_impl, &self) {
         Ok(checksum) => Ok(checksum),
         Err(e) => Err(e),
       }
@@ -47,7 +50,7 @@ impl ProvingKey {
     /// @returns {ProvingKey} A copy of the proving key
     #[wasm_bindgen]
     pub fn copy(&self) -> ProvingKey {
-        ProvingKey(self.0.clone())
+        ProvingKey { network: self.network.clone(), as_string: self.as_string.clone() }
     }
 
     /// Construct a new proving key from a byte array
@@ -56,7 +59,7 @@ impl ProvingKey {
     /// @returns {ProvingKey | Error}
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(network: &str, bytes: &[u8]) -> Result<ProvingKey, String> {
-      match dispatch_network!(network, from_bytes_impl, bytes) {
+      match dispatch_network!(network, proving_key_from_bytes_impl, bytes) {
         Ok(proving_key) => Ok(proving_key),
         Err(e) => Err(e),
       }
@@ -67,7 +70,7 @@ impl ProvingKey {
     /// @param {string | Error} String representation of the proving key
     #[wasm_bindgen(js_name = "fromString")]
     pub fn from_string(network: &str, string: &str) -> Result<ProvingKey, String> {
-      match dispatch_network!(network, from_string_impl, string) {
+      match dispatch_network!(network, proving_key_from_string_impl, string) {
         Ok(proving_key) => Ok(proving_key),
         Err(e) => Err(e),
       }
@@ -77,8 +80,8 @@ impl ProvingKey {
     ///
     /// @returns {Uint8Array | Error} Byte array representation of a proving key
     #[wasm_bindgen(js_name = "toBytes")]
-    pub fn to_bytes(&self, network: &str) -> Result<Vec<u8>, String> {
-      match dispatch_network!(network, to_bytes_impl, &self) {
+    pub fn to_bytes(&self) -> Result<Vec<u8>, String> {
+      match dispatch_network!(self.network.as_str(), proving_key_to_bytes_impl, &self) {
         Ok(bytes) => Ok(bytes),
         Err(e) => Err(e),
       }
@@ -90,27 +93,29 @@ impl ProvingKey {
     #[wasm_bindgen(js_name = "toString")]
     #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
-        format!("{:?}", self.0)
+        format!("{:?}", self.as_string)
     }
 }
 
-pub fn to_bytes_impl<N: Network>(proving_key: &ProvingKey) -> Result<Vec<u8>, String> {
-  let pk_native = ProvingKeyNative::<N>::from_str(&proving_key.0).map_err(|e| e.to_string())?;
+pub fn proving_key_to_bytes_impl<N: Network>(proving_key: &ProvingKey) -> Result<Vec<u8>, String> {
+  let pk_native = ProvingKeyNative::<N>::from_str(&proving_key.as_string).map_err(|e| e.to_string())?;
   pk_native.to_bytes_le().map_err(|_| "Failed to serialize proving key".to_string())
 }
 
-pub fn from_string_impl<N: Network>(proving_key: &str) -> Result<ProvingKey, String> {
+pub fn proving_key_from_string_impl<N: Network>(proving_key: &str) -> Result<ProvingKey, String> {
   let pk_native = ProvingKeyNative::<N>::from_str(proving_key).map_err(|e| e.to_string())?;
-  Ok(ProvingKey(pk_native.to_string()))
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  Ok(ProvingKey { network, as_string: pk_native.to_string() })
 }
 
-pub fn from_bytes_impl<N: Network>(bytes: &[u8]) -> Result<ProvingKey, String> {
+pub fn proving_key_from_bytes_impl<N: Network>(bytes: &[u8]) -> Result<ProvingKey, String> {
   let pk_native = ProvingKeyNative::<N>::from_bytes_le(bytes).map_err(|e| e.to_string())?;
-  Ok(ProvingKey(pk_native.to_string()))
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  Ok(ProvingKey { network, as_string: pk_native.to_string() })
 }
 
-pub fn checksum_impl<N: Network>(proving_key: &ProvingKey) -> Result<String, String> {
-  let pk_native = ProvingKeyNative::<N>::from_str(&proving_key.0).map_err(|e| e.to_string())?;
+pub fn proving_key_checksum_impl<N: Network>(proving_key: &ProvingKey) -> Result<String, String> {
+  let pk_native = ProvingKeyNative::<N>::from_str(&proving_key.as_string).map_err(|e| e.to_string())?;
   Ok(hex::encode(sha2::Sha256::digest(pk_native.to_bytes_le().unwrap())))
 }
 
@@ -118,25 +123,26 @@ impl Deref for ProvingKey {
     type Target = String;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.as_string
     }
 }
 
 impl<N: Network> From<ProvingKey> for ProvingKeyNative<N> {
     fn from(proving_key: ProvingKey) -> ProvingKeyNative<N> {
-        ProvingKeyNative::<N>::from_str(&proving_key.0).unwrap()
+        ProvingKeyNative::<N>::from_str(&proving_key.as_string).unwrap()
     }
 }
 
 impl<N: Network> From<ProvingKeyNative<N>> for ProvingKey {
     fn from(proving_key: ProvingKeyNative<N>) -> ProvingKey {
-        ProvingKey(proving_key.to_string())
+      let network = network_string_id!(N::ID).unwrap().to_string();
+      ProvingKey { network, as_string: proving_key.to_string() }
     }
 }
 
 impl PartialEq for ProvingKey {
     fn eq(&self, other: &Self) -> bool {
-        *self.0 == *other.0
+        *self.as_string == *other.as_string && *self.network == *other.network
     }
 }
 

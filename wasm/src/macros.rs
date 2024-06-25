@@ -10,6 +10,17 @@ macro_rules! dispatch_network {
 }
 
 #[macro_export]
+macro_rules! network_string_id {
+  ($network_id:expr) => {
+      match $network_id {
+        1u16 => Ok("TestnetV0"),
+        0u16 => Ok("MainnetV0"),
+        _ => Err(format!("Unsupported network: {:?}", $network_id)),
+      }
+  };
+}
+
+#[macro_export]
 macro_rules! dispatch_network_self {
     ($network:expr, $fn:ident, $self:ident $(, $arg:expr)*) => {
         match $network {

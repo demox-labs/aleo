@@ -14,20 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod deploy;
-pub use deploy::*;
+use crate::Network;
+// pub mod deploy;
+// pub use deploy::*;
 
-pub mod execute;
-pub use execute::*;
-
-pub mod join;
-pub use join::*;
-
-pub mod split;
-pub use split::*;
-
-pub mod transfer;
-pub use transfer::*;
+// pub mod execute;
+// pub use execute::*;
 
 const DEFAULT_URL: &str = "https://api.explorer.aleo.org/v1";
 
@@ -61,86 +53,86 @@ impl ProgramManager {
             return Err(format!("{name} must be greater than zero to deploy or execute a program"));
         }
         let microcredits = (credits * 1_000_000.0f64) as u64;
-        if amount.microcredits() < microcredits {
+        if (amount.microcredits().unwrap()) < microcredits {
             return Err(format!("{name} record does not have enough credits to pay the specified fee"));
         }
 
         Ok(microcredits)
     }
 
-    /// Synthesize proving and verifying keys for a program
-    ///
-    /// @param program {string} The program source code of the program to synthesize keys for
-    /// @param function_id {string} The function to synthesize keys for
-    /// @param inputs {Array} The inputs to the function
-    /// @param imports {Object | undefined} The imports for the program
-    #[wasm_bindgen(js_name = "synthesizeKeyPair")]
-    pub async fn synthesize_keypair(
-        private_key: &PrivateKey,
-        program: &str,
-        function_id: &str,
-        inputs: js_sys::Array,
-        imports: Option<Object>,
-    ) -> Result<KeyPair, String> {
-        ProgramManager::execute_function_offline(
-            private_key,
-            program,
-            function_id,
-            inputs,
-            false,
-            true,
-            imports,
-            None,
-            None,
-            None,
-            None,
-        )
-        .await?
-        .get_keys()
-    }
+    // /// Synthesize proving and verifying keys for a program
+    // ///
+    // /// @param program {string} The program source code of the program to synthesize keys for
+    // /// @param function_id {string} The function to synthesize keys for
+    // /// @param inputs {Array} The inputs to the function
+    // /// @param imports {Object | undefined} The imports for the program
+    // #[wasm_bindgen(js_name = "synthesizeKeyPair")]
+    // pub async fn synthesize_keypair(
+    //     private_key: &str,
+    //     program: &str,
+    //     function_id: &str,
+    //     inputs: js_sys::Array,
+    //     imports: Option<Object>,
+    // ) -> Result<KeyPair, String> {
+    //     ProgramManager::execute_function_offline(
+    //         private_key,
+    //         program,
+    //         function_id,
+    //         inputs,
+    //         false,
+    //         true,
+    //         imports,
+    //         None,
+    //         None,
+    //         None,
+    //         None,
+    //     )
+    //     .await?
+    //     .get_keys()
+    // }
+}
 
-    /// Check if a process contains a keypair for a specific function
-    pub(crate) fn contains_key(
-        process: &ProcessNative,
-        program_id: &ProgramIDNative,
-        function_id: &IdentifierNative,
-    ) -> bool {
-        process.get_stack(program_id).map_or_else(
-            |_| false,
-            |stack| stack.contains_proving_key(function_id) && stack.contains_verifying_key(function_id),
-        )
-    }
+/// Check if a process contains a keypair for a specific function
+pub(crate) fn contains_key<N: Network>(
+  process: &ProcessNative<N>,
+  program_id: &ProgramIDNative<N>,
+  function_id: &IdentifierNative<N>,
+) -> bool {
+    process.get_stack(program_id).map_or_else(
+        |_| false,
+        |stack| stack.contains_proving_key(function_id) && stack.contains_verifying_key(function_id),
+    )
+}
 
-    /// Resolve imports for a program in depth first search order
-    pub(crate) fn resolve_imports(
-        process: &mut ProcessNative,
-        program: &ProgramNative,
-        imports: Option<Object>,
-    ) -> Result<(), String> {
-        if let Some(imports) = imports {
-            program.imports().keys().try_for_each(|program_id| {
-                // Get the program string
-                let program_id = program_id.to_string();
-                if let Some(import_string) = Reflect::get(&imports, &program_id.as_str().into())
-                    .map_err(|_| "Program import not found in imports provided".to_string())?
-                    .as_string()
-                {
-                    if &program_id != "credits.aleo" {
-                        crate::log(&format!("Importing program: {}", program_id));
-                        let import = ProgramNative::from_str(&import_string).map_err(|err| err.to_string())?;
-                        // If the program has imports, add them
-                        Self::resolve_imports(process, &import, Some(imports.clone()))?;
-                        // If the process does not already contain the program, add it
-                        if !process.contains_program(import.id()) {
-                            process.add_program(&import).map_err(|err| err.to_string())?;
-                        }
+/// Resolve imports for a program in depth first search order
+pub(crate) fn program_manager_resolve_imports_impl<N: Network>(
+  process: &mut ProcessNative<N>,
+  program: &ProgramNative<N>,
+  imports: Option<Object>,
+) -> Result<(), String> {
+    if let Some(imports) = imports {
+        program.imports().keys().try_for_each(|program_id| {
+            // Get the program string
+            let program_id = program_id.to_string();
+            if let Some(import_string) = Reflect::get(&imports, &program_id.as_str().into())
+                .map_err(|_| "Program import not found in imports provided".to_string())?
+                .as_string()
+            {
+                if &program_id != "credits.aleo" {
+                    crate::log(&format!("Importing program: {}", program_id));
+                    let import = ProgramNative::<N>::from_str(&import_string).map_err(|err| err.to_string())?;
+                    // If the program has imports, add them
+                    program_manager_resolve_imports_impl::<N>(process, &import, Some(imports.clone()))?;
+                    // If the process does not already contain the program, add it
+                    if !process.contains_program(import.id()) {
+                        process.add_program(&import).map_err(|err| err.to_string())?;
                     }
                 }
-                Ok::<(), String>(())
-            })
-        } else {
-            Ok(())
-        }
+            }
+            Ok::<(), String>(())
+        })
+    } else {
+        Ok(())
     }
 }
 

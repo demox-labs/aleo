@@ -24,7 +24,11 @@ use crate::native::Network;
 /// Public address of an Aleo account
 #[wasm_bindgen]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Address(String);
+pub struct Address {
+  #[wasm_bindgen(skip)]
+  pub network: String,
+  as_string: String
+}
 
 #[wasm_bindgen]
 impl Address {
@@ -32,8 +36,8 @@ impl Address {
     ///
     /// @param {PrivateKey} private_key The private key to derive the address from
     /// @returns {Address} Address corresponding to the private key
-    pub fn from_private_key(network: &str, private_key: &PrivateKey) -> Result<Address, String> {
-        match dispatch_network!(network, from_private_key_impl, private_key) {
+    pub fn from_private_key(private_key: &PrivateKey) -> Result<Address, String> {
+        match dispatch_network!(private_key.network.as_str(), address_from_private_key_impl, private_key) {
             Ok(result) => Ok(result),
             Err(e) => return Err(e.to_string()),
         }
@@ -43,8 +47,8 @@ impl Address {
     ///
     /// @param {ViewKey} view_key The view key to derive the address from
     /// @returns {Address} Address corresponding to the view key
-    pub fn from_view_key(network: &str, view_key: &ViewKey) -> Result<Address, String> {
-        match dispatch_network!(network, from_view_key_impl, view_key) {
+    pub fn from_view_key(view_key: &ViewKey) -> Result<Address, String> {
+        match dispatch_network!(view_key.network.as_str(), address_from_view_key_impl, view_key) {
             Ok(result) => Ok(result),
             Err(e) => return Err(e.to_string()),
         }
@@ -55,7 +59,7 @@ impl Address {
     /// @param {string} address String representation of an addressm
     /// @returns {Address} Address
     pub fn from_string(network: &str, address: &str) -> Result<Address, String> {
-        match dispatch_network!(network, from_string_impl, address) {
+        match dispatch_network!(network, address_from_string_impl, address) {
             Ok(result) => Ok(result),
             Err(e) => return Err(e),
         }
@@ -67,11 +71,11 @@ impl Address {
     /// @returns {string} String representation of the address
     #[allow(clippy::inherent_to_string_shadow_display)]
     pub fn to_string(&self) -> String {
-        self.0.to_string()
+        self.as_string.clone()
     }
 
     pub fn to_x_coordinate(&self, network: &str) -> Result<String, String> {
-      match dispatch_network!(network, to_x_coordinate_impl, &self.0) {
+      match dispatch_network!(self.network.as_str(), address_to_x_coordinate_impl, &self.as_string) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e)
       }
@@ -86,37 +90,34 @@ impl Address {
     // }
 }
 
-pub fn to_x_coordinate_impl<N: Network>(address: &str) -> Result<String, String> {
+pub fn address_to_x_coordinate_impl<N: Network>(address: &str) -> Result<String, String> {
     let address = AddressNative::<N>::from_str(address).unwrap();
     Ok(address.to_x_coordinate().to_string())
 }
 
-pub fn from_private_key_impl<N: Network>(private_key: &PrivateKey) -> Result<Address, String> {
+pub fn address_from_private_key_impl<N: Network>(private_key: &PrivateKey) -> Result<Address, String> {
+  let network = network_string_id!(N::ID).unwrap().to_string();
   let pk_native = PrivateKeyNative::<N>::from_str(&**private_key).unwrap();
   let address = AddressNative::<N>::try_from(pk_native).map_err(|e| e.to_string())?;
-  Ok(Address(address.to_string()))
+  Ok(Address { network, as_string: address.to_string() })
 }
 
-pub fn from_view_key_impl<N: Network>(view_key: &ViewKey) -> Result<Address, String> {
+pub fn address_from_view_key_impl<N: Network>(view_key: &ViewKey) -> Result<Address, String> {
+  let network = network_string_id!(N::ID).unwrap().to_string();
   let vk_native = ViewKeyNative::<N>::from_str(&**view_key).unwrap();
-  Ok(Address(AddressNative::<N>::try_from(vk_native).map_err(|e| e.to_string())?.to_string()))
+  let address = AddressNative::<N>::try_from(vk_native).map_err(|e| e.to_string())?;
+  Ok(Address { network, as_string: address.to_string() })
 }
 
-pub fn from_string_impl<N: Network>(address: &str) -> Result<Address, String> {
-    Ok(Address(AddressNative::<N>::from_str(address).map_err(|e| e.to_string())?.to_string()))
-}
-
-impl FromStr for Address {
-    type Err = anyhow::Error;
-
-    fn from_str(address: &str) -> Result<Self, Self::Err> {
-        Ok(Self(address.to_string()))
-    }
+pub fn address_from_string_impl<N: Network>(address: &str) -> Result<Address, String> {
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  let address_str = AddressNative::<N>::from_str(address).map_err(|e| e.to_string())?.to_string();
+  Ok(Address { network, as_string: address_str })
 }
 
 impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}", self.as_string)
     }
 }
 
@@ -124,7 +125,7 @@ impl Deref for Address {
     type Target = String;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.as_string
     }
 }
 
