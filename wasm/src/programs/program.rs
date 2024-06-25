@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::types::native::{CurrentNetwork, EntryType, IdentifierNative, PlaintextType, ProgramNative, ValueType};
+use crate::types::native::{EntryType, IdentifierNative, PlaintextType, ProgramNative, ValueType};
 
 use js_sys::{Array, Object, Reflect};
 use std::{ops::Deref, str::FromStr};
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use crate::types::native::ProgramIDNative;
+use crate::Network;
 
 /// Webassembly Representation of an Aleo program
 #[wasm_bindgen]
@@ -33,8 +34,11 @@ impl Program {
     /// @param {string} program Aleo program source code
     /// @returns {Program | Error} Program object
     #[wasm_bindgen(js_name = "fromString")]
-    pub fn from_string(program: &str) -> Result<Program, String> {
-        Ok(Self(ProgramNative::from_str(program).map_err(|err| err.to_string())?))
+    pub fn from_string(network: &str, program: &str) -> Result<Program, String> {
+      match dispatch_network!(network, program_from_string_impl, program) {
+        Ok(program) => Ok(program),
+        Err(e) => Err(e),
+      }
     }
 
     /// Get a string representation of the program
@@ -47,17 +51,19 @@ impl Program {
     }
 
     #[wasm_bindgen(js_name = "toAddress")]
-    pub fn to_address(&self) -> String {
-        let program_id = self.0.id();
-        let address = program_id.to_address().unwrap();
-        address.to_string()
+    pub fn to_address(&self, network: &str) -> Result<String, String> {
+      match dispatch_network!(network, program_to_address_impl, &self) {
+        Ok(address) => Ok(address),
+        Err(e) => Err(e),
+      }
     }
 
     #[wasm_bindgen(js_name = "programIdToAddress")]
-    pub fn program_id_to_address(program_id: &str) -> String {
-        let program_id = ProgramIDNative::from_str(program_id).unwrap();
-        let address = program_id.to_address().unwrap();
-        address.to_string()
+    pub fn program_id_to_address(network: &str, program_id: &str) -> Result<String, String> {
+      match dispatch_network!(network, program_id_to_address_impl, program_id) {
+        Ok(address) => Ok(address),
+        Err(e) => Err(e),
+      }
     }
 
     /// Determine if a function is present in the program
@@ -65,8 +71,11 @@ impl Program {
     /// @param {string} functionName Name of the function to check for
     /// @returns {boolean} True if the program is valid, false otherwise
     #[wasm_bindgen(js_name = "hasFunction")]
-    pub fn has_function(&self, function_name: &str) -> bool {
-        IdentifierNative::from_str(function_name).map_or(false, |identifier| self.0.contains_function(&identifier))
+    pub fn has_function(&self, network: &str, function_name: &str) -> Result<bool, String> {
+      match dispatch_network!(network, program_has_function_impl, &self, function_name) {
+        Ok(result) => Ok(result),
+        Err(e) => Err(e),
+      }
     }
 
     /// Get javascript array of functions names in the program
@@ -89,14 +98,11 @@ impl Program {
     /// const credits_functions = credits_program.getFunctions();
     /// console.log(credits_functions === expected_functions); // Output should be "true"
     #[wasm_bindgen(js_name = "getFunctions")]
-    pub fn get_functions(&self) -> Array {
-        let array = Array::new_with_length(self.0.functions().len() as u32);
-        let mut index = 0u32;
-        self.0.functions().values().for_each(|function| {
-            array.set(index, JsValue::from_str(&function.name().to_string()));
-            index += 1;
-        });
-        array
+    pub fn get_functions(&self, network: &str) -> Result<Array, String> {
+      match dispatch_network!(network, program_get_functions_impl, &self) {
+        Ok(functions) => Ok(functions),
+        Err(e) => Err(e),
+      }
     }
 
     /// Get a javascript object representation of the function inputs and types. This can be used
@@ -136,66 +142,11 @@ impl Program {
     /// const transfer_function_inputs = credits_program.getFunctionInputs("transfer_private");
     /// console.log(transfer_function_inputs === expected_inputs); // Output should be "true"
     #[wasm_bindgen(js_name = "getFunctionInputs")]
-    pub fn get_function_inputs(&self, function_name: String) -> Result<Array, String> {
-        let function_id = IdentifierNative::from_str(&function_name).map_err(|e| e.to_string())?;
-        let function = self
-            .0
-            .functions()
-            .get(&function_id)
-            .ok_or_else(|| format!("function {} not found in {}", function_name, self.0.id()))?;
-        let function_inputs = Array::new_with_length(function.inputs().len() as u32);
-        for (index, input) in function.inputs().iter().enumerate() {
-            let register = JsValue::from_str(&input.register().to_string());
-            match input.value_type() {
-                ValueType::Constant(plaintext) => {
-                    function_inputs.set(index as u32, {
-                        let input = self.get_plaintext_input(plaintext, Some("constant".to_string()), None)?;
-                        Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
-                        input.into()
-                    });
-                }
-                ValueType::Public(plaintext) => {
-                    function_inputs.set(index as u32, {
-                        let input = self.get_plaintext_input(plaintext, Some("public".to_string()), None)?;
-                        Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
-                        input.into()
-                    });
-                }
-                ValueType::Private(plaintext) => {
-                    function_inputs.set(index as u32, {
-                        let input = self.get_plaintext_input(plaintext, Some("private".to_string()), None)?;
-                        Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
-                        input.into()
-                    });
-                }
-                ValueType::Record(identifier) => {
-                    function_inputs.set(index as u32, {
-                        let input = self.get_record_members(identifier.to_string())?;
-                        Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
-                        input.into()
-                    });
-                }
-                ValueType::ExternalRecord(locator) => {
-                    let input = Object::new();
-                    let value_type = JsValue::from_str("external_record");
-                    Reflect::set(&input, &"type".into(), &value_type).map_err(|_| "Failed to set property")?;
-                    Reflect::set(&input, &"locator".into(), &locator.to_string().into())
-                        .map_err(|_| "Failed to set property")?;
-                    Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
-                    function_inputs.set(index as u32, input.into());
-                }
-                ValueType::Future(locator) => {
-                    let input = Object::new();
-                    let value_type = JsValue::from_str("future");
-                    Reflect::set(&input, &"type".into(), &value_type).map_err(|_| "Failed to set property")?;
-                    Reflect::set(&input, &"locator".into(), &locator.to_string().into())
-                        .map_err(|_| "Failed to set property")?;
-                    Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
-                    function_inputs.set(index as u32, input.into());
-                }
-            }
-        }
-        Ok(function_inputs)
+    pub fn get_function_inputs(&self, network: &str, function_name: String) -> Result<Array, String> {
+      match dispatch_network!(network, program_get_function_inputs_impl, &self, &function_name) {
+        Ok(inputs) => Ok(inputs),
+        Err(e) => Err(e),
+      }
     }
 
     /// Get a the list of a program's mappings and the names/types of their keys and values.
@@ -216,70 +167,26 @@ impl Program {
     /// const credits_mappings = credits_program.getMappings();
     /// console.log(credits_mappings === expected_mappings); // Output should be "true"
     #[wasm_bindgen(js_name = "getMappings")]
-    pub fn get_mappings(&self) -> Result<Array, String> {
-        let mappings = Array::new();
-
-        // Set the mapping name and key/value names & types
-        self.0.mappings().iter().try_for_each(|(name, mapping)| {
-            let mapping_object = Object::new();
-            Reflect::set(&mapping_object, &"name".into(), &name.to_string().into())
-                .map_err(|_| "Failed to set property")?;
-            Reflect::set(&mapping_object, &"key_type".into(), &mapping.key().plaintext_type().to_string().into())
-                .map_err(|_| "Failed to set property")?;
-            Reflect::set(&mapping_object, &"value_type".into(), &mapping.value().plaintext_type().to_string().into())
-                .map_err(|_| "Failed to set property")?;
-            mappings.push(&mapping_object);
-            Ok::<(), String>(())
-        })?;
-        Ok(mappings)
+    pub fn get_mappings(&self, network: &str) -> Result<Array, String> {
+      match dispatch_network!(network, program_get_mappings_impl, &self) {
+        Ok(mappings) => Ok(mappings),
+        Err(e) => Err(e),
+      }
     }
 
     // Get the value of a plaintext input as a javascript object (this function is not part of the
     // public API)
     fn get_plaintext_input(
         &self,
-        plaintext: &PlaintextType<CurrentNetwork>,
+        network: &str,
+        plaintext_str: &str,
         visibility: Option<String>,
         name: Option<String>,
     ) -> Result<Object, String> {
-        let input = Object::new();
-        match plaintext {
-            PlaintextType::Array(array_type) => {
-                if let Some(name) = name {
-                    Reflect::set(&input, &"name".into(), &name.into()).map_err(|_| "Failed to set property")?;
-                }
-                Reflect::set(&input, &"type".into(), &"array".into()).map_err(|_| "Failed to set property")?;
-
-                // Set the element types of the Array and record the length
-                let element_type = self.get_plaintext_input(array_type.base_element_type(), None, None)?;
-                let length = **array_type.length();
-                Reflect::set(&input, &"element_type".into(), &element_type).map_err(|_| "Failed to set property")?;
-                Reflect::set(&input, &"length".into(), &length.into()).map_err(|_| "Failed to set property")?;
-            }
-            PlaintextType::Literal(literal_type) => {
-                if let Some(name) = name {
-                    Reflect::set(&input, &"name".into(), &name.into()).map_err(|_| "Failed to set property")?;
-                }
-                let value_type = JsValue::from_str(&literal_type.to_string());
-                Reflect::set(&input, &"type".into(), &value_type).map_err(|_| "Failed to set property")?;
-            }
-            PlaintextType::Struct(struct_id) => {
-                let struct_name = struct_id.to_string();
-                if let Some(name) = name {
-                    Reflect::set(&input, &"name".into(), &name.into()).map_err(|_| "Failed to set property")?;
-                }
-                Reflect::set(&input, &"type".into(), &"struct".into()).map_err(|_| "Failed to set property")?;
-                Reflect::set(&input, &"struct_id".into(), &struct_name.as_str().into())
-                    .map_err(|_| "Failed to set property")?;
-                let inputs = self.get_struct_members(struct_name)?;
-                Reflect::set(&input, &"members".into(), &inputs.into()).map_err(|_| "Failed to set property")?;
-            }
-        }
-        if let Some(visibility) = visibility {
-            Reflect::set(&input, &"visibility".into(), &visibility.into()).map_err(|_| "Failed to set property")?;
-        }
-
-        Ok(input)
+       match dispatch_network!(network, program_get_plaintext_input_impl, &self, plaintext_str, visibility, name) {
+        Ok(input) => Ok(input),
+        Err(e) => Err(e)
+       } 
     }
 
     /// Get a javascript object representation of a program record and its types
@@ -310,47 +217,11 @@ impl Program {
     /// const credits_record = credits_program.getRecordMembers("Credits");
     /// console.log(credits_record === expected_record); // Output should be "true"
     #[wasm_bindgen(js_name = "getRecordMembers")]
-    pub fn get_record_members(&self, record_name: String) -> Result<Object, String> {
-        let record_id = IdentifierNative::from_str(&record_name).map_err(|e| e.to_string())?;
-        let record = self
-            .0
-            .get_record(&record_id)
-            .map_err(|_| format!("struct {} not found in {}", record_name, self.0.id()))?;
-
-        let input = Object::new();
-        Reflect::set(&input, &"type".into(), &"record".into()).map_err(|_| "Failed to set property")?;
-        Reflect::set(&input, &"record".into(), &record_name.into()).map_err(|_| "Failed to set property")?;
-
-        let record_members = Array::new_with_length(record.entries().len() as u32);
-
-        for (index, (name, member_type)) in record.entries().iter().enumerate() {
-            match member_type {
-                EntryType::Constant(plaintext) => record_members.set(
-                    index as u32,
-                    self.get_plaintext_input(plaintext, Some("constant".to_string()), Some(name.to_string()))?.into(),
-                ),
-                EntryType::Public(plaintext) => record_members.set(
-                    index as u32,
-                    self.get_plaintext_input(plaintext, Some("public".to_string()), Some(name.to_string()))?.into(),
-                ),
-                EntryType::Private(plaintext) => record_members.set(
-                    index as u32,
-                    self.get_plaintext_input(plaintext, Some("private".to_string()), Some(name.to_string()))?.into(),
-                ),
-            }
+    pub fn get_record_members(&self, network: &str, record_name: String) -> Result<Object, String> {
+        match dispatch_network!(network, program_get_record_members_impl, &self, &record_name) {
+          Ok(record) => Ok(record),
+          Err(e) => Err(e),
         }
-
-        Reflect::set(&input, &"members".into(), &record_members).map_err(|_| "Failed to set property")?;
-
-        // Adding _nonce object to record
-        let _nonce = Object::new();
-        Reflect::set(&_nonce, &"name".into(), &"_nonce".into()).map_err(|_| "Failed to set property")?;
-        Reflect::set(&_nonce, &"type".into(), &"group".into()).map_err(|_| "Failed to set property")?;
-        Reflect::set(&_nonce, &"visibility".into(), &"public".into()).map_err(|_| "Failed to set property")?;
-
-        record_members.push(&JsValue::from(_nonce));
-
-        Ok(input)
     }
 
     /// Get a javascript object representation of a program struct and its types
@@ -400,37 +271,33 @@ impl Program {
     /// const struct_members = program.getStructMembers("token");
     /// console.log(struct_members === expected_struct_members); // Output should be "true"
     #[wasm_bindgen(js_name = "getStructMembers")]
-    pub fn get_struct_members(&self, struct_name: String) -> Result<Array, String> {
-        let struct_id = IdentifierNative::from_str(&struct_name).map_err(|e| e.to_string())?;
-
-        let program_struct = self
-            .0
-            .get_struct(&struct_id)
-            .map_err(|_| format!("struct {} not found in {}", struct_name, self.0.id()))?;
-
-        let struct_members = Array::new_with_length(program_struct.members().len() as u32);
-        for (index, (name, member_type)) in program_struct.members().iter().enumerate() {
-            let input = self.get_plaintext_input(member_type, None, Some(name.to_string()))?;
-            struct_members.set(index as u32, input.into());
+    pub fn get_struct_members(&self, network: &str, struct_name: String) -> Result<Array, String> {
+        match dispatch_network!(network, program_get_struct_members_impl, &self, &struct_name) {
+          Ok(struct_members) => Ok(struct_members),
+          Err(e) => Err(e),
         }
-
-        Ok(struct_members)
     }
 
     /// Get the credits.aleo program
     ///
     /// @returns {Program} The credits.aleo program
     #[wasm_bindgen(js_name = "getCreditsProgram")]
-    pub fn get_credits_program() -> Program {
-        Program::from(ProgramNative::credits().unwrap())
+    pub fn get_credits_program(network: &str) -> Result<Program, String> {
+      match dispatch_network!(network, program_get_credits_program_impl) {
+        Ok(program) => Ok(program),
+        Err(e) => Err(e),
+      }
     }
 
     /// Get the id of the program
     ///
     /// @returns {string} The id of the program
     #[wasm_bindgen]
-    pub fn id(&self) -> String {
-        self.0.id().to_string()
+    pub fn id(&self, network: &str) -> Result<String, String> {
+      match dispatch_network!(network, program_id_impl, &self) {
+        Ok(id) => Ok(id),
+        Err(e) => Err(e),
+      }
     }
 
     /// Determine equality with another program
@@ -465,13 +332,245 @@ impl Program {
     /// const imports = program.getImports();
     /// console.log(imports === expected_imports); // Output should be "true"
     #[wasm_bindgen(js_name = "getImports")]
-    pub fn get_imports(&self) -> Array {
-        let imports = Array::new_with_length(self.0.imports().len() as u32);
-        for (index, (import, _)) in self.0.imports().iter().enumerate() {
-            imports.set(index as u32, import.to_string().into());
-        }
-        imports
+    pub fn get_imports(&self, network: &str) -> Result<Array, String> {
+      match dispatch_network!(network, program_get_imports_impl, &self) {
+        Ok(imports) => Ok(imports),
+        Err(e) => Err(e),
+      }
     }
+}
+
+pub fn program_from_string_impl<N: Network>(program: &str) -> Result<Program, String> {
+  let p_native = ProgramNative::<N>::from_str(program).map_err(|e| e.to_string())?;
+  Ok(Program(p_native.to_string()))
+}
+
+pub fn program_to_address_impl<N: Network>(program: &Program) -> Result<String, String> {
+  let p_native = ProgramNative::<N>::from_str(&*program).unwrap();
+  let program_id = p_native.id();
+  let address = program_id.to_address().unwrap();
+  Ok(address.to_string())
+}
+
+pub fn program_id_to_address_impl<N: Network>(program_id: &str) -> Result<String, String> {
+  let program_id = ProgramIDNative::<N>::from_str(program_id).unwrap();
+  let address = program_id.to_address().unwrap();
+  Ok(address.to_string())
+}
+
+pub fn program_has_function_impl<N: Network>(program: &Program, function_name: &str) -> Result<bool, String> {
+  let program = ProgramNative::<N>::from_str(&*program).unwrap();
+  let function_id = IdentifierNative::<N>::from_str(function_name).unwrap();
+  Ok(program.functions().contains_key(&function_id))
+}
+
+pub fn program_get_functions_impl<N: Network>(program: &Program) -> Result<Array, String> {
+  let p_native = ProgramNative::<N>::from_str(&*program).unwrap();
+  let array = Array::new_with_length(p_native.functions().len() as u32);
+  let mut index = 0u32;
+  p_native.functions().values().for_each(|function| {
+      array.set(index, JsValue::from_str(&function.name().to_string()));
+      index += 1;
+  });
+  Ok(array)
+}
+
+pub fn program_get_function_inputs_impl<N: Network>(program: &Program, function_name: &str) -> Result<Array, String> {
+  let p_native = ProgramNative::<N>::from_str(&*program).unwrap();
+  let function_id = IdentifierNative::<N>::from_str(function_name).unwrap();
+  let function = p_native.functions().get(&function_id).ok_or_else(|| format!("function {} not found in {}", function_name, p_native.id()))?;
+  let function_inputs = Array::new_with_length(function.inputs().len() as u32);
+  for (index, input) in function.inputs().iter().enumerate() {
+      let register = JsValue::from_str(&input.register().to_string());
+      match input.value_type() {
+          ValueType::Constant(plaintext) => {
+              function_inputs.set(index as u32, {
+                  let input = program_get_plaintext_input_impl::<N>(program, &plaintext.to_string(), Some("constant".to_string()), None)?;
+                  Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
+                  input.into()
+              });
+          }
+          ValueType::Public(plaintext) => {
+              function_inputs.set(index as u32, {
+                  let input = program_get_plaintext_input_impl::<N>(program, &plaintext.to_string(), Some("public".to_string()), None)?;
+                  Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
+                  input.into()
+              });
+          }
+          ValueType::Private(plaintext) => {
+              function_inputs.set(index as u32, {
+                  let input = program_get_plaintext_input_impl::<N>(program, &plaintext.to_string(), Some("private".to_string()), None)?;
+                  Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
+                  input.into()
+              });
+          }
+          ValueType::Record(identifier) => {
+              function_inputs.set(index as u32, {
+                  let input = program_get_record_members_impl::<N>(program, &identifier.to_string())?;
+                  Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
+                  input.into()
+              });
+          }
+          ValueType::ExternalRecord(locator) => {
+              let input = Object::new();
+              let value_type = JsValue::from_str("external_record");
+              Reflect::set(&input, &"type".into(), &value_type).map_err(|_| "Failed to set property")?;
+              Reflect::set(&input, &"locator".into(), &locator.to_string().into())
+                  .map_err(|_| "Failed to set property")?;
+              Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
+              function_inputs.set(index as u32, input.into());
+          }
+          ValueType::Future(locator) => {
+              let input = Object::new();
+              let value_type = JsValue::from_str("future");
+              Reflect::set(&input, &"type".into(), &value_type).map_err(|_| "Failed to set property")?;
+              Reflect::set(&input, &"locator".into(), &locator.to_string().into())
+                  .map_err(|_| "Failed to set property")?;
+              Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
+              function_inputs.set(index as u32, input.into());
+          }
+      }
+  }
+  Ok(function_inputs)
+}
+
+pub fn program_get_mappings_impl<N: Network>(program: &Program) -> Result<Array, String> {
+  let p_native = ProgramNative::<N>::from_str(&*program).unwrap();
+  let mappings = Array::new();
+
+  // Set the mapping name and key/value names & types
+  p_native.mappings().iter().try_for_each(|(name, mapping)| {
+      let mapping_object = Object::new();
+      Reflect::set(&mapping_object, &"name".into(), &name.to_string().into())
+          .map_err(|_| "Failed to set property")?;
+      Reflect::set(&mapping_object, &"key_type".into(), &mapping.key().plaintext_type().to_string().into())
+          .map_err(|_| "Failed to set property")?;
+      Reflect::set(&mapping_object, &"value_type".into(), &mapping.value().plaintext_type().to_string().into())
+          .map_err(|_| "Failed to set property")?;
+      mappings.push(&mapping_object);
+      Ok::<(), String>(())
+  })?;
+  Ok(mappings)
+}
+
+pub fn program_get_plaintext_input_impl<N: Network>(
+  program: &Program,
+  plaintext_str: &str,
+  visibility: Option<String>,
+  name: Option<String>
+) -> Result<Object, String> {
+  let plaintext = PlaintextType::<N>::from_str(plaintext_str).map_err(|e| e.to_string())?;
+  let input = Object::new();
+  match plaintext {
+      PlaintextType::Array(array_type) => {
+          if let Some(name) = name {
+              Reflect::set(&input, &"name".into(), &name.into()).map_err(|_| "Failed to set property")?;
+          }
+          Reflect::set(&input, &"type".into(), &"array".into()).map_err(|_| "Failed to set property")?;
+
+          // Set the element types of the Array and record the length
+          let element_type = program_get_plaintext_input_impl::<N>(program, &array_type.base_element_type().to_string(), None, None)?;
+          let length = **array_type.length();
+          Reflect::set(&input, &"element_type".into(), &element_type).map_err(|_| "Failed to set property")?;
+          Reflect::set(&input, &"length".into(), &length.into()).map_err(|_| "Failed to set property")?;
+      }
+      PlaintextType::Literal(literal_type) => {
+          if let Some(name) = name {
+              Reflect::set(&input, &"name".into(), &name.into()).map_err(|_| "Failed to set property")?;
+          }
+          let value_type = JsValue::from_str(&literal_type.to_string());
+          Reflect::set(&input, &"type".into(), &value_type).map_err(|_| "Failed to set property")?;
+      }
+      PlaintextType::Struct(struct_id) => {
+          let struct_name = struct_id.to_string();
+          if let Some(name) = name {
+              Reflect::set(&input, &"name".into(), &name.into()).map_err(|_| "Failed to set property")?;
+          }
+          Reflect::set(&input, &"type".into(), &"struct".into()).map_err(|_| "Failed to set property")?;
+          Reflect::set(&input, &"struct_id".into(), &struct_name.as_str().into())
+              .map_err(|_| "Failed to set property")?;
+          let inputs = program_get_struct_members_impl::<N>(program, &struct_name)?;
+          Reflect::set(&input, &"members".into(), &inputs.into()).map_err(|_| "Failed to set property")?;
+      }
+  }
+  if let Some(visibility) = visibility {
+      Reflect::set(&input, &"visibility".into(), &visibility.into()).map_err(|_| "Failed to set property")?;
+  }
+
+  Ok(input)
+}
+
+pub fn program_get_record_members_impl<N: Network>(program: &Program, record_name: &str) -> Result<Object, String> {
+  let p_native = ProgramNative::<N>::from_str(&*program).unwrap();
+  let record_id = IdentifierNative::<N>::from_str(record_name).map_err(|e| e.to_string())?;
+  let record = p_native.get_record(&record_id).map_err(|_| format!("struct {} not found in {}", record_name, p_native.id()))?;
+
+  let input = Object::new();
+  Reflect::set(&input, &"type".into(), &"record".into()).map_err(|_| "Failed to set property")?;
+  Reflect::set(&input, &"record".into(), &record_name.into()).map_err(|_| "Failed to set property")?;
+
+  let record_members = Array::new_with_length(record.entries().len() as u32);
+
+  for (index, (name, member_type)) in record.entries().iter().enumerate() {
+      match member_type {
+          EntryType::Constant(plaintext) => record_members.set(
+              index as u32,
+              program_get_plaintext_input_impl::<N>(program, &plaintext.to_string(), Some("constant".to_string()), Some(name.to_string()))?.into(),
+          ),
+          EntryType::Public(plaintext) => record_members.set(
+              index as u32,
+              program_get_plaintext_input_impl::<N>(program, &plaintext.to_string(), Some("public".to_string()), Some(name.to_string()))?.into(),
+          ),
+          EntryType::Private(plaintext) => record_members.set(
+              index as u32,
+              program_get_plaintext_input_impl::<N>(program, &plaintext.to_string(), Some("private".to_string()), Some(name.to_string()))?.into(),
+          ),
+      }
+  }
+
+  Reflect::set(&input, &"members".into(), &record_members).map_err(|_| "Failed to set property")?;
+
+  // Adding _nonce object to record
+  let _nonce = Object::new();
+  Reflect::set(&_nonce, &"name".into(), &"_nonce".into()).map_err(|_| "Failed to set property")?;
+  Reflect::set(&_nonce, &"type".into(), &"group".into()).map_err(|_| "Failed to set property")?;
+  Reflect::set(&_nonce, &"visibility".into(), &"public".into()).map_err(|_| "Failed to set property")?;
+
+  record_members.push(&JsValue::from(_nonce));
+
+  Ok(input)
+}
+
+pub fn program_get_struct_members_impl<N: Network>(program: &Program, struct_name: &str) -> Result<Array, String> {
+  let p_native = ProgramNative::<N>::from_str(&*program).unwrap();
+  let struct_id = IdentifierNative::<N>::from_str(struct_name).map_err(|e| e.to_string())?;
+  let program_struct = p_native.get_struct(&struct_id).map_err(|_| format!("struct {} not found in {}", struct_name, p_native.id()))?;
+
+  let struct_members = Array::new_with_length(program_struct.members().len() as u32);
+  for (index, (name, member_type)) in program_struct.members().iter().enumerate() {
+      let input = program_get_plaintext_input_impl::<N>(program, &member_type.to_string(), None, Some(name.to_string()))?;
+      struct_members.set(index as u32, input.into());
+  }
+
+  Ok(struct_members)
+}
+
+pub fn program_get_credits_program_impl<N: Network>() -> Result<Program, String> {
+  Ok(Program::from(ProgramNative::<N>::credits().unwrap()))
+}
+
+pub fn program_id_impl<N: Network>(program: &Program) -> Result<String, String> {
+  let p_native = ProgramNative::<N>::from_str(&*program).unwrap();
+  Ok(p_native.id().to_string())
+}
+
+pub fn program_get_imports_impl<N: Network>(program: &Program) -> Result<Array, String> {
+  let p_native = ProgramNative::<N>::from_str(&*program).unwrap();
+  let imports = Array::new_with_length(p_native.imports().len() as u32);
+  for (index, (import, _)) in p_native.imports().iter().enumerate() {
+      imports.set(index as u32, import.to_string().into());
+  }
+  Ok(imports)
 }
 
 impl Deref for Program {
@@ -498,7 +597,7 @@ impl FromStr for Program {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::from_string(s)
+        Ok(Self(s.to_string()))
     }
 }
 

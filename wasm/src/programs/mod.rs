@@ -21,8 +21,8 @@ mod macros;
 // #[cfg(feature = "browser")]
 // pub use manager::*;
 
-// pub mod program;
-// pub use program::*;
+pub mod program;
+pub use program::*;
 
 pub mod proving_key;
 pub use proving_key::*;
