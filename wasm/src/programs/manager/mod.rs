@@ -18,8 +18,8 @@ use crate::Network;
 pub mod deploy;
 pub use deploy::*;
 
-// pub mod execute;
-// pub use execute::*;
+pub mod execute;
+pub use execute::*;
 
 const DEFAULT_URL: &str = "https://api.explorer.aleo.org/v1";
 

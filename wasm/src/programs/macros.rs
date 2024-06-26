@@ -44,9 +44,9 @@ macro_rules! execute_program {
 
         log("Loading program");
         let program =
-            ProgramNative::from_str($program_string).map_err(|_| "The program ID provided was invalid".to_string())?;
+            ProgramNative::<N>::from_str($program_string).map_err(|_| "The program ID provided was invalid".to_string())?;
         log("Loading function");
-        let function_name = IdentifierNative::from_str($function_id_string)
+        let function_name = IdentifierNative::<N>::from_str($function_id_string)
             .map_err(|_| "The function name provided was invalid".to_string())?;
 
         let program_id = program.id().to_string();
@@ -63,22 +63,22 @@ macro_rules! execute_program {
         }
 
         if let Some(proving_key) = $proving_key {
-            if Self::contains_key($process, program.id(), &function_name) {
+            if contains_key::<N>($process, program.id(), &function_name) {
                 log(&format!("Proving & verifying keys were specified for {program_id} - {function_name:?} but a key already exists in the cache. Using cached keys"));
             } else {
                 log(&format!("Inserting externally provided proving and verifying keys for {program_id} - {function_name:?}"));
                 $process
-                    .insert_proving_key(program.id(), &function_name, ProvingKeyNative::from(proving_key))
+                    .insert_proving_key(program.id(), &function_name, ProvingKeyNative::<N>::from(proving_key))
                     .map_err(|e| e.to_string())?;
                 if let Some(verifying_key) = $verifying_key {
-                    $process.insert_verifying_key(program.id(), &function_name, VerifyingKeyNative::from(verifying_key)).map_err(|e| e.to_string())?;
+                    $process.insert_verifying_key(program.id(), &function_name, VerifyingKeyNative::<N>::from(verifying_key)).map_err(|e| e.to_string())?;
                 }
             }
         };
 
         log("Creating authorization");
         let authorization = $process
-            .authorize::<CurrentAleo, _>(
+            .authorize::<A, _>(
                 $private_key,
                 program.id(),
                 function_name,
@@ -89,7 +89,7 @@ macro_rules! execute_program {
 
         log("Executing program");
         let result = $process
-            .execute::<CurrentAleo, _>(authorization, $rng)
+            .execute::<A, _>(authorization, $rng)
             .map_err(|err| err.to_string())?;
 
         result

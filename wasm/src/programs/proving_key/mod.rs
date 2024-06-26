@@ -29,7 +29,8 @@ use std::{ops::Deref, str::FromStr};
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct ProvingKey {
-  network: String,
+  #[wasm_bindgen(skip)]
+  pub network: String,
   as_string: String
 }
 

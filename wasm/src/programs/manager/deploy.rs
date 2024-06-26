@@ -77,7 +77,7 @@ impl ProgramManager {
         fee_verifying_key: Option<VerifyingKey>,
         inclusion_key: ProvingKey,
     ) -> Result<Transaction, String> {
-        match dispatch_network_aleo!(
+        match dispatch_network_aleo_async!(
           private_key.network.as_str(),
           deploy_deploy_transaction_impl,
           private_key,
@@ -102,7 +102,7 @@ impl ProgramManager {
         fee_credits: f64,
         fee_record: Option<RecordPlaintext>
     ) -> Result<String, String> {
-      match dispatch_network_aleo!(
+      match dispatch_network_aleo_async!(
         private_key.network.as_str(),
         deploy_authorize_deploy_impl,
         private_key,
