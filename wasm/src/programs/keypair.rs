@@ -59,7 +59,6 @@ impl KeyPair {
 
 impl<N: Network> From<(ProvingKeyNative<N>, VerifyingKeyNative<N>)> for KeyPair {
     fn from((proving_key, verifying_key): (ProvingKeyNative<N>, VerifyingKeyNative<N>)) -> Self {
-      let network = network_string_id!(N::ID).unwrap().to_string();
       let pk: ProvingKey = proving_key.into();
       let vk: VerifyingKey = verifying_key.into();
       Self::new(pk, vk)

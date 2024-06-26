@@ -16,7 +16,6 @@
 
 use crate::{
     account::PrivateKey,
-    account::ViewKey,
     types::Field,
     Credits,
     // RecordCiphertext,

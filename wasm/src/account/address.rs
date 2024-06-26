@@ -74,7 +74,7 @@ impl Address {
         self.as_string.clone()
     }
 
-    pub fn to_x_coordinate(&self, network: &str) -> Result<String, String> {
+    pub fn to_x_coordinate(&self) -> Result<String, String> {
       match dispatch_network!(self.network.as_str(), address_to_x_coordinate_impl, &self.as_string) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e)

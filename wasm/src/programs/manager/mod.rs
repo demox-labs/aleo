@@ -15,8 +15,8 @@
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::Network;
-// pub mod deploy;
-// pub use deploy::*;
+pub mod deploy;
+pub use deploy::*;
 
 // pub mod execute;
 // pub use execute::*;
@@ -59,37 +59,6 @@ impl ProgramManager {
 
         Ok(microcredits)
     }
-
-    // /// Synthesize proving and verifying keys for a program
-    // ///
-    // /// @param program {string} The program source code of the program to synthesize keys for
-    // /// @param function_id {string} The function to synthesize keys for
-    // /// @param inputs {Array} The inputs to the function
-    // /// @param imports {Object | undefined} The imports for the program
-    // #[wasm_bindgen(js_name = "synthesizeKeyPair")]
-    // pub async fn synthesize_keypair(
-    //     private_key: &str,
-    //     program: &str,
-    //     function_id: &str,
-    //     inputs: js_sys::Array,
-    //     imports: Option<Object>,
-    // ) -> Result<KeyPair, String> {
-    //     ProgramManager::execute_function_offline(
-    //         private_key,
-    //         program,
-    //         function_id,
-    //         inputs,
-    //         false,
-    //         true,
-    //         imports,
-    //         None,
-    //         None,
-    //         None,
-    //         None,
-    //     )
-    //     .await?
-    //     .get_keys()
-    // }
 }
 
 /// Check if a process contains a keypair for a specific function

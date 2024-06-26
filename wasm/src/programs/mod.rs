@@ -30,6 +30,9 @@ pub use program::*;
 pub mod proving_key;
 pub use proving_key::*;
 
+pub mod transaction;
+pub use transaction::*;
+
 pub mod verifying_key;
 pub use verifying_key::*;
 

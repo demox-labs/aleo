@@ -17,7 +17,7 @@
 use super::{Address, PrivateKey};
 use crate::record::RecordCiphertext;
 
-use crate::types::native::{ViewKeyNative, RecordCiphertextNative, AddressNative, FieldNative, GroupNative};
+use crate::types::native::{ViewKeyNative, RecordCiphertextNative, FieldNative, GroupNative};
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
 use crate::native::Network;
 use crate::native::PrivateKeyNative;
@@ -67,7 +67,7 @@ impl ViewKey {
       }
     }
 
-    pub fn to_scalar(&self, network: &str) -> Result<String, String> {
+    pub fn to_scalar(&self) -> Result<String, String> {
       match dispatch_network!(self.network.as_str(), view_key_to_scalar_impl, &self.as_string) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e)
