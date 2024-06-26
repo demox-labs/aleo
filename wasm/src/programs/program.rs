@@ -25,7 +25,11 @@ use crate::Network;
 /// Webassembly Representation of an Aleo program
 #[wasm_bindgen]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Program(String);
+pub struct Program {
+  #[wasm_bindgen(skip)]
+  pub network: String,
+  as_string: String
+}
 
 #[wasm_bindgen]
 impl Program {
@@ -47,12 +51,12 @@ impl Program {
     #[wasm_bindgen(js_name = "toString")]
     #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
-        self.0.to_string()
+        self.as_string.clone()
     }
 
     #[wasm_bindgen(js_name = "toAddress")]
-    pub fn to_address(&self, network: &str) -> Result<String, String> {
-      match dispatch_network!(network, program_to_address_impl, &self) {
+    pub fn to_address(&self) -> Result<String, String> {
+      match dispatch_network!(self.network.as_str(), program_to_address_impl, &self) {
         Ok(address) => Ok(address),
         Err(e) => Err(e),
       }
@@ -71,8 +75,8 @@ impl Program {
     /// @param {string} functionName Name of the function to check for
     /// @returns {boolean} True if the program is valid, false otherwise
     #[wasm_bindgen(js_name = "hasFunction")]
-    pub fn has_function(&self, network: &str, function_name: &str) -> Result<bool, String> {
-      match dispatch_network!(network, program_has_function_impl, &self, function_name) {
+    pub fn has_function(&self, function_name: &str) -> Result<bool, String> {
+      match dispatch_network!(self.network.as_str(), program_has_function_impl, &self, function_name) {
         Ok(result) => Ok(result),
         Err(e) => Err(e),
       }
@@ -98,8 +102,8 @@ impl Program {
     /// const credits_functions = credits_program.getFunctions();
     /// console.log(credits_functions === expected_functions); // Output should be "true"
     #[wasm_bindgen(js_name = "getFunctions")]
-    pub fn get_functions(&self, network: &str) -> Result<Array, String> {
-      match dispatch_network!(network, program_get_functions_impl, &self) {
+    pub fn get_functions(&self) -> Result<Array, String> {
+      match dispatch_network!(self.network.as_str(), program_get_functions_impl, &self) {
         Ok(functions) => Ok(functions),
         Err(e) => Err(e),
       }
@@ -142,8 +146,8 @@ impl Program {
     /// const transfer_function_inputs = credits_program.getFunctionInputs("transfer_private");
     /// console.log(transfer_function_inputs === expected_inputs); // Output should be "true"
     #[wasm_bindgen(js_name = "getFunctionInputs")]
-    pub fn get_function_inputs(&self, network: &str, function_name: String) -> Result<Array, String> {
-      match dispatch_network!(network, program_get_function_inputs_impl, &self, &function_name) {
+    pub fn get_function_inputs(&self, function_name: String) -> Result<Array, String> {
+      match dispatch_network!(self.network.as_str(), program_get_function_inputs_impl, &self, &function_name) {
         Ok(inputs) => Ok(inputs),
         Err(e) => Err(e),
       }
@@ -167,8 +171,8 @@ impl Program {
     /// const credits_mappings = credits_program.getMappings();
     /// console.log(credits_mappings === expected_mappings); // Output should be "true"
     #[wasm_bindgen(js_name = "getMappings")]
-    pub fn get_mappings(&self, network: &str) -> Result<Array, String> {
-      match dispatch_network!(network, program_get_mappings_impl, &self) {
+    pub fn get_mappings(&self) -> Result<Array, String> {
+      match dispatch_network!(self.network.as_str(), program_get_mappings_impl, &self) {
         Ok(mappings) => Ok(mappings),
         Err(e) => Err(e),
       }
@@ -178,12 +182,11 @@ impl Program {
     // public API)
     fn get_plaintext_input(
         &self,
-        network: &str,
         plaintext_str: &str,
         visibility: Option<String>,
         name: Option<String>,
     ) -> Result<Object, String> {
-       match dispatch_network!(network, program_get_plaintext_input_impl, &self, plaintext_str, visibility, name) {
+       match dispatch_network!(self.network.as_str(), program_get_plaintext_input_impl, &self, plaintext_str, visibility, name) {
         Ok(input) => Ok(input),
         Err(e) => Err(e)
        } 
@@ -217,8 +220,8 @@ impl Program {
     /// const credits_record = credits_program.getRecordMembers("Credits");
     /// console.log(credits_record === expected_record); // Output should be "true"
     #[wasm_bindgen(js_name = "getRecordMembers")]
-    pub fn get_record_members(&self, network: &str, record_name: String) -> Result<Object, String> {
-        match dispatch_network!(network, program_get_record_members_impl, &self, &record_name) {
+    pub fn get_record_members(&self, record_name: String) -> Result<Object, String> {
+        match dispatch_network!(self.network.as_str(), program_get_record_members_impl, &self, &record_name) {
           Ok(record) => Ok(record),
           Err(e) => Err(e),
         }
@@ -271,8 +274,8 @@ impl Program {
     /// const struct_members = program.getStructMembers("token");
     /// console.log(struct_members === expected_struct_members); // Output should be "true"
     #[wasm_bindgen(js_name = "getStructMembers")]
-    pub fn get_struct_members(&self, network: &str, struct_name: String) -> Result<Array, String> {
-        match dispatch_network!(network, program_get_struct_members_impl, &self, &struct_name) {
+    pub fn get_struct_members(&self, struct_name: String) -> Result<Array, String> {
+        match dispatch_network!(self.network.as_str(), program_get_struct_members_impl, &self, &struct_name) {
           Ok(struct_members) => Ok(struct_members),
           Err(e) => Err(e),
         }
@@ -293,8 +296,8 @@ impl Program {
     ///
     /// @returns {string} The id of the program
     #[wasm_bindgen]
-    pub fn id(&self, network: &str) -> Result<String, String> {
-      match dispatch_network!(network, program_id_impl, &self) {
+    pub fn id(&self) -> Result<String, String> {
+      match dispatch_network!(self.network.as_str(), program_id_impl, &self) {
         Ok(id) => Ok(id),
         Err(e) => Err(e),
       }
@@ -306,7 +309,7 @@ impl Program {
     /// @returns {boolean} True if the programs are equal, false otherwise
     #[wasm_bindgen(js_name = "isEqual")]
     pub fn is_equal(&self, other: &Program) -> bool {
-        self == other
+        self.as_string == other.as_string && self.network == other.network
     }
 
     /// Get program_imports
@@ -332,8 +335,8 @@ impl Program {
     /// const imports = program.getImports();
     /// console.log(imports === expected_imports); // Output should be "true"
     #[wasm_bindgen(js_name = "getImports")]
-    pub fn get_imports(&self, network: &str) -> Result<Array, String> {
-      match dispatch_network!(network, program_get_imports_impl, &self) {
+    pub fn get_imports(&self) -> Result<Array, String> {
+      match dispatch_network!(self.network.as_str(), program_get_imports_impl, &self) {
         Ok(imports) => Ok(imports),
         Err(e) => Err(e),
       }
@@ -342,7 +345,8 @@ impl Program {
 
 pub fn program_from_string_impl<N: Network>(program: &str) -> Result<Program, String> {
   let p_native = ProgramNative::<N>::from_str(program).map_err(|e| e.to_string())?;
-  Ok(Program(p_native.to_string()))
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  Ok(Program { as_string: p_native.to_string(), network })
 }
 
 pub fn program_to_address_impl<N: Network>(program: &Program) -> Result<String, String> {
@@ -577,27 +581,20 @@ impl Deref for Program {
     type Target = String;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.as_string
     }
 }
 
 impl<N: Network> From<ProgramNative<N>> for Program {
     fn from(value: ProgramNative<N>) -> Self {
-        Self(value.to_string())
+      let network = network_string_id!(N::ID).unwrap().to_string();
+      Self { as_string: value.to_string(), network }
     }
 }
 
 impl<N: Network> From<Program> for ProgramNative<N> {
     fn from(program: Program) -> Self {
         ProgramNative::<N>::from_str(&*program).unwrap()
-    }
-}
-
-impl FromStr for Program {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self(s.to_string()))
     }
 }
 
