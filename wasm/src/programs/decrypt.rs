@@ -23,10 +23,10 @@ use crate::{
   account::ViewKey,
   types::native::{
     TransitionNative,
-    CurrentNetwork,
     ProgramIDNative,
     CiphertextNative,
-    IdentifierNative
+    IdentifierNative,
+    ViewKeyNative
   }
 };
 use snarkvm_console::{prelude::Network, types::{U16, Field, Group}, program::ToBits};
@@ -40,29 +40,21 @@ pub struct DecryptTransition {}
 #[wasm_bindgen]
 impl DecryptTransition {
   pub fn owns_transition(
-    view_key: ViewKey,
+    network: &str,
+    view_key: &ViewKey,
     tpk_str: &str,
     tcm_str: &str,
   ) -> Result<bool, String> {
     console_error_panic_hook::set_once();
-
-    let tpk = Group::<CurrentNetwork>::from_str(tpk_str)
-      .map_err(|_| "Could not deserialize transition public key".to_string())?;
-
-    let tcm = Field::<CurrentNetwork>::from_str(tcm_str)
-      .map_err(|_| "Could not deserialize transition commitment".to_string())?;
-
-    let scalar = *view_key;
-    let tvk = (tpk * *scalar).to_x_coordinate();
-
-    let tcm_derived = CurrentNetwork::hash_psd2(&[tvk])
-      .map_err(|_| "Could not deserialize transition".to_string())?;
-
-    return Ok(tcm == tcm_derived);
+    match dispatch_network!(network, owns_transition_impl, view_key, tpk_str, tcm_str) {
+      Ok(owns_transition) => Ok(owns_transition),
+      Err(e) => Err(e),
+    }
   }
 
   pub fn decrypt_ciphertext(
-    view_key: ViewKey,
+    network: &str,
+    view_key: &ViewKey,
     ciphertext_str: &str,
     tpk_str: &str,
     program_id: &str,
@@ -71,118 +63,170 @@ impl DecryptTransition {
   ) -> Result<String, String> {
     console_error_panic_hook::set_once();
 
-    let tpk = Group::<CurrentNetwork>::from_str(tpk_str)
-      .map_err(|_| "Could not deserialize transition public key".to_string())?;
-
-    let program_id = ProgramIDNative::from_str(program_id)
-      .map_err(|_| "Could not deserialize program id".to_string())?;
-
-    let function_name = IdentifierNative::from_str(function_name_str)
-      .map_err(|_| "Could not deserialize function name".to_string())?;
-
-    let scalar = *view_key;
-    let tvk = (tpk * *scalar).to_x_coordinate();
-
-    let function_id = CurrentNetwork::hash_bhp1024(
-      &(U16::<CurrentNetwork>::new(CurrentNetwork::ID),
-      program_id.name().size_in_bits(),
-      program_id.name(),
-      program_id.network().size_in_bits(),
-      program_id.network(),
-      function_name.size_in_bits(),
-      function_name
-    ).to_bits_le(),
-    ).map_err(|_| "Could not create function id".to_string())?;
-
-    let index_field = Field::from_u16(u16::try_from(index).unwrap());
-    let ciphertext_view_key = CurrentNetwork::hash_psd4(&[function_id, tvk, index_field])
-      .map_err(|_| "Could not create ciphertext view key".to_string())?;
-
-    let ciphertext = CiphertextNative::from_str(ciphertext_str)
-      .map_err(|_| "Could not deserialize ciphertext".to_string())?;
-
-    let plaintext = ciphertext.decrypt_symmetric(ciphertext_view_key)
-      .map_err(|e| e.to_string())?;
-
-    Ok(plaintext.to_string())
+    match dispatch_network!(network, decrypt_ciphertext_impl, view_key, ciphertext_str, tpk_str, program_id, function_name_str, index) {
+      Ok(plaintext) => Ok(plaintext),
+      Err(e) => Err(e),
+    }
   }
 
   pub fn decrypt_transition(
-    view_key: ViewKey,
+    network: &str,
+    view_key: &ViewKey,
     transition_str: &str
   ) -> Result<String, String> {
     console_error_panic_hook::set_once();
-
-    let transition: TransitionNative = serde_json::from_str(transition_str)
-      .map_err(|_| "Could not deserialize transition".to_string())?;
-
-    let scalar = *view_key;
-    let tvk = (*transition.tpk() * *scalar).to_x_coordinate();
-
-    let function_id = CurrentNetwork::hash_bhp1024(
-      &(U16::<CurrentNetwork>::new(CurrentNetwork::ID),
-      transition.program_id().name().size_in_bits(),
-      transition.program_id().name(),
-      transition.program_id().network().size_in_bits(),
-      transition.program_id().network(),
-      transition.function_name().size_in_bits(),
-      transition.function_name()
-    ).to_bits_le(),
-    ).map_err(|_| "Could not create function id".to_string())?;
-
-    let mut decrypted_inputs: Vec<Input<CurrentNetwork>> = vec![]; 
-    let mut decrypted_outputs: Vec<Output<CurrentNetwork>> = vec![];
-
-    for (index, input) in transition.inputs().iter().enumerate() {
-      if let Input::Private(id, ciphertext_option) = input {
-        if let Some(ciphertext) = ciphertext_option {
-          let index_field = Field::from_u16(u16::try_from(index).unwrap());
-          let input_view_key = CurrentNetwork::hash_psd4(&[function_id, tvk, index_field])
-            .map_err(|_| "Could not create input view key".to_string())?;
-          let plaintext = ciphertext.decrypt_symmetric(input_view_key)
-            .map_err(|e| e.to_string())?;
-          decrypted_inputs.push(Input::Public(*id, Some(plaintext)));
-        } else {
-          decrypted_inputs.push(input.clone());
-        }
-      } else {
-          decrypted_inputs.push(input.clone());
-      }
+    match dispatch_network!(network, decrypt_transition_impl, view_key, transition_str) {
+      Ok(transition) => Ok(transition),
+      Err(e) => Err(e),
     }
-
-    let num_inputs = transition.inputs().len();
-    for (index, output) in transition.outputs().iter().enumerate() {
-      if let Output::Private(id, ciphertext_option) = output {
-        if let Some(ciphertext) = ciphertext_option {
-          let index_field = Field::from_u16(u16::try_from(num_inputs + index).unwrap());
-          let output_view_key = CurrentNetwork::hash_psd4(&[function_id, tvk, index_field])
-            .map_err(|_| "Could not create output view key".to_string())?;
-          let plaintext = ciphertext.decrypt_symmetric(output_view_key)
-            .map_err(|e| e.to_string())?;
-          decrypted_outputs.push(Output::Public(*id, Some(plaintext)));
-        } else {
-          decrypted_outputs.push(output.clone());
-        }
-      } else {
-          decrypted_outputs.push(output.clone());
-      }
-    }
-
-    let decrypted_transition = TransitionNative::new(
-      *transition.program_id(),
-      *transition.function_name(),
-      decrypted_inputs,
-      decrypted_outputs,
-      *transition.tpk(),
-      *transition.tcm(),
-      *transition.scm()
-    ).unwrap();
-
-    let transition_output = serde_json::to_string(&decrypted_transition)
-        .map_err(|_| "Could not serialize decrypted transition".to_string())?;
-
-    Ok(transition_output)
   }
+}
+
+pub fn owns_transition_impl<N: Network>(
+  view_key: &ViewKey,
+  tpk_str: &str,
+  tcm_str: &str
+) -> Result<bool, String> {
+  let tpk = Group::<N>::from_str(tpk_str)
+    .map_err(|_| "Could not deserialize transition public key".to_string())?;
+
+  let tcm = Field::<N>::from_str(tcm_str)
+    .map_err(|_| "Could not deserialize transition commitment".to_string())?;
+
+  let vk_native = ViewKeyNative::<N>::from_str(&*view_key)
+    .map_err(|_| "Could not deserialize view key".to_string())?;
+  let scalar = *vk_native;
+  let tvk = (tpk * scalar).to_x_coordinate();
+
+  let tcm_derived = N::hash_psd2(&[tvk])
+    .map_err(|_| "Could not deserialize transition".to_string())?;
+
+  return Ok(tcm == tcm_derived);
+}
+
+pub fn decrypt_ciphertext_impl<N: Network>(
+  view_key: &ViewKey,
+  ciphertext_str: &str,
+  tpk_str: &str,
+  program_id: &str,
+  function_name_str: &str,
+  index: usize
+) -> Result<String, String> {
+  let tpk = Group::<N>::from_str(tpk_str)
+    .map_err(|_| "Could not deserialize transition public key".to_string())?;
+
+  let program_id = ProgramIDNative::<N>::from_str(program_id)
+    .map_err(|_| "Could not deserialize program id".to_string())?;
+
+  let function_name = IdentifierNative::<N>::from_str(function_name_str)
+    .map_err(|_| "Could not deserialize function name".to_string())?;
+
+  let vk_native = ViewKeyNative::<N>::from_str(&*view_key)
+    .map_err(|_| "Could not deserialize view key".to_string())?;
+  let scalar = *vk_native;
+  let tvk = (tpk * scalar).to_x_coordinate();
+
+  let function_id = N::hash_bhp1024(
+    &(U16::<N>::new(N::ID),
+    program_id.name().size_in_bits(),
+    program_id.name(),
+    program_id.network().size_in_bits(),
+    program_id.network(),
+    function_name.size_in_bits(),
+    function_name
+  ).to_bits_le(),
+  ).map_err(|_| "Could not create function id".to_string())?;
+
+  let index_field = Field::<N>::from_u16(u16::try_from(index).unwrap());
+  let ciphertext_view_key = N::hash_psd4(&[function_id, tvk, index_field])
+    .map_err(|_| "Could not create ciphertext view key".to_string())?;
+
+  let ciphertext = CiphertextNative::<N>::from_str(ciphertext_str)
+    .map_err(|_| "Could not deserialize ciphertext".to_string())?;
+
+  let plaintext = ciphertext.decrypt_symmetric(ciphertext_view_key)
+    .map_err(|e| e.to_string())?;
+
+  Ok(plaintext.to_string())
+}
+
+pub fn decrypt_transition_impl<N: Network>(
+  view_key: &ViewKey,
+  transition_str: &str
+) -> Result<String, String> {
+  console_error_panic_hook::set_once();
+
+  let transition: TransitionNative<N> = serde_json::from_str(transition_str)
+    .map_err(|_| "Could not deserialize transition".to_string())?;
+
+  let vk_native = ViewKeyNative::<N>::from_str(&*view_key)
+    .map_err(|_| "Could not deserialize view key".to_string())?;
+  let scalar = *vk_native;
+  let tvk = (*transition.tpk() * scalar).to_x_coordinate();
+
+  let function_id = N::hash_bhp1024(
+    &(U16::<N>::new(N::ID),
+    transition.program_id().name().size_in_bits(),
+    transition.program_id().name(),
+    transition.program_id().network().size_in_bits(),
+    transition.program_id().network(),
+    transition.function_name().size_in_bits(),
+    transition.function_name()
+  ).to_bits_le(),
+  ).map_err(|_| "Could not create function id".to_string())?;
+
+  let mut decrypted_inputs: Vec<Input<N>> = vec![]; 
+  let mut decrypted_outputs: Vec<Output<N>> = vec![];
+
+  for (index, input) in transition.inputs().iter().enumerate() {
+    if let Input::Private(id, ciphertext_option) = input {
+      if let Some(ciphertext) = ciphertext_option {
+        let index_field = Field::from_u16(u16::try_from(index).unwrap());
+        let input_view_key = N::hash_psd4(&[function_id, tvk, index_field])
+          .map_err(|_| "Could not create input view key".to_string())?;
+        let plaintext = ciphertext.decrypt_symmetric(input_view_key)
+          .map_err(|e| e.to_string())?;
+        decrypted_inputs.push(Input::Public(*id, Some(plaintext)));
+      } else {
+        decrypted_inputs.push(input.clone());
+      }
+    } else {
+        decrypted_inputs.push(input.clone());
+    }
+  }
+
+  let num_inputs = transition.inputs().len();
+  for (index, output) in transition.outputs().iter().enumerate() {
+    if let Output::Private(id, ciphertext_option) = output {
+      if let Some(ciphertext) = ciphertext_option {
+        let index_field = Field::from_u16(u16::try_from(num_inputs + index).unwrap());
+        let output_view_key = N::hash_psd4(&[function_id, tvk, index_field])
+          .map_err(|_| "Could not create output view key".to_string())?;
+        let plaintext = ciphertext.decrypt_symmetric(output_view_key)
+          .map_err(|e| e.to_string())?;
+        decrypted_outputs.push(Output::Public(*id, Some(plaintext)));
+      } else {
+        decrypted_outputs.push(output.clone());
+      }
+    } else {
+        decrypted_outputs.push(output.clone());
+    }
+  }
+
+  let decrypted_transition = TransitionNative::<N>::new(
+    *transition.program_id(),
+    *transition.function_name(),
+    decrypted_inputs,
+    decrypted_outputs,
+    *transition.tpk(),
+    *transition.tcm(),
+    *transition.scm()
+  ).unwrap();
+
+  let transition_output = serde_json::to_string(&decrypted_transition)
+      .map_err(|_| "Could not serialize decrypted transition".to_string())?;
+
+  Ok(transition_output)
 }
 
 // Write a test to check that the decryption of a transition is correct

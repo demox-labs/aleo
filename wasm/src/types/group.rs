@@ -15,6 +15,7 @@
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::types::native::GroupNative;
+use crate::native::Network;
 
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -22,30 +23,40 @@ use std::str::FromStr;
 
 #[wasm_bindgen]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Group(GroupNative);
+pub struct Group {
+  network: String,
+  as_string: String
+}
 
 #[wasm_bindgen]
 impl Group {
     #[wasm_bindgen(js_name = "toString")]
     #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
-        self.0.to_string()
+        self.as_string.clone()
     }
 
     #[wasm_bindgen(js_name = "fromString")]
-    pub fn from_string(group: &str) -> Result<Group, String> {
-        Ok(Self(GroupNative::from_str(group).map_err(|e| e.to_string())?))
+    pub fn from_string(network: &str, group: &str) -> Result<Group, String> {
+      match dispatch_network!(network, group_from_string_impl, group) {
+        Ok(result) => Ok(Self { network: network.to_string(), as_string: result }),
+        Err(e) => return Err(e)
+      }
     }
 }
 
-impl From<GroupNative> for Group {
-    fn from(native: GroupNative) -> Self {
-        Self(native)
+pub fn group_from_string_impl<N: Network>(group: &str) -> Result<String, String> {
+  Ok(GroupNative::<N>::from_str(group).map_err(|e| e.to_string())?.to_string())
+}
+
+impl<N: Network> From<GroupNative<N>> for Group {
+    fn from(native: GroupNative<N>) -> Self {
+        Self { network: network_string_id!(N::ID).unwrap().to_string(), as_string: native.to_string() }
     }
 }
 
-impl From<Group> for GroupNative {
+impl<N: Network> From<Group> for GroupNative<N> {
     fn from(group: Group) -> Self {
-        group.0
+      GroupNative::<N>::from_str(&group.as_string).unwrap()
     }
 }

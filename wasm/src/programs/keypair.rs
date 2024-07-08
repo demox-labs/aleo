@@ -18,6 +18,7 @@ use crate::{ProvingKey, VerifyingKey};
 
 use crate::types::native::{ProvingKeyNative, VerifyingKeyNative};
 use wasm_bindgen::prelude::wasm_bindgen;
+use crate::Network;
 
 /// Key pair object containing both the function proving and verifying keys
 #[wasm_bindgen]
@@ -56,8 +57,10 @@ impl KeyPair {
     }
 }
 
-impl From<(ProvingKeyNative, VerifyingKeyNative)> for KeyPair {
-    fn from((proving_key, verifying_key): (ProvingKeyNative, VerifyingKeyNative)) -> Self {
-        Self::new(proving_key.into(), verifying_key.into())
+impl<N: Network> From<(ProvingKeyNative<N>, VerifyingKeyNative<N>)> for KeyPair {
+    fn from((proving_key, verifying_key): (ProvingKeyNative<N>, VerifyingKeyNative<N>)) -> Self {
+      let pk: ProvingKey = proving_key.into();
+      let vk: VerifyingKey = verifying_key.into();
+      Self::new(pk, vk)
     }
 }

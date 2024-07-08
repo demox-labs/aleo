@@ -19,11 +19,17 @@ use crate::record::RecordCiphertext;
 
 use crate::types::native::{ViewKeyNative, RecordCiphertextNative, FieldNative, GroupNative};
 use core::{convert::TryFrom, fmt, ops::Deref, str::FromStr};
+use crate::native::Network;
+use crate::native::PrivateKeyNative;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ViewKey(ViewKeyNative);
+pub struct ViewKey {
+  #[wasm_bindgen(skip)]
+  pub network: String,
+  as_string: String
+}
 
 #[wasm_bindgen]
 impl ViewKey {
@@ -31,32 +37,41 @@ impl ViewKey {
     ///
     /// @param {PrivateKey} private_key Private key
     /// @returns {ViewKey} View key
-    pub fn from_private_key(private_key: &PrivateKey) -> Self {
-        Self(ViewKeyNative::try_from(**private_key).unwrap())
+    pub fn from_private_key(network: &str, private_key: &PrivateKey) -> Result<ViewKey, String> {
+      match dispatch_network!(network, view_key_from_private_key_impl, private_key) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e.to_string())
+      }
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn network(&self) -> String {
+      self.network.clone()
     }
 
     /// Create a new view key from a string representation of a view key
     ///
     /// @param {string} view_key String representation of a view key
     /// @returns {ViewKey} View key
-    pub fn from_string(view_key: &str) -> Self {
-        Self::from_str(view_key).unwrap()
+    pub fn from_string(network: &str, view_key: &str) -> Result<ViewKey, String> {
+      match dispatch_network!(network, view_key_from_string_impl, view_key) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e.to_string())
+      }
     }
 
-    pub fn is_owner(&self, address_x_coordinate: &str, record_nonce: &str, record_owner_x_coordinate: &str) -> bool {
-        let x_field = FieldNative::from_str(address_x_coordinate).unwrap();
-        let nonce_group = GroupNative::from_str(record_nonce).unwrap();
-        let owner_x_field = FieldNative::from_str(record_owner_x_coordinate).unwrap();
-        RecordCiphertextNative::is_owner_direct(
-            x_field,
-            *self.0,
-            nonce_group,
-            owner_x_field,
-        )
+    pub fn is_owner(&self, address_x_coordinate: &str, record_nonce: &str, record_owner_x_coordinate: &str) -> Result<bool, String> {
+      match dispatch_network!(self.network.as_str(), view_key_is_owner_impl, &self.as_string, address_x_coordinate, record_nonce, record_owner_x_coordinate) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
-    pub fn to_scalar(&self) -> String {
-      (*self.0).to_string()
+    pub fn to_scalar(&self) -> Result<String, String> {
+      match dispatch_network!(self.network.as_str(), view_key_to_scalar_impl, &self.as_string) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
     /// Get a string representation of a view key
@@ -64,14 +79,17 @@ impl ViewKey {
     /// @returns {string} String representation of a view key
     #[allow(clippy::inherent_to_string_shadow_display)]
     pub fn to_string(&self) -> String {
-        self.0.to_string()
+        self.as_string.clone()
     }
 
     /// Get the address corresponding to a view key
     ///
     /// @returns {Address} Address
-    pub fn to_address(&self) -> Address {
-        Address::from_view_key(self)
+    pub fn to_address(&self) -> Result<Address, String> {
+      match dispatch_network!(self.network.as_str(), view_key_to_address_impl, &self.as_string) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 
     /// Decrypt a record ciphertext with a view key
@@ -79,33 +97,70 @@ impl ViewKey {
     /// @param {string} ciphertext String representation of a record ciphertext
     /// @returns {string} String representation of a record plaintext
     pub fn decrypt(&self, ciphertext: &str) -> Result<String, String> {
-        let ciphertext = RecordCiphertext::from_str(ciphertext).map_err(|error| error.to_string())?;
-        match ciphertext.decrypt(self) {
-            Ok(plaintext) => Ok(plaintext.to_string()),
-            Err(error) => Err(error),
-        }
+      match dispatch_network!(self.network.as_str(), view_key_decrypt_impl, &self.as_string, ciphertext) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 }
 
-impl FromStr for ViewKey {
-    type Err = anyhow::Error;
+pub fn view_key_decrypt_impl<N: Network>(view_key: &str, ciphertext: &str) -> Result<String, String> {
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  let view_key = ViewKey::from_string(&network, view_key).unwrap();
+  let cypher_text = RecordCiphertext::from_string(&network, ciphertext).map_err(|e| e.to_string())?;
+  match cypher_text.decrypt(&view_key) {
+    Ok(plaintext) => Ok(plaintext.to_string()),
+    Err(error) => Err(error),
+  }
+}
 
-    fn from_str(view_key: &str) -> Result<Self, Self::Err> {
-        Ok(Self(ViewKeyNative::from_str(view_key)?))
-    }
+pub fn view_key_to_address_impl<N: Network>(view_key: &str) -> Result<Address, String> {
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  let vk_string = ViewKeyNative::<N>::from_str(view_key).map_err(|e| e.to_string())?.to_string();
+  crate::address::address_from_view_key_impl::<N>(&ViewKey { network, as_string: vk_string })
+}
+
+pub fn view_key_from_private_key_impl<N: Network>(private_key: &PrivateKey) -> Result<ViewKey, String> {
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  let vk_string = ViewKeyNative::<N>::try_from(PrivateKeyNative::<N>::from_str(&**private_key).unwrap()).unwrap().to_string();
+  Ok(ViewKey { network, as_string: vk_string })
+}
+
+pub fn view_key_from_string_impl<N: Network>(view_key: &str) -> Result<ViewKey, String> {
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  let vk_string = ViewKeyNative::<N>::from_str(view_key).map_err(|e| e.to_string())?.to_string();
+  Ok(ViewKey { network, as_string: vk_string })
+}
+
+pub fn view_key_is_owner_impl<N: Network>(view_key: &str, address_x_coordinate: &str, record_nonce: &str, record_owner_x_coordinate: &str) -> Result<bool, String> {
+  let x_field = FieldNative::<N>::from_str(address_x_coordinate).unwrap();
+  let nonce_group = GroupNative::<N>::from_str(record_nonce).unwrap();
+  let owner_x_field = FieldNative::<N>::from_str(record_owner_x_coordinate).unwrap();
+  let scalar = *ViewKeyNative::<N>::from_str(view_key).unwrap();
+  Ok(RecordCiphertextNative::<N>::is_owner_direct(
+      x_field,
+      scalar,
+      nonce_group,
+      owner_x_field,
+  ))
+}
+
+pub fn view_key_to_scalar_impl<N: Network>(view_key: &str) -> Result<String, String> {
+  let scalar = *ViewKeyNative::<N>::from_str(view_key).unwrap();
+  Ok(scalar.to_string())
 }
 
 impl fmt::Display for ViewKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}", self.as_string)
     }
 }
 
 impl Deref for ViewKey {
-    type Target = ViewKeyNative;
+    type Target = String;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.as_string
     }
 }
 

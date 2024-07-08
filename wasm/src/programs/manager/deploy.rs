@@ -16,11 +16,19 @@
 
 use super::*;
 
-use crate::{execute_fee, log, OfflineQuery, PrivateKey, RecordPlaintext, Transaction};
+use crate::{execute_fee, log, PrivateKey, RecordPlaintext, Transaction, Network};
 
 use crate::types::native::{
-    CurrentAleo, CurrentNetwork, DeploymentNative, ProcessNative, ProgramIDNative, ProgramNative, ProgramOwnerNative, RecordPlaintextNative, TransactionNative
+  PrivateKeyNative,
+  DeploymentNative,
+  ProcessNative,
+  ProgramIDNative,
+  ProgramNative,
+  ProgramOwnerNative,
+  RecordPlaintextNative,
+  TransactionNative
 };
+use snarkvm_circuit_network::Aleo;
 use js_sys::Object;
 use rand::{rngs::StdRng, SeedableRng};
 use serde::Serialize;
@@ -35,90 +43,6 @@ pub struct DeployAuthorizationResponse {
 
 #[wasm_bindgen]
 impl ProgramManager {
-    /// Deploy an Aleo program
-    ///
-    /// @param private_key The private key of the sender
-    /// @param program The source code of the program being deployed
-    /// @param imports A javascript object holding the source code of any imported programs in the
-    /// form \{"program_name1": "program_source_code", "program_name2": "program_source_code", ..\}.
-    /// Note that all imported programs must be deployed on chain before the main program in order
-    /// for the deployment to succeed
-    /// @param fee_credits The amount of credits to pay as a fee
-    /// @param fee_record The record to spend the fee from
-    /// @param url The url of the Aleo network node to send the transaction to
-    /// @param imports (optional) Provide a list of imports to use for the program deployment in the
-    /// form of a javascript object where the keys are a string of the program name and the values
-    /// are a string representing the program source code \{ "hello.aleo": "hello.aleo source code" \}
-    /// @param fee_proving_key (optional) Provide a proving key to use for the fee execution
-    /// @param fee_verifying_key (optional) Provide a verifying key to use for the fee execution
-    /// @returns {Transaction | Error}
-    #[wasm_bindgen(js_name = buildDeploymentTransaction)]
-    #[allow(clippy::too_many_arguments)]
-    pub async fn deploy(
-        private_key: &PrivateKey,
-        program: &str,
-        fee_credits: f64,
-        fee_record: Option<RecordPlaintext>,
-        url: Option<String>,
-        imports: Option<Object>,
-        fee_proving_key: Option<ProvingKey>,
-        fee_verifying_key: Option<VerifyingKey>,
-        offline_query: Option<OfflineQuery>,
-    ) -> Result<Transaction, String> {
-        log("Creating deployment transaction");
-        // Convert fee to microcredits and check that the fee record has enough credits to pay it
-        let fee_microcredits = match &fee_record {
-            Some(fee_record) => Self::validate_amount(fee_credits, fee_record, true)?,
-            None => (fee_credits * 1_000_000.0) as u64,
-        };
-
-        let mut process_native = ProcessNative::load_web().map_err(|err| err.to_string())?;
-        let process = &mut process_native;
-
-        log("Checking program has a valid name");
-        let program = ProgramNative::from_str(program).map_err(|err| err.to_string())?;
-
-        log("Checking program imports are valid and add them to the process");
-        ProgramManager::resolve_imports(process, &program, imports)?;
-        let rng = &mut StdRng::from_entropy();
-
-        log("Creating deployment");
-        let node_url = url.as_deref().unwrap_or(DEFAULT_URL);
-        let deployment = process.deploy::<CurrentAleo, _>(&program, rng).map_err(|err| err.to_string())?;
-        if deployment.program().functions().is_empty() {
-            return Err("Attempted to create an empty transaction deployment".to_string());
-        }
-
-        let deployment_id = deployment.to_deployment_id().map_err(|e| e.to_string())?;
-
-        let fee = execute_fee!(
-            process,
-            private_key,
-            fee_record,
-            fee_microcredits,
-            node_url,
-            fee_proving_key,
-            fee_verifying_key,
-            deployment_id,
-            rng,
-            offline_query
-        );
-
-        // Create the program owner
-        let owner = ProgramOwnerNative::new(private_key, deployment_id, &mut StdRng::from_entropy())
-            .map_err(|err| err.to_string())?;
-
-        log("Verifying the deployment and fees");
-        process
-            .verify_deployment::<CurrentAleo, _>(&deployment, &mut StdRng::from_entropy())
-            .map_err(|err| err.to_string())?;
-
-        log("Creating deployment transaction");
-        Ok(Transaction::from(
-            TransactionNative::from_deployment(owner, deployment, fee).map_err(|err| err.to_string())?,
-        ))
-    }
-
     /// Estimate the component of the deployment cost which comes from the fee for the program name.
     /// Note that this cost does not represent the entire cost of deployment. It is additional to
     /// the cost of the size (in bytes) of the deployment.
@@ -153,98 +77,22 @@ impl ProgramManager {
         fee_verifying_key: Option<VerifyingKey>,
         inclusion_key: ProvingKey,
     ) -> Result<Transaction, String> {
-        log("Creating deployment transaction");
-        // Convert fee to microcredits and check that the fee record has enough credits to pay it
-        let fee_microcredits = match &fee_record {
-            Some(fee_record) => Self::validate_amount(fee_credits, fee_record, true)?,
-            None => (fee_credits * 1_000_000.0) as u64,
-        };
-
-        let mut process_native = ProcessNative::load_web().map_err(|err| err.to_string())?;
-        let process = &mut process_native;
-
-        log("Check program has a valid name");
-        let program = ProgramNative::from_str(&program).map_err(|err| err.to_string())?;
-
-        log("Checking program imports are valid and add them to the process");
-        ProgramManager::resolve_imports(process, &program, imports)?;
-        
-        log("Create and validate deployment");
-        let deployment =
-            process.deploy::<CurrentAleo, _>(&program, &mut StdRng::from_entropy()).map_err(|err| err.to_string())?;
-        if deployment.program().functions().is_empty() {
-            return Err("Attempted to create an empty transaction deployment".to_string());
+        match dispatch_network_aleo_async!(
+          private_key.network.as_str(),
+          deploy_deploy_transaction_impl,
+          private_key,
+          program,
+          imports,
+          fee_credits,
+          fee_record,
+          url,
+          fee_proving_key,
+          fee_verifying_key,
+          inclusion_key
+        ) {
+            Ok(result) => Ok(result),
+            Err(e) => return Err(e),
         }
-
-        log("Verify the deployment and fees");
-        process
-            .verify_deployment::<CurrentAleo, _>(&deployment, &mut StdRng::from_entropy())
-            .map_err(|err| err.to_string())?;
-
-        let deployment_id = deployment.to_deployment_id().map_err(|e| e.to_string())?;
-
-        let stack = process.get_stack("credits.aleo").map_err(|e| e.to_string())?;
-        let fee_identifier = if fee_record.is_some() {
-            IdentifierNative::from_str("fee_private").unwrap()
-        } else {
-            IdentifierNative::from_str("fee_public").unwrap()
-        };
-        if !stack.contains_proving_key(&fee_identifier) && fee_proving_key.is_some() && fee_verifying_key.is_some() {
-            let fee_proving_key = fee_proving_key.unwrap();
-            let fee_verifying_key = fee_verifying_key.unwrap();
-            stack
-                .insert_proving_key(&fee_identifier, ProvingKeyNative::from(fee_proving_key))
-                .map_err(|e| e.to_string())?;
-            stack
-                .insert_verifying_key(&fee_identifier, VerifyingKeyNative::from(fee_verifying_key))
-                .map_err(|e| e.to_string())?;
-        }
-
-        let fee_authorization = match fee_record {
-            Some(fee_record) => {
-                process.authorize_fee_private::<CurrentAleo, _>(
-                    &private_key,
-                    fee_record.into(),
-                    fee_microcredits,
-                    0u64,
-                    deployment_id,
-                    &mut StdRng::from_entropy()
-                ).map_err(|e| e.to_string())?
-            }
-            None => {
-                process.authorize_fee_public::<CurrentAleo, _>(&private_key, fee_microcredits, 0u64, deployment_id, &mut StdRng::from_entropy()).map_err(|e| e.to_string())?
-            }
-        };
-
-        let rng = &mut StdRng::from_entropy();
-        let (_, mut trace) = process
-        .execute::<CurrentAleo, _>(
-            fee_authorization,
-            rng
-        )
-        .map_err(|err| err.to_string())?;
-
-        log("Created fee");
-        let query = QueryNative::from(&url);
-        trace.prepare_async(query).await.map_err(|err| err.to_string())?;
-        log("Prepared fee");
-        let fee = trace.prove_fee_web::<CurrentAleo, _>(inclusion_key.into(), &mut StdRng::from_entropy()).map_err(|e| e.to_string())?;
-
-        log("Proved fee");
-
-        log("Create the program owner");
-        let owner = ProgramOwnerNative::new(&private_key, deployment_id, &mut StdRng::from_entropy())
-            .map_err(|err| err.to_string())?;
-
-        log("Verify the deployment and fees");
-        process
-            .verify_deployment::<CurrentAleo, _>(&deployment, &mut StdRng::from_entropy())
-            .map_err(|err| err.to_string())?;
-
-        log("Creating deployment transaction");
-        Ok(Transaction::from(
-            TransactionNative::from_deployment(owner, deployment, fee).map_err(|err| err.to_string())?,
-        ))
     }
 
     #[wasm_bindgen]
@@ -254,32 +102,53 @@ impl ProgramManager {
         fee_credits: f64,
         fee_record: Option<RecordPlaintext>
     ) -> Result<String, String> {
-        log("Creating deployment transaction");
+      match dispatch_network_aleo_async!(
+        private_key.network.as_str(),
+        deploy_authorize_deploy_impl,
+        private_key,
+        deployment,
+        fee_credits,
+        fee_record
+      ) {
+          Ok(result) => Ok(result),
+          Err(e) => return Err(e),
+      }
+    }
+}
+
+pub async fn deploy_authorize_deploy_impl<N: Network, A: Aleo<Network = N>>(
+  private_key: &PrivateKey,
+  deployment: &str,
+  fee_credits: f64,
+  fee_record: Option<RecordPlaintext>
+) -> Result<String, String> {
+      log("Creating deployment transaction");
         // Convert fee to microcredits and check that the fee record has enough credits to pay it
         let fee_microcredits = match &fee_record {
-            Some(fee_record) => Self::validate_amount(fee_credits, fee_record, true)?,
+            Some(fee_record) => ProgramManager::validate_amount(fee_credits, fee_record, true)?,
             None => (fee_credits * 1_000_000.0) as u64,
         };
 
         log("Create and validate deployment");
-        let deployment = DeploymentNative::from_str(deployment).map_err(|e| e.to_string())?;
+        let deployment = DeploymentNative::<N>::from_str(deployment).map_err(|e| e.to_string())?;
         let deployment_id = deployment.to_deployment_id().map_err(|e| e.to_string())?;
 
-        let mut process_native = ProcessNative::load_web().map_err(|err| err.to_string())?;
+        let mut process_native = ProcessNative::<N>::load_web().map_err(|err| err.to_string())?;
         let process = &mut process_native;
+        let pk_native = PrivateKeyNative::<N>::from_str(&**private_key).unwrap();
 
         let stack = process.get_stack("credits.aleo").map_err(|e| e.to_string())?;
         let fee_identifier = if fee_record.is_some() {
-            IdentifierNative::from_str("fee_private").unwrap()
+            IdentifierNative::<N>::from_str("fee_private").unwrap()
         } else {
-            IdentifierNative::from_str("fee_public").unwrap()
+            IdentifierNative::<N>::from_str("fee_public").unwrap()
         };
 
         log("Build fee execution");
         let fee_authorization = match fee_record {
             Some(fee_record) => {
-                process.authorize_fee_private::<CurrentAleo, _>(
-                    &private_key,
+                process.authorize_fee_private::<A, _>(
+                    &pk_native,
                     fee_record.into(),
                     fee_microcredits,
                     0u64,
@@ -288,12 +157,12 @@ impl ProgramManager {
                 ).map_err(|e| e.to_string())?
             }
             None => {
-                process.authorize_fee_public::<CurrentAleo, _>(&private_key, fee_microcredits, 0u64, deployment_id, &mut StdRng::from_entropy()).map_err(|e| e.to_string())?
+                process.authorize_fee_public::<A, _>(&pk_native, fee_microcredits, 0u64, deployment_id, &mut StdRng::from_entropy()).map_err(|e| e.to_string())?
             }
         };
 
         log("Create the program owner");
-        let owner = ProgramOwnerNative::new(&private_key, deployment_id, &mut StdRng::from_entropy())
+        let owner = ProgramOwnerNative::<N>::new(&pk_native, deployment_id, &mut StdRng::from_entropy())
             .map_err(|err| err.to_string())?;
 
         let authorization_response = DeployAuthorizationResponse {
@@ -306,5 +175,110 @@ impl ProgramManager {
             .map_err(|_| "Could not serialize authorization response".to_string())?;
 
         Ok(authorization_response)
-    }
+}
+
+pub async fn deploy_deploy_transaction_impl<N: Network, A: Aleo<Network = N>>(
+  private_key: PrivateKey,
+  program: String,
+  imports: Option<Object>,
+  fee_credits: f64,
+  fee_record: Option<RecordPlaintext>,
+  url: String,
+  fee_proving_key: Option<ProvingKey>,
+  fee_verifying_key: Option<VerifyingKey>,
+  inclusion_key: ProvingKey,
+) -> Result<Transaction, String> {
+  log("Creating deployment transaction");
+  // Convert fee to microcredits and check that the fee record has enough credits to pay it
+  let fee_microcredits = match &fee_record {
+      Some(fee_record) => ProgramManager::validate_amount(fee_credits, fee_record, true)?,
+      None => (fee_credits * 1_000_000.0) as u64,
+  };
+
+  let mut process_native = ProcessNative::<N>::load_web().map_err(|err| err.to_string())?;
+  let process = &mut process_native;
+  let pk_native = PrivateKeyNative::<N>::from_str(&**private_key).unwrap();
+
+  log("Check program has a valid name");
+  let program = ProgramNative::<N>::from_str(&program).map_err(|err| err.to_string())?;
+
+  log("Checking program imports are valid and add them to the process");
+  program_manager_resolve_imports_impl::<N>(process, &program, imports)?;
+  
+  log("Create and validate deployment");
+  let deployment =
+      process.deploy::<A, _>(&program, &mut StdRng::from_entropy()).map_err(|err| err.to_string())?;
+  if deployment.program().functions().is_empty() {
+      return Err("Attempted to create an empty transaction deployment".to_string());
+  }
+
+  log("Verify the deployment and fees");
+  process
+      .verify_deployment::<A, _>(&deployment, &mut StdRng::from_entropy())
+      .map_err(|err| err.to_string())?;
+
+  let deployment_id = deployment.to_deployment_id().map_err(|e| e.to_string())?;
+
+  let stack = process.get_stack("credits.aleo").map_err(|e| e.to_string())?;
+  let fee_identifier = if fee_record.is_some() {
+      IdentifierNative::<N>::from_str("fee_private").unwrap()
+  } else {
+      IdentifierNative::<N>::from_str("fee_public").unwrap()
+  };
+  if !stack.contains_proving_key(&fee_identifier) && fee_proving_key.is_some() && fee_verifying_key.is_some() {
+      let fee_proving_key = fee_proving_key.unwrap();
+      let fee_verifying_key = fee_verifying_key.unwrap();
+      stack
+          .insert_proving_key(&fee_identifier, ProvingKeyNative::<N>::from(fee_proving_key))
+          .map_err(|e| e.to_string())?;
+      stack
+          .insert_verifying_key(&fee_identifier, VerifyingKeyNative::<N>::from(fee_verifying_key))
+          .map_err(|e| e.to_string())?;
+  }
+
+  let fee_authorization = match fee_record {
+      Some(fee_record) => {
+          process.authorize_fee_private::<A, _>(
+              &pk_native,
+              fee_record.into(),
+              fee_microcredits,
+              0u64,
+              deployment_id,
+              &mut StdRng::from_entropy()
+          ).map_err(|e| e.to_string())?
+      }
+      None => {
+          process.authorize_fee_public::<A, _>(&pk_native, fee_microcredits, 0u64, deployment_id, &mut StdRng::from_entropy()).map_err(|e| e.to_string())?
+      }
+  };
+
+  let rng = &mut StdRng::from_entropy();
+  let (_, mut trace) = process
+  .execute::<A, _>(
+      fee_authorization,
+      rng
+  )
+  .map_err(|err| err.to_string())?;
+
+  log("Created fee");
+  let query = QueryNative::<N>::from(&url);
+  trace.prepare_async(query).await.map_err(|err| err.to_string())?;
+  log("Prepared fee");
+  let fee = trace.prove_fee_web::<A, _>(inclusion_key.into(), &mut StdRng::from_entropy()).map_err(|e| e.to_string())?;
+
+  log("Proved fee");
+
+  log("Create the program owner");
+  let owner = ProgramOwnerNative::<N>::new(&pk_native, deployment_id, &mut StdRng::from_entropy())
+      .map_err(|err| err.to_string())?;
+
+  log("Verify the deployment and fees");
+  process
+      .verify_deployment::<A, _>(&deployment, &mut StdRng::from_entropy())
+      .map_err(|err| err.to_string())?;
+
+  log("Creating deployment transaction");
+  let t_native = TransactionNative::<N>::from_deployment(owner, deployment, fee).map_err(|err| err.to_string())?;
+  let t_wasm: Transaction = t_native.into();
+  Ok(t_wasm)
 }

@@ -14,10 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-mod credits;
-pub use credits::*;
+// mod credits;
+// pub use credits::*;
 
 use crate::types::native::{FromBytes, ToBytes, VerifyingKeyNative};
+use crate::Network;
 
 use sha2::Digest;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -27,15 +28,21 @@ use std::{ops::Deref, str::FromStr};
 /// Verifying key for a function within an Aleo program
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
-pub struct VerifyingKey(VerifyingKeyNative);
+pub struct VerifyingKey {
+  network: String,
+  as_string: String
+}
 
 #[wasm_bindgen]
 impl VerifyingKey {
     /// Get the checksum of the verifying key
     ///
     /// @returns {string} Checksum of the verifying key
-    pub fn checksum(&self) -> String {
-        hex::encode(sha2::Sha256::digest(self.to_bytes().unwrap()))
+    pub fn checksum(&self) -> Result<String, String> {
+      match dispatch_network!(self.network.as_str(), verifying_key_checksum_impl, &self) {
+        Ok(checksum) => Ok(checksum),
+        Err(e) => Err(e),
+      }
     }
 
     /// Create a copy of the verifying key
@@ -43,7 +50,7 @@ impl VerifyingKey {
     /// @returns {VerifyingKey} A copy of the verifying key
     #[wasm_bindgen]
     pub fn copy(&self) -> VerifyingKey {
-        self.0.clone().into()
+      VerifyingKey { network: self.network.clone(), as_string: self.as_string.clone() }
     }
 
     /// Construct a new verifying key from a byte array
@@ -51,8 +58,11 @@ impl VerifyingKey {
     /// @param {Uint8Array} bytes Byte representation of a verifying key
     /// @returns {VerifyingKey | Error}
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &[u8]) -> Result<VerifyingKey, String> {
-        Ok(Self(VerifyingKeyNative::from_bytes_le(bytes).map_err(|e| e.to_string())?))
+    pub fn from_bytes(network: &str, bytes: &[u8]) -> Result<VerifyingKey, String> {
+      match dispatch_network!(network, verifying_key_from_bytes_impl, bytes) {
+        Ok(verifying_key) => Ok(verifying_key),
+        Err(e) => Err(e),
+      }
     }
 
     /// Create a verifying key from string
@@ -60,8 +70,11 @@ impl VerifyingKey {
     /// @param {String} string String representation of a verifying key
     /// @returns {VerifyingKey | Error}
     #[wasm_bindgen(js_name = "fromString")]
-    pub fn from_string(string: &str) -> Result<VerifyingKey, String> {
-        Ok(Self(VerifyingKeyNative::from_str(string).map_err(|e| e.to_string())?))
+    pub fn from_string(network: &str, string: &str) -> Result<VerifyingKey, String> {
+      match dispatch_network!(network, verifying_key_from_string_impl, string) {
+        Ok(verifying_key) => Ok(verifying_key),
+        Err(e) => Err(e),
+      }
     }
 
     /// Create a byte array from a verifying key
@@ -69,7 +82,10 @@ impl VerifyingKey {
     /// @returns {Uint8Array | Error} Byte representation of a verifying key
     #[wasm_bindgen(js_name = "toBytes")]
     pub fn to_bytes(&self) -> Result<Vec<u8>, String> {
-        self.0.to_bytes_le().map_err(|_| "Failed to serialize verifying key".to_string())
+      match dispatch_network!(self.network.as_str(), verifying_key_to_bytes_impl, &self) {
+        Ok(bytes) => Ok(bytes),
+        Err(e) => Err(e),
+      }
     }
 
     /// Get a string representation of the verifying key
@@ -78,39 +94,62 @@ impl VerifyingKey {
     #[wasm_bindgen(js_name = "toString")]
     #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
-        self.0.to_string()
+      format!("{:?}", self.as_string)
     }
+}
+
+pub fn verifying_key_to_bytes_impl<N: Network>(verifying_key: &VerifyingKey) -> Result<Vec<u8>, String> {
+  let vk_native = VerifyingKeyNative::<N>::from_str(&verifying_key.as_string).map_err(|e| e.to_string())?;
+  vk_native.to_bytes_le().map_err(|_| "Failed to serialize verifying key".to_string())
+}
+
+pub fn verifying_key_from_string_impl<N: Network>(string: &str) -> Result<VerifyingKey, String> {
+  let vk_native = VerifyingKeyNative::<N>::from_str(string).map_err(|e| e.to_string())?;
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  Ok(VerifyingKey { network, as_string: vk_native.to_string() })
+}
+
+pub fn verifying_key_checksum_impl<N: Network>(verifying_key: &VerifyingKey) -> Result<String, String> {
+    let vk_native = VerifyingKeyNative::<N>::from_str(&verifying_key.as_string).map_err(|e| e.to_string())?;
+    Ok(hex::encode(sha2::Sha256::digest(vk_native.to_bytes_le().unwrap())))
+}
+
+pub fn verifying_key_from_bytes_impl<N: Network>(bytes: &[u8]) -> Result<VerifyingKey, String> {
+    let vk_native = VerifyingKeyNative::<N>::from_bytes_le(bytes).map_err(|e| e.to_string())?;
+    let network = network_string_id!(N::ID).unwrap().to_string();
+    Ok(VerifyingKey { network, as_string: vk_native.to_string() })
 }
 
 impl Deref for VerifyingKey {
-    type Target = VerifyingKeyNative;
+    type Target = String;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.as_string
     }
 }
 
-impl From<VerifyingKey> for VerifyingKeyNative {
-    fn from(verifying_key: VerifyingKey) -> VerifyingKeyNative {
-        verifying_key.0
+impl<N: Network> From<VerifyingKey> for VerifyingKeyNative<N> {
+    fn from(verifying_key: VerifyingKey) -> VerifyingKeyNative<N> {
+        VerifyingKeyNative::<N>::from_str(&verifying_key.as_string).unwrap()
     }
 }
 
-impl From<&VerifyingKey> for VerifyingKeyNative {
-    fn from(verifying_key: &VerifyingKey) -> VerifyingKeyNative {
-        verifying_key.0.clone()
+impl<N: Network> From<&VerifyingKey> for VerifyingKeyNative<N> {
+    fn from(verifying_key: &VerifyingKey) -> VerifyingKeyNative<N> {
+      VerifyingKeyNative::<N>::from_str(&verifying_key.as_string).unwrap()
     }
 }
 
-impl From<VerifyingKeyNative> for VerifyingKey {
-    fn from(verifying_key: VerifyingKeyNative) -> VerifyingKey {
-        VerifyingKey(verifying_key)
+impl<N: Network> From<VerifyingKeyNative<N>> for VerifyingKey {
+    fn from(verifying_key: VerifyingKeyNative<N>) -> VerifyingKey {
+      let network = network_string_id!(N::ID).unwrap().to_string();
+      VerifyingKey { network, as_string: verifying_key.to_string() }
     }
 }
 
 impl PartialEq for VerifyingKey {
     fn eq(&self, other: &Self) -> bool {
-        *self.0 == *other.0
+      *self.as_string == *other.as_string && *self.network == *other.network
     }
 }
 

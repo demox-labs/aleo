@@ -18,6 +18,7 @@ use crate::types::native::TransactionNative;
 
 use std::str::FromStr;
 use wasm_bindgen::prelude::wasm_bindgen;
+use crate::Network;
 
 /// Webassembly Representation of an Aleo transaction
 ///
@@ -25,7 +26,11 @@ use wasm_bindgen::prelude::wasm_bindgen;
 /// object that should be submitted to the Aleo Network in order to deploy or execute a function.
 #[wasm_bindgen]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Transaction(TransactionNative);
+pub struct Transaction {
+  #[wasm_bindgen(skip)]
+  pub network: String,
+  as_string: String
+}
 
 #[wasm_bindgen]
 impl Transaction {
@@ -34,8 +39,11 @@ impl Transaction {
     /// @param {string} transaction String representation of a transaction
     /// @returns {Transaction | Error}
     #[wasm_bindgen(js_name = fromString)]
-    pub fn from_string(transaction: &str) -> Result<Transaction, String> {
-        Transaction::from_str(transaction)
+    pub fn from_string(network: &str, transaction: &str) -> Result<Transaction, String> {
+      match dispatch_network!(network, transaction_from_string_impl, transaction) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e),
+      }
     }
 
     /// Get the transaction as a string. If you want to submit this transaction to the Aleo Network
@@ -45,7 +53,7 @@ impl Transaction {
     #[wasm_bindgen(js_name = toString)]
     #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
-        self.0.to_string()
+        self.as_string.clone()
     }
 
     /// Get the id of the transaction. This is the merkle root of the transaction's inclusion proof.
@@ -56,40 +64,55 @@ impl Transaction {
     ///
     /// @returns {string} Transaction id
     #[wasm_bindgen(js_name = transactionId)]
-    pub fn transaction_id(&self) -> String {
-        self.0.id().to_string()
+    pub fn transaction_id(&self) -> Result<String, String> {
+      match dispatch_network!(self.network.as_str(), transaction_transaction_id_impl, self) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e),
+      }
     }
 
     /// Get the type of the transaction (will return "deploy" or "execute")
     ///
     /// @returns {string} Transaction type
     #[wasm_bindgen(js_name = transactionType)]
-    pub fn transaction_type(&self) -> String {
-        match &self.0 {
-            TransactionNative::Deploy(..) => "deploy".to_string(),
-            TransactionNative::Execute(..) => "execute".to_string(),
-            TransactionNative::Fee(..) => "fee".to_string(),
-        }
+    pub fn transaction_type(&self) -> Result<String, String> {
+      match dispatch_network!(self.network.as_str(), transaction_transaction_type_impl, self) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e),
+      }
     }
 }
 
-impl From<Transaction> for TransactionNative {
+pub fn transaction_transaction_type_impl<N: Network>(transaction: &Transaction) -> Result<String, String> {
+  let t_native = TransactionNative::<N>::from_str(&transaction.as_string).unwrap();
+  match &t_native {
+    TransactionNative::Deploy(..) => Ok("deploy".to_string()),
+    TransactionNative::Execute(..) => Ok("execute".to_string()),
+    TransactionNative::Fee(..) => Ok("fee".to_string()),
+  }
+}
+
+pub fn transaction_transaction_id_impl<N: Network>(transaction: &Transaction) -> Result<String, String> {
+  let t_native = TransactionNative::<N>::from_str(&transaction.as_string).unwrap();
+  Ok(t_native.id().to_string())
+}
+
+pub fn transaction_from_string_impl<N: Network>(transaction: &str) -> Result<Transaction, String> {
+    let t_native = TransactionNative::<N>::from_str(transaction).map_err(|e| e.to_string())?;
+    let network = network_string_id!(N::ID).unwrap().to_string();
+    Ok(Transaction { network, as_string: t_native.to_string() })
+}
+
+impl<N: Network> From<Transaction> for TransactionNative<N> {
     fn from(transaction: Transaction) -> Self {
-        transaction.0
+        TransactionNative::<N>::from_str(&transaction.as_string).unwrap()
     }
 }
 
-impl From<TransactionNative> for Transaction {
-    fn from(transaction: TransactionNative) -> Self {
-        Self(transaction)
-    }
-}
-
-impl FromStr for Transaction {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self(TransactionNative::from_str(s).map_err(|e| e.to_string())?))
+impl<N: Network> From<TransactionNative<N>> for Transaction {
+    fn from(transaction: TransactionNative<N>) -> Self {
+      let network = network_string_id!(N::ID).unwrap().to_string();
+      Self { network, as_string: transaction.to_string() }
     }
 }
 
