@@ -16,6 +16,7 @@
 
 use crate::types::native::FieldNative;
 use crate::native::Network;
+use snarkvm_console::prelude::ToBits;
 
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -43,6 +44,19 @@ impl Field {
         Err(e) => return Err(e)
       }
     }
+
+    pub fn bhp256_hash_to_field(network: &str, hash: &[u8]) -> Result<Field, String> {
+      match dispatch_network!(network, field_bhp256_hash_to_field_impl, hash) {
+        Ok(result) => Ok(Self{ network: network.to_string(), as_string: result}),
+        Err(e) => return Err(e)
+      }
+    }
+}
+
+pub fn field_bhp256_hash_to_field_impl<N: Network>(hash: &[u8]) -> Result<String, String> {
+  let bits = hash.to_vec().to_bits_le();
+  let field_string = N::hash_bhp256(&bits).map_err(|e| e.to_string())?.to_string();
+  Ok(field_string)
 }
 
 pub fn field_from_string_impl<N: Network>(field: &str) -> Result<String, String> {
