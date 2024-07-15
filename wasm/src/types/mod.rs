@@ -20,4 +20,7 @@ pub use field::*;
 pub mod group;
 pub use group::*;
 
+pub mod plaintext;
+pub use plaintext::*;
+
 pub(crate) mod native;
