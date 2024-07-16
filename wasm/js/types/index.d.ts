@@ -11,6 +11,7 @@ export {
     ExecutionResponse,
     Field,
     OfflineQuery,
+    Plaintext,
     PrivateKey,
     PrivateKeyCiphertext,
     Program,
