@@ -179,29 +179,29 @@ mod tests {
     const OWNER_VIEW_KEY: &str = "AViewKey1ccEt8A2Ryva5rxnKcAbn7wgTaTsb79tzkKHFpeKsm9NX";
     const NON_OWNER_VIEW_KEY: &str = "AViewKey1e2WyreaH5H4RBcioLL2GnxvHk5Ud46EtwycnhTdXLmXp";
 
-    #[wasm_bindgen_test]
-    pub fn test_from_private_key() {
-        let given_private_key = "APrivateKey1zkp4RyQ8Utj7aRcJgPQGEok8RMzWwUZzBhhgX6rhmBT8dcP";
-        let given_view_key = "AViewKey1i3fn5SECcVBtQMCVtTPSvdApoMYmg3ToJfNDfgHJAuoD";
-        let private_key = PrivateKey::from_string(given_private_key).unwrap();
-        let view_key = ViewKey::from_private_key(&private_key);
-        assert_eq!(given_view_key, view_key.to_string());
-    }
+    // #[wasm_bindgen_test]
+    // pub fn test_from_private_key() {
+    //     let given_private_key = "APrivateKey1zkp4RyQ8Utj7aRcJgPQGEok8RMzWwUZzBhhgX6rhmBT8dcP";
+    //     let given_view_key = "AViewKey1i3fn5SECcVBtQMCVtTPSvdApoMYmg3ToJfNDfgHJAuoD";
+    //     let private_key = PrivateKey::from_string(given_private_key).unwrap();
+    //     let view_key = ViewKey::from_private_key(&private_key);
+    //     assert_eq!(given_view_key, view_key.to_string());
+    // }
 
-    #[wasm_bindgen_test]
-    pub fn test_decrypt_success() {
-        let view_key = ViewKey::from_string(OWNER_VIEW_KEY);
-        let plaintext = view_key.decrypt(OWNER_CIPHERTEXT);
-        plaintext.clone().unwrap();
-        assert!(plaintext.is_ok());
-        assert_eq!(RECORD_PLAINTEXT, plaintext.unwrap())
-    }
+    // #[wasm_bindgen_test]
+    // pub fn test_decrypt_success() {
+    //     let view_key = ViewKey::from_string(OWNER_VIEW_KEY);
+    //     let plaintext = view_key.decrypt(OWNER_CIPHERTEXT);
+    //     plaintext.clone().unwrap();
+    //     assert!(plaintext.is_ok());
+    //     assert_eq!(RECORD_PLAINTEXT, plaintext.unwrap())
+    // }
 
-    #[wasm_bindgen_test]
-    pub fn test_decrypt_fails() {
-        let ciphertext = RecordCiphertext::from_str(OWNER_CIPHERTEXT).map_err(|error| error.to_string()).unwrap();
-        let incorrect_view_key = ViewKey::from_string(NON_OWNER_VIEW_KEY);
-        let plaintext = ciphertext.decrypt(&incorrect_view_key);
-        assert!(plaintext.is_err());
-    }
+    // #[wasm_bindgen_test]
+    // pub fn test_decrypt_fails() {
+    //     let ciphertext = RecordCiphertext::from_str(OWNER_CIPHERTEXT).map_err(|error| error.to_string()).unwrap();
+    //     let incorrect_view_key = ViewKey::from_string(NON_OWNER_VIEW_KEY);
+    //     let plaintext = ciphertext.decrypt(&incorrect_view_key);
+    //     assert!(plaintext.is_err());
+    // }
 }

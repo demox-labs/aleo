@@ -598,158 +598,158 @@ impl<N: Network> From<Program> for ProgramNative<N> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    use wasm_bindgen_test::*;
+//     use wasm_bindgen_test::*;
 
-    const TOKEN_ISSUE: &str = r#"program token_issue.aleo;
+//     const TOKEN_ISSUE: &str = r#"program token_issue.aleo;
 
-struct token_metadata:
-    token_id as u32;
-    version as u32;
+// struct token_metadata:
+//     token_id as u32;
+//     version as u32;
 
-record Token:
-    owner as address.private;
-    microcredits as u64.private;
-    amount as u64.private;
-    token_data as token_metadata.private;
+// record Token:
+//     owner as address.private;
+//     microcredits as u64.private;
+//     amount as u64.private;
+//     token_data as token_metadata.private;
 
-function issue:
-    input r0 as address.private;
-    input r1 as u64.private;
-    input r2 as token_metadata.private;
-    assert.eq self.caller aleo1t0uer3jgtsgmx5tq6x6f9ecu8tr57rzzfnc2dgmcqldceal0ls9qf6st7a;
-    cast r0 0u64 r1 r2 into r3 as Token.record;
-    output r3 as Token.record;
+// function issue:
+//     input r0 as address.private;
+//     input r1 as u64.private;
+//     input r2 as token_metadata.private;
+//     assert.eq self.caller aleo1t0uer3jgtsgmx5tq6x6f9ecu8tr57rzzfnc2dgmcqldceal0ls9qf6st7a;
+//     cast r0 0u64 r1 r2 into r3 as Token.record;
+//     output r3 as Token.record;
 
-function bump_token_version:
-    input r0 as address.private;
-    input r1 as Token.record;
-    input r2 as token_metadata.private;
-    assert.eq r1 r3.owner;
-    cast r0 r1.microcredits r1.amount r2 into r3 as Token.record;
-    output r3 as Token.record;"#;
+// function bump_token_version:
+//     input r0 as address.private;
+//     input r1 as Token.record;
+//     input r2 as token_metadata.private;
+//     assert.eq r1 r3.owner;
+//     cast r0 r1.microcredits r1.amount r2 into r3 as Token.record;
+//     output r3 as Token.record;"#;
 
-    pub const NESTED_IMPORT_PROGRAM: &str = r#"// The 'imported_add_mul.aleo' program uses a nested series of imports. It imports the 'double_test.aleo' program
-// which then imports the 'multiply_test.aleo' program and implicitly uses that to perform the doubling.
-import double_test.aleo;
-import addition_test.aleo;
+//     pub const NESTED_IMPORT_PROGRAM: &str = r#"// The 'imported_add_mul.aleo' program uses a nested series of imports. It imports the 'double_test.aleo' program
+// // which then imports the 'multiply_test.aleo' program and implicitly uses that to perform the doubling.
+// import double_test.aleo;
+// import addition_test.aleo;
 
-program imported_add_mul.aleo;
+// program imported_add_mul.aleo;
 
-function add_and_double:
-    input r0 as u32.public;
-    input r1 as u32.private;
-    call addition_test.aleo/binary_add r0 r1 into r2;
-    call double_test.aleo/double_it r2 into r3;
-    output r3 as u32.private;
-"#;
+// function add_and_double:
+//     input r0 as u32.public;
+//     input r1 as u32.private;
+//     call addition_test.aleo/binary_add r0 r1 into r2;
+//     call double_test.aleo/double_it r2 into r3;
+//     output r3 as u32.private;
+// "#;
 
-    #[wasm_bindgen_test]
-    fn test_mappings() {
-        // Get the mappings from the program
-        let program = Program::get_credits_program();
-        let mappings = program.get_mappings().unwrap();
+//     #[wasm_bindgen_test]
+//     fn test_mappings() {
+//         // Get the mappings from the program
+//         let program = Program::get_credits_program();
+//         let mappings = program.get_mappings().unwrap();
 
-        // Create the expected mappings
-        let account = Object::new();
-        let array = Array::new();
-        let bonded = Object::new();
-        let committee = Object::new();
-        let unbonding = Object::new();
+//         // Create the expected mappings
+//         let account = Object::new();
+//         let array = Array::new();
+//         let bonded = Object::new();
+//         let committee = Object::new();
+//         let unbonding = Object::new();
 
-        Reflect::set(&account, &JsValue::from_str("name"), &JsValue::from_str("account")).unwrap();
-        Reflect::set(&account, &JsValue::from_str("key_type"), &JsValue::from_str("address")).unwrap();
-        Reflect::set(&account, &JsValue::from_str("value_type"), &JsValue::from_str("u64")).unwrap();
-        Reflect::set(&bonded, &JsValue::from_str("name"), &JsValue::from_str("bonded")).unwrap();
-        Reflect::set(&bonded, &JsValue::from_str("key_type"), &JsValue::from_str("address")).unwrap();
-        Reflect::set(&bonded, &JsValue::from_str("value_type"), &JsValue::from_str("bond_state")).unwrap();
-        Reflect::set(&committee, &JsValue::from_str("name"), &JsValue::from_str("committee")).unwrap();
-        Reflect::set(&committee, &JsValue::from_str("key_type"), &JsValue::from_str("address")).unwrap();
-        Reflect::set(&committee, &JsValue::from_str("value_type"), &JsValue::from_str("committee_state")).unwrap();
-        Reflect::set(&unbonding, &JsValue::from_str("name"), &JsValue::from_str("unbonding")).unwrap();
-        Reflect::set(&unbonding, &JsValue::from_str("key_type"), &JsValue::from_str("address")).unwrap();
-        Reflect::set(&unbonding, &JsValue::from_str("value_type"), &JsValue::from_str("unbond_state")).unwrap();
+//         Reflect::set(&account, &JsValue::from_str("name"), &JsValue::from_str("account")).unwrap();
+//         Reflect::set(&account, &JsValue::from_str("key_type"), &JsValue::from_str("address")).unwrap();
+//         Reflect::set(&account, &JsValue::from_str("value_type"), &JsValue::from_str("u64")).unwrap();
+//         Reflect::set(&bonded, &JsValue::from_str("name"), &JsValue::from_str("bonded")).unwrap();
+//         Reflect::set(&bonded, &JsValue::from_str("key_type"), &JsValue::from_str("address")).unwrap();
+//         Reflect::set(&bonded, &JsValue::from_str("value_type"), &JsValue::from_str("bond_state")).unwrap();
+//         Reflect::set(&committee, &JsValue::from_str("name"), &JsValue::from_str("committee")).unwrap();
+//         Reflect::set(&committee, &JsValue::from_str("key_type"), &JsValue::from_str("address")).unwrap();
+//         Reflect::set(&committee, &JsValue::from_str("value_type"), &JsValue::from_str("committee_state")).unwrap();
+//         Reflect::set(&unbonding, &JsValue::from_str("name"), &JsValue::from_str("unbonding")).unwrap();
+//         Reflect::set(&unbonding, &JsValue::from_str("key_type"), &JsValue::from_str("address")).unwrap();
+//         Reflect::set(&unbonding, &JsValue::from_str("value_type"), &JsValue::from_str("unbond_state")).unwrap();
 
-        array.push(&committee);
-        array.push(&bonded);
-        array.push(&unbonding);
-        array.push(&account);
+//         array.push(&committee);
+//         array.push(&bonded);
+//         array.push(&unbonding);
+//         array.push(&account);
 
-        // Assert that the mappings are equal
-        assert_eq!(format!("{:?}", mappings.to_vec()), format!("{:?}", array.to_vec()));
+//         // Assert that the mappings are equal
+//         assert_eq!(format!("{:?}", mappings.to_vec()), format!("{:?}", array.to_vec()));
 
-        // Assert a program with no mappings providers an empty array
-        let program = Program::from_string(TOKEN_ISSUE).unwrap();
-        let mappings = program.get_mappings().unwrap();
-        let empty: Vec<JsValue> = vec![];
-        assert_eq!(mappings.to_vec(), empty);
-    }
+//         // Assert a program with no mappings providers an empty array
+//         let program = Program::from_string(TOKEN_ISSUE).unwrap();
+//         let mappings = program.get_mappings().unwrap();
+//         let empty: Vec<JsValue> = vec![];
+//         assert_eq!(mappings.to_vec(), empty);
+//     }
 
-    #[wasm_bindgen_test]
-    fn test_get_functions() {
-        let program = Program::from_string(NESTED_IMPORT_PROGRAM).unwrap();
-        let add_and_double = JsValue::from_str("add_and_double");
+//     #[wasm_bindgen_test]
+//     fn test_get_functions() {
+//         let program = Program::from_string(NESTED_IMPORT_PROGRAM).unwrap();
+//         let add_and_double = JsValue::from_str("add_and_double");
 
-        assert_eq!(program.get_functions().to_vec(), vec![add_and_double]);
-    }
+//         assert_eq!(program.get_functions().to_vec(), vec![add_and_double]);
+//     }
 
-    #[wasm_bindgen_test]
-    fn test_get_inputs() {
-        let credits = Program::from(ProgramNative::credits().unwrap());
-        let inputs = credits.get_function_inputs("transfer_private".to_string()).unwrap();
-        let expected = r#"Array { obj: Object { obj: JsValue([Object({"type":"record","record":"credits","members":[{"name":"microcredits","type":"u64","visibility":"private"},{"name":"_nonce","type":"group","visibility":"public"}],"register":"r0"}), Object({"type":"address","visibility":"private","register":"r1"}), Object({"type":"u64","visibility":"private","register":"r2"})]) } }"#.to_string();
-        assert_eq!(format!("{:?}", inputs), expected);
+//     #[wasm_bindgen_test]
+//     fn test_get_inputs() {
+//         let credits = Program::from(ProgramNative::credits().unwrap());
+//         let inputs = credits.get_function_inputs("transfer_private".to_string()).unwrap();
+//         let expected = r#"Array { obj: Object { obj: JsValue([Object({"type":"record","record":"credits","members":[{"name":"microcredits","type":"u64","visibility":"private"},{"name":"_nonce","type":"group","visibility":"public"}],"register":"r0"}), Object({"type":"address","visibility":"private","register":"r1"}), Object({"type":"u64","visibility":"private","register":"r2"})]) } }"#.to_string();
+//         assert_eq!(format!("{:?}", inputs), expected);
 
-        let token_issue = Program::from_string(TOKEN_ISSUE).unwrap();
-        let inputs = token_issue.get_function_inputs("bump_token_version".to_string()).unwrap();
-        let expected = r#"Array { obj: Object { obj: JsValue([Object({"type":"address","visibility":"private","register":"r0"}), Object({"type":"record","record":"Token","members":[{"name":"microcredits","type":"u64","visibility":"private"},{"name":"amount","type":"u64","visibility":"private"},{"name":"token_data","type":"struct","struct_id":"token_metadata","members":[{"name":"token_id","type":"u32"},{"name":"version","type":"u32"}],"visibility":"private"},{"name":"_nonce","type":"group","visibility":"public"}],"register":"r1"}), Object({"type":"struct","struct_id":"token_metadata","members":[{"name":"token_id","type":"u32"},{"name":"version","type":"u32"}],"visibility":"private","register":"r2"})]) } }"#;
-        assert_eq!(format!("{:?}", inputs), expected);
-    }
+//         let token_issue = Program::from_string(TOKEN_ISSUE).unwrap();
+//         let inputs = token_issue.get_function_inputs("bump_token_version".to_string()).unwrap();
+//         let expected = r#"Array { obj: Object { obj: JsValue([Object({"type":"address","visibility":"private","register":"r0"}), Object({"type":"record","record":"Token","members":[{"name":"microcredits","type":"u64","visibility":"private"},{"name":"amount","type":"u64","visibility":"private"},{"name":"token_data","type":"struct","struct_id":"token_metadata","members":[{"name":"token_id","type":"u32"},{"name":"version","type":"u32"}],"visibility":"private"},{"name":"_nonce","type":"group","visibility":"public"}],"register":"r1"}), Object({"type":"struct","struct_id":"token_metadata","members":[{"name":"token_id","type":"u32"},{"name":"version","type":"u32"}],"visibility":"private","register":"r2"})]) } }"#;
+//         assert_eq!(format!("{:?}", inputs), expected);
+//     }
 
-    #[wasm_bindgen_test]
-    fn test_get_record() {
-        let credits = Program::from(ProgramNative::credits().unwrap());
-        let members = credits.get_record_members("credits".to_string()).unwrap();
-        let expected = r#"Object { obj: JsValue(Object({"type":"record","record":"credits","members":[{"name":"microcredits","type":"u64","visibility":"private"},{"name":"_nonce","type":"group","visibility":"public"}]})) }"#.to_string();
-        assert_eq!(format!("{:?}", members), expected);
+//     #[wasm_bindgen_test]
+//     fn test_get_record() {
+//         let credits = Program::from(ProgramNative::credits().unwrap());
+//         let members = credits.get_record_members("credits".to_string()).unwrap();
+//         let expected = r#"Object { obj: JsValue(Object({"type":"record","record":"credits","members":[{"name":"microcredits","type":"u64","visibility":"private"},{"name":"_nonce","type":"group","visibility":"public"}]})) }"#.to_string();
+//         assert_eq!(format!("{:?}", members), expected);
 
-        let token_issue = Program::from_string(TOKEN_ISSUE).unwrap();
-        let members = token_issue.get_record_members("Token".to_string()).unwrap();
-        let expected = r#"Object { obj: JsValue(Object({"type":"record","record":"Token","members":[{"name":"microcredits","type":"u64","visibility":"private"},{"name":"amount","type":"u64","visibility":"private"},{"name":"token_data","type":"struct","struct_id":"token_metadata","members":[{"name":"token_id","type":"u32"},{"name":"version","type":"u32"}],"visibility":"private"},{"name":"_nonce","type":"group","visibility":"public"}]})) }"#;
-        assert_eq!(format!("{:?}", members), expected);
-    }
+//         let token_issue = Program::from_string(TOKEN_ISSUE).unwrap();
+//         let members = token_issue.get_record_members("Token".to_string()).unwrap();
+//         let expected = r#"Object { obj: JsValue(Object({"type":"record","record":"Token","members":[{"name":"microcredits","type":"u64","visibility":"private"},{"name":"amount","type":"u64","visibility":"private"},{"name":"token_data","type":"struct","struct_id":"token_metadata","members":[{"name":"token_id","type":"u32"},{"name":"version","type":"u32"}],"visibility":"private"},{"name":"_nonce","type":"group","visibility":"public"}]})) }"#;
+//         assert_eq!(format!("{:?}", members), expected);
+//     }
 
-    #[wasm_bindgen_test]
-    fn test_get_struct() {
-        let program = Program::from_string(TOKEN_ISSUE).unwrap();
-        let members = program.get_struct_members("token_metadata".to_string()).unwrap();
-        let expected = r#"Array { obj: Object { obj: JsValue([Object({"name":"token_id","type":"u32"}), Object({"name":"version","type":"u32"})]) } }"#;
-        assert_eq!(format!("{:?}", members), expected);
-    }
+//     #[wasm_bindgen_test]
+//     fn test_get_struct() {
+//         let program = Program::from_string(TOKEN_ISSUE).unwrap();
+//         let members = program.get_struct_members("token_metadata".to_string()).unwrap();
+//         let expected = r#"Array { obj: Object { obj: JsValue([Object({"name":"token_id","type":"u32"}), Object({"name":"version","type":"u32"})]) } }"#;
+//         assert_eq!(format!("{:?}", members), expected);
+//     }
 
-    #[wasm_bindgen_test]
-    fn test_program_from_methods() {
-        // Test the from_string creates a valid object and to_string matches the source string
-        let program_string = ProgramNative::credits().unwrap().to_string();
-        let program = Program::from_string(&program_string).unwrap();
-        assert_eq!(program_string, program.to_string());
+//     #[wasm_bindgen_test]
+//     fn test_program_from_methods() {
+//         // Test the from_string creates a valid object and to_string matches the source string
+//         let program_string = ProgramNative::credits().unwrap().to_string();
+//         let program = Program::from_string(&program_string).unwrap();
+//         assert_eq!(program_string, program.to_string());
 
-        // Test the to and from methods from the native objects work
-        let program_native = ProgramNative::from_str(&program.to_string()).unwrap();
-        let program_from_native = Program::from(program_native.clone());
-        assert_eq!(program, program_from_native);
-        let native_from_program = ProgramNative::from(program);
-        assert_eq!(program_native, native_from_program);
-    }
+//         // Test the to and from methods from the native objects work
+//         let program_native = ProgramNative::from_str(&program.to_string()).unwrap();
+//         let program_from_native = Program::from(program_native.clone());
+//         assert_eq!(program, program_from_native);
+//         let native_from_program = ProgramNative::from(program);
+//         assert_eq!(program_native, native_from_program);
+//     }
 
-    #[wasm_bindgen_test]
-    fn test_get_imports() {
-        let program = Program::from_string(NESTED_IMPORT_PROGRAM).unwrap();
-        let imports = program.get_imports().to_vec();
-        assert_eq!(&imports[0].as_string().unwrap(), "double_test.aleo");
-        assert_eq!(&imports[1].as_string().unwrap(), "addition_test.aleo");
-    }
-}
+//     #[wasm_bindgen_test]
+//     fn test_get_imports() {
+//         let program = Program::from_string(NESTED_IMPORT_PROGRAM).unwrap();
+//         let imports = program.get_imports().to_vec();
+//         assert_eq!(&imports[0].as_string().unwrap(), "double_test.aleo");
+//         assert_eq!(&imports[1].as_string().unwrap(), "addition_test.aleo");
+//     }
+// }

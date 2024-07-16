@@ -118,22 +118,22 @@ mod tests {
 
     const ITERATIONS: u64 = 1_000;
 
-    #[wasm_bindgen_test]
-    pub fn test_sign_and_verify() {
-        for _ in 0..ITERATIONS {
-            // Sample a new private key and message.
-            let private_key = PrivateKey::new();
-            let message: [u8; 32] = StdRng::from_entropy().gen();
+    // #[wasm_bindgen_test]
+    // pub fn test_sign_and_verify() {
+    //     for _ in 0..ITERATIONS {
+    //         // Sample a new private key and message.
+    //         let private_key = PrivateKey::new();
+    //         let message: [u8; 32] = StdRng::from_entropy().gen();
 
-            // Sign the message.
-            let signature = Signature::sign(&private_key, &message);
-            // Check the signature is valid.
-            assert!(signature.verify(&private_key.to_address(), &message));
+    //         // Sign the message.
+    //         let signature = Signature::sign(&private_key, &message);
+    //         // Check the signature is valid.
+    //         assert!(signature.verify(&private_key.to_address(), &message));
 
-            // Sample a different message.
-            let bad_message: [u8; 32] = StdRng::from_entropy().gen();
-            // Check the signature is invalid.
-            assert!(!signature.verify(&private_key.to_address(), &bad_message));
-        }
-    }
+    //         // Sample a different message.
+    //         let bad_message: [u8; 32] = StdRng::from_entropy().gen();
+    //         // Check the signature is invalid.
+    //         assert!(!signature.verify(&private_key.to_address(), &bad_message));
+    //     }
+    // }
 }

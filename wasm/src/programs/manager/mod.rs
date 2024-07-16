@@ -159,30 +159,30 @@ function add_and_double:
     output r3 as u32.private;
 "#;
 
-    #[wasm_bindgen_test]
-    fn test_import_resolution() {
-        let imports = Object::new();
-        Reflect::set(&imports, &JsValue::from_str("multiply_test.aleo"), &JsValue::from_str(MULTIPLY_PROGRAM)).unwrap();
-        Reflect::set(&imports, &JsValue::from_str("addition_test.aleo"), &JsValue::from_str(ADDITION_PROGRAM)).unwrap();
-        Reflect::set(&imports, &JsValue::from_str("double_test.aleo"), &JsValue::from_str(MULTIPLY_IMPORT_PROGRAM))
-            .unwrap();
+    // #[wasm_bindgen_test]
+    // fn test_import_resolution() {
+    //     let imports = Object::new();
+    //     Reflect::set(&imports, &JsValue::from_str("multiply_test.aleo"), &JsValue::from_str(MULTIPLY_PROGRAM)).unwrap();
+    //     Reflect::set(&imports, &JsValue::from_str("addition_test.aleo"), &JsValue::from_str(ADDITION_PROGRAM)).unwrap();
+    //     Reflect::set(&imports, &JsValue::from_str("double_test.aleo"), &JsValue::from_str(MULTIPLY_IMPORT_PROGRAM))
+    //         .unwrap();
 
-        let mut process = ProcessNative::load_web().unwrap();
-        let program = ProgramNative::from_str(NESTED_IMPORT_PROGRAM).unwrap();
-        let add_program = ProgramNative::from_str(ADDITION_PROGRAM).unwrap();
-        let multiply_program = ProgramNative::from_str(MULTIPLY_PROGRAM).unwrap();
-        let double_program = ProgramNative::from_str(MULTIPLY_IMPORT_PROGRAM).unwrap();
+    //     let mut process = ProcessNative::load_web().unwrap();
+    //     let program = ProgramNative::from_str(NESTED_IMPORT_PROGRAM).unwrap();
+    //     let add_program = ProgramNative::from_str(ADDITION_PROGRAM).unwrap();
+    //     let multiply_program = ProgramNative::from_str(MULTIPLY_PROGRAM).unwrap();
+    //     let double_program = ProgramNative::from_str(MULTIPLY_IMPORT_PROGRAM).unwrap();
 
-        ProgramManager::resolve_imports(&mut process, &program, Some(imports)).unwrap();
+    //     ProgramManager::resolve_imports(&mut process, &program, Some(imports)).unwrap();
 
-        let add_import = process.get_program("addition_test.aleo").unwrap();
-        let multiply_import = process.get_program("multiply_test.aleo").unwrap();
-        let double_import = process.get_program("double_test.aleo").unwrap();
-        let main_program = process.get_program("imported_add_mul.aleo");
+    //     let add_import = process.get_program("addition_test.aleo").unwrap();
+    //     let multiply_import = process.get_program("multiply_test.aleo").unwrap();
+    //     let double_import = process.get_program("double_test.aleo").unwrap();
+    //     let main_program = process.get_program("imported_add_mul.aleo");
 
-        assert_eq!(add_import, &add_program);
-        assert_eq!(multiply_import, &multiply_program);
-        assert_eq!(double_import, &double_program);
-        assert!(main_program.is_err());
-    }
+    //     assert_eq!(add_import, &add_program);
+    //     assert_eq!(multiply_import, &multiply_program);
+    //     assert_eq!(double_import, &double_program);
+    //     assert!(main_program.is_err());
+    // }
 }

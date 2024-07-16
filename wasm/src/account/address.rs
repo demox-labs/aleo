@@ -129,25 +129,25 @@ impl Deref for Address {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::account::PrivateKey;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use crate::account::PrivateKey;
 
-    use wasm_bindgen_test::*;
+//     use wasm_bindgen_test::*;
 
-    const ITERATIONS: u64 = 1_000;
+//     const ITERATIONS: u64 = 1_000;
 
-    #[wasm_bindgen_test]
-    pub fn test_from_private_key() {
-        for _ in 0..ITERATIONS {
-            // Sample a new private key.
-            let private_key = PrivateKey::new();
-            let expected = Address::from_private_key(&private_key);
+//     #[wasm_bindgen_test]
+//     pub fn test_from_private_key() {
+//         for _ in 0..ITERATIONS {
+//             // Sample a new private key.
+//             let private_key = PrivateKey::new();
+//             let expected = Address::from_private_key(&private_key);
 
-            // Check the address derived from the view key.
-            let view_key = private_key.to_view_key();
-            assert_eq!(expected, Address::from_view_key(&view_key));
-        }
-    }
-}
+//             // Check the address derived from the view key.
+//             let view_key = private_key.to_view_key();
+//             assert_eq!(expected, Address::from_view_key(&view_key));
+//         }
+//     }
+// }

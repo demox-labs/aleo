@@ -23,6 +23,8 @@ use wasm_bindgen::prelude::wasm_bindgen;
 
 use std::str::FromStr;
 
+use super::native::FieldNative;
+
 #[wasm_bindgen]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Plaintext{
@@ -46,15 +48,25 @@ impl Plaintext {
       }
     }
 
-    #[wasm_bindgen(js_name = "toBytes")]
-    pub fn to_bits(&self) -> Result<Vec<u8>, String> {
-      self.as_string.to_bits_le().to_bytes_le().map_err(|err| err.to_string())
+    #[wasm_bindgen(js_name = "hashBhp256")]
+    pub fn hash_bhp256(&self) -> Result<String, String> {
+      match dispatch_network!(self.network.as_str(), plaintext_hash_bhp256_impl, &self.as_string) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
     }
 }
 
 pub fn plaintext_from_string_impl<N: Network>(plaintext: &str) -> Result<String, String> {
   let plaintext_string = PlaintextNative::<N>::from_str(plaintext).map_err(|e| e.to_string())?.to_string();
   Ok(plaintext_string)
+}
+
+pub fn plaintext_hash_bhp256_impl<N: Network>(plaintext_string: &str) -> Result<String, String> {
+  let literal = PlaintextNative::<N>::from_str(&plaintext_string).unwrap();
+  let bits = literal.to_bits_le();
+  let field_string = N::hash_bhp256(&bits).map_err(|e| e.to_string())?.to_string();
+  Ok(field_string)
 }
 
 impl<N: Network> From<PlaintextNative<N>> for Plaintext {
@@ -67,5 +79,21 @@ impl<N: Network> From<PlaintextNative<N>> for Plaintext {
 impl<N: Network> From<Plaintext> for PlaintextNative<N> {
     fn from(plaintext: Plaintext) -> Self {
       PlaintextNative::<N>::from_str(&plaintext.as_string).unwrap()
+    }
+}
+
+
+// Write tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_plaintext_to_bytes() {
+      let plaintext_string = "{ account: aleo15xd9tee983ts3urff8j22q64wvcyc8geakghyc3ew5u0v8jfuqgs958t6d, token_id: 4846247369341682005field }";
+      let plaintext = Plaintext::from_string("TestnetV0", &plaintext_string).unwrap();
+
+      let hash = plaintext.hash_bhp256().unwrap();
+      assert_eq!(hash, "5516020691424619214358523651321345610671348418282339232497640613253889639415field");
     }
 }
