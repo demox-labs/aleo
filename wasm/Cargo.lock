@@ -1960,6 +1960,7 @@ dependencies = [
  "snarkvm-ledger-authority",
  "snarkvm-ledger-committee",
  "snarkvm-ledger-narwhal-batch-header",
+ "snarkvm-ledger-narwhal-data",
  "snarkvm-ledger-narwhal-subdag",
  "snarkvm-ledger-narwhal-transmission-id",
  "snarkvm-ledger-puzzle",
@@ -1999,6 +2000,15 @@ dependencies = [
  "serde_json",
  "snarkvm-console",
  "snarkvm-ledger-narwhal-transmission-id",
+]
+
+[[package]]
+name = "snarkvm-ledger-narwhal-data"
+version = "0.16.19"
+dependencies = [
+ "bytes",
+ "serde_json",
+ "snarkvm-console",
 ]
 
 [[package]]
@@ -2141,6 +2151,7 @@ dependencies = [
  "snarkvm-console",
  "snarkvm-ledger-block",
  "snarkvm-ledger-committee",
+ "snarkvm-ledger-narwhal-data",
  "snarkvm-ledger-puzzle",
  "snarkvm-ledger-puzzle-epoch",
  "snarkvm-ledger-query",

@@ -43,6 +43,7 @@ use rand::{rngs::StdRng, SeedableRng};
 use serde::Serialize;
 use std::str::FromStr;
 use snarkvm_console::prelude::ToBytes;
+pub use snarkvm_synthesizer::process::cost_in_microcredits;
 
 #[derive(Serialize)]
 pub struct AuthorizationResponse {
@@ -196,8 +197,30 @@ impl ProgramManager {
             Ok(result) => Ok(result),
             Err(e) => return Err(e),
         }
+      }
+
+    #[wasm_bindgen(js_name = estimateExecutionFee)]
+    #[allow(clippy::too_many_arguments)]
+    pub async fn estimate_execution_fee(
+      network: &str,
+      transaction: &str,
+      program: &str,
+      function: &str,
+      imports: Option<Object>,
+    ) -> Result<u64, String> {
+      match dispatch_network_aleo_async!(
+        network,
+        estimate_execution_fee_impl,
+        transaction,
+        program,
+        function,
+        imports
+      ) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e),
+      }
     }
-   }
+  }
 
    pub fn execute_synthesize_impl<N: Network, A: Aleo<Network = N>>(
     program_string: &str,
@@ -569,4 +592,45 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
   let t_native = TransactionNative::<N>::from_execution(execution, fee).map_err(|err| err.to_string())?;
   let t_wasm: Transaction = t_native.into();
   Ok(t_wasm)
+}
+
+pub async fn estimate_execution_fee_impl<N: Network, A: Aleo<Network = N>>(
+    transaction: &str,
+    program: &str,
+    function: &str,
+    imports: Option<Object>,
+) -> Result<u64, String> {
+    log(
+        "Disclaimer: Fee estimation is experimental and may not represent a correct estimate on any current or future network",
+    );
+    let transaction = TransactionNative::<N>::from_str(transaction).map_err(|err| err.to_string())?;
+    let mut process_native = ProcessNative::<N>::load_web().map_err(|err| err.to_string())?;
+    let process = &mut process_native;
+    let program_native = ProgramNative::from_str(program).map_err(|err| err.to_string())?;
+    program_manager_resolve_imports_impl::<N>(process, &program_native, imports)?;
+    process.add_program(&program_native).map_err(|e| e.to_string())?;
+
+    // Get the storage cost in bytes for the program execution
+    log("Estimating cost");
+    let execution = transaction.execution().unwrap();
+    let storage_cost = execution.size_in_bytes().map_err(|e| e.to_string())?;
+
+    // Compute the finalize cost in microcredits.
+    let mut finalize_cost = 0u64;
+    // Iterate over the transitions to accumulate the finalize cost.
+    for transition in execution.transitions() {
+        // Retrieve the function name, program id, and program.
+        let function_name = transition.function_name();
+        let program_id = transition.program_id();
+        let stack = process.get_stack(program_id).map_err(|e| e.to_string())?;
+
+        // Calculate the finalize cost for the function identified in the transition
+        let cost = cost_in_microcredits(stack, function_name).map_err(|e| e.to_string())?;
+
+        // Accumulate the finalize cost.
+        finalize_cost = finalize_cost
+            .checked_add(cost)
+            .ok_or("The finalize cost computation overflowed for an execution".to_string())?;
+    }
+    Ok(storage_cost + finalize_cost)
 }
