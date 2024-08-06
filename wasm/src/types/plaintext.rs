@@ -55,6 +55,14 @@ impl Plaintext {
         Err(e) => return Err(e)
       }
     }
+
+    #[wasm_bindgen(js_name = "hashBhp256ToAddress")]
+    pub fn hash_bhp256_to_address(&self) -> Result<String, String> {
+      match dispatch_network!(self.network.as_str(), plaintext_hash_bhp256_to_address_impl, &self.as_string) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
+    }
 }
 
 pub fn plaintext_from_string_impl<N: Network>(plaintext: &str) -> Result<String, String> {
@@ -63,6 +71,13 @@ pub fn plaintext_from_string_impl<N: Network>(plaintext: &str) -> Result<String,
 }
 
 pub fn plaintext_hash_bhp256_impl<N: Network>(plaintext_string: &str) -> Result<String, String> {
+  let literal = PlaintextNative::<N>::from_str(&plaintext_string).unwrap();
+  let bits = literal.to_bits_le();
+  let field_string = N::hash_bhp256(&bits).map_err(|e| e.to_string())?.to_string();
+  Ok(field_string)
+}
+
+pub fn plaintext_hash_bhp256_to_address_impl<N: Network>(plaintext_string: &str) -> Result<String, String> {
   let literal = PlaintextNative::<N>::from_str(&plaintext_string).unwrap();
   let bits = literal.to_bits_le();
   let field_string = N::hash_bhp256(&bits).map_err(|e| e.to_string())?.to_string();

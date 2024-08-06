@@ -22,46 +22,46 @@ crate-type = [ "cdylib", "rlib" ]
 doctest = false
 
 [dependencies.snarkvm-circuit-network]
-version = "0.16.19"
-path="../../snarkVM/circuit/network"
+git = "https://github.com/demox-labs/snarkVM"
+branch = "mainnet-staging"
 
 [dependencies.snarkvm-console]
-version = "=0.16.19"
+git = "https://github.com/demox-labs/snarkVM"
+branch = "mainnet-staging"
 features = [ "wasm" ]
-path="../../snarkVM/console"
 
 [dependencies.snarkvm-fields]
-version = "0.16.10"
-path="../../snarkVM/fields"
+git = "https://github.com/demox-labs/snarkVM"
+branch = "mainnet-staging"
 
 [dependencies.snarkvm-ledger-block]
-version = "0.16.19"
-path="../../snarkVM/ledger/block"
+git = "https://github.com/demox-labs/snarkVM"
+branch = "mainnet-staging"
 features = [ "wasm" ]
 
 [dependencies.snarkvm-ledger-query]
-version = "0.16.19"
-path="../../snarkVM/ledger/query"
+git = "https://github.com/demox-labs/snarkVM"
+branch = "mainnet-staging"
 features = [ "async", "wasm" ]
 
 [dependencies.snarkvm-ledger-store]
-version = "0.16.19"
-path="../../snarkVM/ledger/store"
+git = "https://github.com/demox-labs/snarkVM"
+branch = "mainnet-staging"
 
 [dependencies.snarkvm-parameters]
-version = "=0.16.19"
+git = "https://github.com/demox-labs/snarkVM"
+branch = "mainnet-staging"
 features = [ "wasm" ]
-path="../../snarkVM/parameters"
 
 [dependencies.snarkvm-synthesizer]
-version = "=0.16.19"
+git = "https://github.com/demox-labs/snarkVM"
+branch = "mainnet-staging"
 features = [ "async", "wasm" ]
-path="../../snarkVM/synthesizer"
 
 [dependencies.snarkvm-wasm]
-version = "0.16.19"
+git = "https://github.com/demox-labs/snarkVM"
+branch = "mainnet-staging"
 features = [ "console", "fields", "utilities" ]
-path="../../snarkVM/wasm"
 
 [dependencies.anyhow]
 version = "1.0"
