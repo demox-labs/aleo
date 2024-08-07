@@ -16,7 +16,8 @@
 
 use crate::account::{Address, PrivateKey};
 
-use crate::types::native::{AddressNative, PrivateKeyNative, SignatureNative};
+use crate::types::native::{AddressNative, PlaintextNative, PrivateKeyNative, SignatureNative};
+use snarkvm_console::prelude::ToFields;
 use core::{fmt, ops::Deref, str::FromStr};
 use rand::{rngs::StdRng, SeedableRng};
 use wasm_bindgen::prelude::*;
@@ -39,6 +40,15 @@ impl Signature {
     /// @returns {Signature} Signature of the message
     pub fn sign(private_key: &PrivateKey, message: &[u8]) -> Result<Signature, String> {
       match dispatch_network!(private_key.network.as_str(), signature_sign_impl, private_key, message) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e),
+      }
+    }
+
+    pub fn sign_plaintext(network: &str, private_key: &str, message: &str) -> Result<Signature, String> {
+      let pk = PrivateKey::from_string(network, private_key).unwrap();
+      // let plaintext = plaintext::Plaintext::from_string(network, message).unwrap();
+      match dispatch_network!(network, signature_sign_plaintext_impl, &pk, &message) {
         Ok(result) => Ok(result),
         Err(e) => return Err(e),
       }
@@ -83,6 +93,15 @@ pub fn signature_sign_impl<N: Network>(private_key: &PrivateKey, message: &[u8])
   Ok(Signature { network, as_string: signature.to_string() })
 }
 
+pub fn signature_sign_plaintext_impl<N: Network>(private_key: &PrivateKey, plaintext: &str) -> Result<Signature, String> {
+  let pk_native = PrivateKeyNative::<N>::from_str(&**private_key).unwrap();
+  let plaintext_native = PlaintextNative::<N>::from_str(plaintext).unwrap();
+  let message_fields = plaintext_native.to_fields().unwrap();
+  let signature = SignatureNative::<N>::sign(&pk_native, &message_fields, &mut StdRng::from_entropy()).unwrap();
+  let network = network_string_id!(N::ID).unwrap().to_string();
+  Ok(Signature { network, as_string: signature.to_string() })
+}
+
 pub fn signature_verify_impl<N: Network>(signature: &Signature, address: &Address, message: &[u8]) -> Result<bool, String> {
   let s_native = SignatureNative::<N>::from_str(&signature.as_string).unwrap();
   let address_native = AddressNative::<N>::from_str(&address.to_string()).unwrap();
@@ -107,33 +126,4 @@ impl Deref for Signature {
     fn deref(&self) -> &Self::Target {
         &self.as_string
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    use rand::{rngs::StdRng, Rng, SeedableRng};
-    use wasm_bindgen_test::*;
-
-    const ITERATIONS: u64 = 1_000;
-
-    // #[wasm_bindgen_test]
-    // pub fn test_sign_and_verify() {
-    //     for _ in 0..ITERATIONS {
-    //         // Sample a new private key and message.
-    //         let private_key = PrivateKey::new();
-    //         let message: [u8; 32] = StdRng::from_entropy().gen();
-
-    //         // Sign the message.
-    //         let signature = Signature::sign(&private_key, &message);
-    //         // Check the signature is valid.
-    //         assert!(signature.verify(&private_key.to_address(), &message));
-
-    //         // Sample a different message.
-    //         let bad_message: [u8; 32] = StdRng::from_entropy().gen();
-    //         // Check the signature is invalid.
-    //         assert!(!signature.verify(&private_key.to_address(), &bad_message));
-    //     }
-    // }
 }

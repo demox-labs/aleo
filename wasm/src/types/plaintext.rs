@@ -18,12 +18,10 @@ use crate::types::native::PlaintextNative;
 use crate::native::Network;
 use snarkvm_console::prelude::ToBits;
 
-use snarkvm_wasm::utilities::ToBytes;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use std::str::FromStr;
 
-use super::native::FieldNative;
 
 #[wasm_bindgen]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -96,7 +94,6 @@ impl<N: Network> From<Plaintext> for PlaintextNative<N> {
       PlaintextNative::<N>::from_str(&plaintext.as_string).unwrap()
     }
 }
-
 
 // Write tests
 #[cfg(test)]
