@@ -80,8 +80,10 @@ pub fn plaintext_hash_bhp256_impl<N: Network>(plaintext_string: &str) -> Result<
 pub fn plaintext_hash_bhp256_to_address_impl<N: Network>(plaintext_string: &str) -> Result<String, String> {
   let literal = PlaintextNative::<N>::from_str(&plaintext_string).unwrap();
   let bits = literal.to_bits_le();
-  let field_string = N::hash_bhp256(&bits).map_err(|e| e.to_string())?.to_string();
-  Ok(field_string)
+  let address_string = AddressNative::<N>::new(
+    N::hash_to_group_bhp256(&bits).map_err(|e| e.to_string())?
+  ).to_string();
+  Ok(address_string)
 }
 
 impl<N: Network> From<PlaintextNative<N>> for Plaintext {
