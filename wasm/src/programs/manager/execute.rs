@@ -43,7 +43,7 @@ use rand::{rngs::StdRng, SeedableRng};
 use serde::Serialize;
 use std::str::FromStr;
 use snarkvm_console::prelude::ToBytes;
-pub use snarkvm_synthesizer::process::cost_in_microcredits;
+pub use snarkvm_synthesizer::process::cost_in_microcredits_v2;
 
 #[derive(Serialize)]
 pub struct AuthorizationResponse {
@@ -625,7 +625,7 @@ pub async fn estimate_execution_fee_impl<N: Network, A: Aleo<Network = N>>(
         let stack = process.get_stack(program_id).map_err(|e| e.to_string())?;
 
         // Calculate the finalize cost for the function identified in the transition
-        let cost = cost_in_microcredits(stack, function_name).map_err(|e| e.to_string())?;
+        let cost = cost_in_microcredits_v2(stack, function_name).map_err(|e| e.to_string())?;
 
         // Accumulate the finalize cost.
         finalize_cost = finalize_cost

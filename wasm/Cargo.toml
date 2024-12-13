@@ -23,44 +23,44 @@ doctest = false
 
 [dependencies.snarkvm-circuit-network]
 git = "https://github.com/demox-labs/snarkVM"
-branch = "mainnet-staging"
+branch = "mainnet-staging-sdk"
 
 [dependencies.snarkvm-console]
 git = "https://github.com/demox-labs/snarkVM"
-branch = "mainnet-staging"
+branch = "mainnet-staging-sdk"
 features = [ "wasm" ]
 
 [dependencies.snarkvm-fields]
 git = "https://github.com/demox-labs/snarkVM"
-branch = "mainnet-staging"
+branch = "mainnet-staging-sdk"
 
 [dependencies.snarkvm-ledger-block]
 git = "https://github.com/demox-labs/snarkVM"
-branch = "mainnet-staging"
+branch = "mainnet-staging-sdk"
 features = [ "wasm" ]
 
 [dependencies.snarkvm-ledger-query]
 git = "https://github.com/demox-labs/snarkVM"
-branch = "mainnet-staging"
+branch = "mainnet-staging-sdk"
 features = [ "async", "wasm" ]
 
 [dependencies.snarkvm-ledger-store]
 git = "https://github.com/demox-labs/snarkVM"
-branch = "mainnet-staging"
+branch = "mainnet-staging-sdk"
 
 [dependencies.snarkvm-parameters]
 git = "https://github.com/demox-labs/snarkVM"
-branch = "mainnet-staging"
+branch = "mainnet-staging-sdk"
 features = [ "wasm" ]
 
 [dependencies.snarkvm-synthesizer]
 git = "https://github.com/demox-labs/snarkVM"
-branch = "mainnet-staging"
+branch = "mainnet-staging-sdk"
 features = [ "async", "wasm" ]
 
 [dependencies.snarkvm-wasm]
 git = "https://github.com/demox-labs/snarkVM"
-branch = "mainnet-staging"
+branch = "mainnet-staging-sdk"
 features = [ "console", "fields", "utilities" ]
 
 [dependencies.anyhow]
