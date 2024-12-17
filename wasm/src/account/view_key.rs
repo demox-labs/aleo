@@ -67,6 +67,13 @@ impl ViewKey {
       }
     }
 
+    pub fn is_owner_precompute(&self, address_x_coordinate: &str, record_nonce: &str, record_owner_x_coordinate: &str) -> Result<bool, String> {
+      match dispatch_network!(self.network.as_str(), view_key_is_owner_precompute_impl, &self.as_string, address_x_coordinate, record_nonce, record_owner_x_coordinate) {
+        Ok(result) => Ok(result),
+        Err(e) => return Err(e)
+      }
+    }
+
     pub fn to_scalar(&self) -> Result<String, String> {
       match dispatch_network!(self.network.as_str(), view_key_to_scalar_impl, &self.as_string) {
         Ok(result) => Ok(result),
@@ -138,6 +145,19 @@ pub fn view_key_is_owner_impl<N: Network>(view_key: &str, address_x_coordinate: 
   let owner_x_field = FieldNative::<N>::from_str(record_owner_x_coordinate).unwrap();
   let scalar = *ViewKeyNative::<N>::from_str(view_key).unwrap();
   Ok(RecordCiphertextNative::<N>::is_owner_direct(
+      x_field,
+      scalar,
+      nonce_group,
+      owner_x_field,
+  ))
+}
+
+pub fn view_key_is_owner_precompute_impl<N: Network>(view_key: &str, address_x_coordinate: &str, record_nonce: &str, record_owner_x_coordinate: &str) -> Result<bool, String> {
+  let x_field = FieldNative::<N>::from_str(address_x_coordinate).unwrap();
+  let nonce_group = GroupNative::<N>::from_str(record_nonce).unwrap();
+  let owner_x_field = FieldNative::<N>::from_str(record_owner_x_coordinate).unwrap();
+  let scalar = *ViewKeyNative::<N>::from_str(view_key).unwrap();
+  Ok(RecordCiphertextNative::<N>::is_owner_direct_precompute(
       x_field,
       scalar,
       nonce_group,
