@@ -42,6 +42,7 @@ pub use snarkvm_synthesizer::{
     snark::{ProvingKey, VerifyingKey},
     Process,
     Program,
+    program::StackKeys,
     VM,
     Trace
 };
@@ -50,6 +51,7 @@ pub use snarkvm_wasm::{
     fields::PrimeField,
     utilities::{FromBytes, ToBytes, Uniform},
 };
+use snarkvm_algorithms::snark::varuna::VarunaVersion;
 
 // Account types
 pub type AddressNative<N> = Address<N>;
@@ -84,3 +86,4 @@ pub type ResponseNative<N> = Response<N>;
 pub type TransactionNative<N> = Transaction<N>;
 pub type TransitionNative<N> = Transition<N>;
 pub type VerifyingKeyNative<N> = VerifyingKey<N>;
+pub type VarunaVersionNative = VarunaVersion;

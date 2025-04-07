@@ -16,6 +16,7 @@
 
 use super::*;
 
+use crate::native::VarunaVersionNative;
 use crate::{execute_fee, log, PrivateKey, RecordPlaintext, Transaction, Network};
 
 use crate::types::native::{
@@ -264,7 +265,7 @@ pub async fn deploy_deploy_transaction_impl<N: Network, A: Aleo<Network = N>>(
   let query = QueryNative::<N>::from(&url);
   trace.prepare_async(query).await.map_err(|err| err.to_string())?;
   log("Prepared fee");
-  let fee = trace.prove_fee_web::<A, _>(inclusion_key.into(), &mut StdRng::from_entropy()).map_err(|e| e.to_string())?;
+  let fee = trace.prove_fee_web::<A, _>(VarunaVersionNative::V2, inclusion_key.into(), &mut StdRng::from_entropy()).map_err(|e| e.to_string())?;
 
   log("Proved fee");
 

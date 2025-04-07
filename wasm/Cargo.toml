@@ -21,6 +21,10 @@ edition = "2021"
 crate-type = [ "cdylib", "rlib" ]
 doctest = false
 
+[dependencies.snarkvm-algorithms]
+git = "https://github.com/demox-labs/snarkVM"
+branch = "mainnet-staging-sdk"
+
 [dependencies.snarkvm-circuit-network]
 git = "https://github.com/demox-labs/snarkVM"
 branch = "mainnet-staging-sdk"
@@ -49,6 +53,11 @@ git = "https://github.com/demox-labs/snarkVM"
 branch = "mainnet-staging-sdk"
 
 [dependencies.snarkvm-parameters]
+git = "https://github.com/demox-labs/snarkVM"
+branch = "mainnet-staging-sdk"
+features = [ "wasm" ]
+
+[dependencies.snarkvm-synthesizer-program]
 git = "https://github.com/demox-labs/snarkVM"
 branch = "mainnet-staging-sdk"
 features = [ "wasm" ]

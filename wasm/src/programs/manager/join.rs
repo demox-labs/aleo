@@ -129,7 +129,7 @@ impl ProgramManager {
         let execution_id = execution.to_execution_id().map_err(|e| e.to_string())?;
 
         log("Verifying the join execution");
-        process.verify_execution(&execution).map_err(|err| err.to_string())?;
+        process.verify_execution(VarunaVersionNative::V2, &execution).map_err(|err| err.to_string())?;
 
         log("Executing the fee");
         let fee = execute_fee!(

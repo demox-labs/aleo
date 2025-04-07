@@ -93,7 +93,7 @@ pub fn verify_function_execution(
     process
         .insert_verifying_key(&program_id, &function, VerifyingKeyNative::from(verifying_key))
         .map_err(|e| e.to_string())?;
-    process.verify_execution(execution).map_or(Ok(false), |_| Ok(true))
+    process.verify_execution(VarunaVersionNative::V2, execution).map_or(Ok(false), |_| Ok(true))
 }
 
 #[cfg(test)]

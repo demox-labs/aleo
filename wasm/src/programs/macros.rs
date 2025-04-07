@@ -161,7 +161,7 @@ macro_rules! execute_fee {
         let fee = trace.prove_fee::<CurrentAleo, _>(&mut StdRng::from_entropy()).map_err(|e|e.to_string())?;
 
         log("Verifying fee execution");
-        $process.verify_fee(&fee, $execution_id).map_err(|e| e.to_string())?;
+        $process.verify_fee(VarunaVersionNative::V2, &fee, $execution_id).map_err(|e| e.to_string())?;
 
         fee
     }};

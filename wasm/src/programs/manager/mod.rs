@@ -37,6 +37,7 @@ use crate::types::native::{
 use js_sys::{Object, Reflect};
 use std::str::FromStr;
 use wasm_bindgen::prelude::wasm_bindgen;
+use snarkvm_synthesizer_program::StackKeys;
 
 #[wasm_bindgen]
 #[derive(Clone)]

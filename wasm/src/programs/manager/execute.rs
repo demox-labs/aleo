@@ -17,6 +17,7 @@
 use super::*;
 use core::ops::Add;
 
+use crate::native::VarunaVersionNative;
 use crate::{
     execute_fee,
     execute_program,
@@ -313,7 +314,7 @@ impl ProgramManager {
     let program = ProgramNative::<N>::from_str(&program).map_err(|err| err.to_string())?;
     let locator = program.id().to_string().add("/").add(&function);
     let execution = trace
-        .prove_execution_web::<A, _>(&locator, inclusion_key.clone().into(), &mut StdRng::from_entropy())
+        .prove_execution_web::<A, _>(&locator, VarunaVersionNative::V2, inclusion_key.clone().into(), &mut StdRng::from_entropy())
         .map_err(|e| e.to_string())?;
 
     log("Created inclusion");
@@ -347,13 +348,13 @@ impl ProgramManager {
     let query = QueryNative::<N>::from(url);
     trace.prepare_async(query).await.map_err(|err| err.to_string())?;
     log("Prepared fee");
-    let fee = trace.prove_fee_web::<A, _>(inclusion_key.into(), &mut StdRng::from_entropy()).map_err(|e| e.to_string())?;
+    let fee = trace.prove_fee_web::<A, _>(VarunaVersionNative::V2, inclusion_key.into(), &mut StdRng::from_entropy()).map_err(|e| e.to_string())?;
 
     log("Proved fee");
 
     // Verify the execution and fee
-    process.verify_execution(&execution).map_err(|err| err.to_string())?;
-    process.verify_fee(&fee, execution_id).map_err(|err| err.to_string())?;
+    process.verify_execution(VarunaVersionNative::V2, &execution).map_err(|err| err.to_string())?;
+    process.verify_fee(VarunaVersionNative::V2, &fee, execution_id).map_err(|err| err.to_string())?;
 
     log("Creating execution transaction");
     let t_native = TransactionNative::<N>::from_execution(execution, Some(fee)).map_err(|err| err.to_string())?;
@@ -393,12 +394,12 @@ impl ProgramManager {
     // Prove the execution and fee
     let locator = program_native.id().to_string().add("/").add(&function);
     let execution = trace
-        .prove_execution_web::<A, _>(&locator, inclusion_key.clone().into(), &mut StdRng::from_entropy())
+        .prove_execution_web::<A, _>(&locator, VarunaVersionNative::V2, inclusion_key.clone().into(), &mut StdRng::from_entropy())
         .map_err(|e| e.to_string())?;
 
     log("Created inclusion");
 
-    process.verify_execution(&execution).map_err(|err| err.to_string())?;
+    process.verify_execution(VarunaVersionNative::V2, &execution).map_err(|err| err.to_string())?;
 
     let execution_string = serde_json::to_string(&execution)
         .map_err(|_| "Could not serialize execution".to_string())?;
@@ -558,7 +559,7 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
   let program = ProgramNative::<N>::from_str(&program).map_err(|err| err.to_string())?;
   let locator = program.id().to_string().add("/").add(&function);
   let execution = trace
-      .prove_execution_web::<A, _>(&locator, inclusion_key.clone().into(), &mut StdRng::from_entropy())
+      .prove_execution_web::<A, _>(&locator, VarunaVersionNative::V2, inclusion_key.clone().into(), &mut StdRng::from_entropy())
       .map_err(|e| e.to_string())?;
 
   log("Created inclusion");
@@ -574,10 +575,10 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
           let query = QueryNative::<N>::from(url);
           trace.prepare_async(query).await.map_err(|err| err.to_string())?;
           log("Prepared fee");
-          let fee = trace.prove_fee_web::<A, _>(inclusion_key.into(), &mut StdRng::from_entropy()).map_err(|e| e.to_string())?;
+          let fee = trace.prove_fee_web::<A, _>(VarunaVersionNative::V2, inclusion_key.into(), &mut StdRng::from_entropy()).map_err(|e| e.to_string())?;
 
           log("Proved fee");
-          process.verify_fee(&fee, execution_id).map_err(|err| err.to_string())?;
+          process.verify_fee(VarunaVersionNative::V2, &fee, execution_id).map_err(|err| err.to_string())?;
 
           Some(fee)
           
@@ -586,7 +587,7 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
   };
 
   // Verify the execution and fee
-  process.verify_execution(&execution).map_err(|err| err.to_string())?;
+  process.verify_execution(VarunaVersionNative::V2, &execution).map_err(|err| err.to_string())?;
 
   log("Creating execution transaction");
   let t_native = TransactionNative::<N>::from_execution(execution, fee).map_err(|err| err.to_string())?;
