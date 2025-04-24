@@ -80,6 +80,30 @@ impl DecryptTransition {
       Err(e) => Err(e),
     }
   }
+
+  pub fn decrypt_transition_with_tvk(
+    network: &str,
+    tvk_str: &str,
+    transition_str: &str
+  ) -> Result<String, String> {
+    console_error_panic_hook::set_once();
+    match dispatch_network!(network, decrypt_transition_with_tvk_impl, tvk_str, transition_str) {
+      Ok(transition) => Ok(transition),
+      Err(e) => Err(e),
+    }
+  }
+
+  pub fn generate_tvk(
+    network: &str,
+    view_key: &ViewKey,
+    tpk_str: &str
+  ) -> Result<String, String> {
+    console_error_panic_hook::set_once();
+    match dispatch_network!(network, generate_tvk_impl, view_key, tpk_str) {
+      Ok(tvk) => Ok(tvk),
+      Err(e) => Err(e),
+    }
+  }
 }
 
 pub fn owns_transition_impl<N: Network>(
@@ -164,6 +188,21 @@ pub fn decrypt_transition_impl<N: Network>(
   let scalar = *vk_native;
   let tvk = (*transition.tpk() * scalar).to_x_coordinate();
 
+  return decrypt_transition_with_tvk_impl::<N>(&tvk.to_string(), transition_str);
+}
+
+pub fn decrypt_transition_with_tvk_impl<N: Network>(
+  tvk_str: &str,
+  transition_str: &str
+) -> Result<String, String> {
+  console_error_panic_hook::set_once();
+
+  let tvk = Field::<N>::from_str(tvk_str)
+    .map_err(|_| "Could not deserialize transition public key".to_string())?;
+
+  let transition: TransitionNative<N> = serde_json::from_str(transition_str)
+    .map_err(|_| "Could not deserialize transition".to_string())?;
+
   let function_id = N::hash_bhp1024(
     &(U16::<N>::new(N::ID),
     transition.program_id().name().size_in_bits(),
@@ -227,6 +266,23 @@ pub fn decrypt_transition_impl<N: Network>(
       .map_err(|_| "Could not serialize decrypted transition".to_string())?;
 
   Ok(transition_output)
+}
+
+pub fn generate_tvk_impl<N: Network>(
+  view_key: &ViewKey,
+  tpk_str: &str,
+) -> Result<String, String> {
+  console_error_panic_hook::set_once();
+
+  let tpk = Group::<N>::from_str(tpk_str)
+    .map_err(|_| "Could not deserialize transition public key".to_string())?;
+
+  let vk_native = ViewKeyNative::<N>::from_str(&*view_key)
+    .map_err(|_| "Could not deserialize view key".to_string())?;
+  let scalar = *vk_native;
+  let tvk = (tpk * scalar).to_x_coordinate();
+
+  Ok(tvk.to_string())
 }
 
 // Write a test to check that the decryption of a transition is correct
