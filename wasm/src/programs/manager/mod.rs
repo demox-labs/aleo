@@ -21,6 +21,9 @@ pub use deploy::*;
 pub mod execute;
 pub use execute::*;
 
+pub mod utils;
+pub use utils::*;
+
 const DEFAULT_URL: &str = "https://api.explorer.aleo.org/v1";
 
 use crate::{KeyPair, PrivateKey, ProvingKey, RecordPlaintext, VerifyingKey};
@@ -35,9 +38,9 @@ use crate::types::native::{
     VerifyingKeyNative,
 };
 use js_sys::{Object, Reflect};
+use snarkvm_synthesizer_program::StackTrait;
 use std::str::FromStr;
 use wasm_bindgen::prelude::wasm_bindgen;
-use snarkvm_synthesizer_program::StackKeys;
 
 #[wasm_bindgen]
 #[derive(Clone)]
@@ -64,9 +67,9 @@ impl ProgramManager {
 
 /// Check if a process contains a keypair for a specific function
 pub(crate) fn contains_key<N: Network>(
-  process: &ProcessNative<N>,
-  program_id: &ProgramIDNative<N>,
-  function_id: &IdentifierNative<N>,
+    process: &ProcessNative<N>,
+    program_id: &ProgramIDNative<N>,
+    function_id: &IdentifierNative<N>,
 ) -> bool {
     process.get_stack(program_id).map_or_else(
         |_| false,
@@ -76,9 +79,9 @@ pub(crate) fn contains_key<N: Network>(
 
 /// Resolve imports for a program in depth first search order
 pub(crate) fn program_manager_resolve_imports_impl<N: Network>(
-  process: &mut ProcessNative<N>,
-  program: &ProgramNative<N>,
-  imports: Option<Object>,
+    process: &mut ProcessNative<N>,
+    program: &ProgramNative<N>,
+    imports: Option<Object>,
 ) -> Result<(), String> {
     if let Some(imports) = imports {
         program.imports().keys().try_for_each(|program_id| {

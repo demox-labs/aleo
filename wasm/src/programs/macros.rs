@@ -53,13 +53,7 @@ macro_rules! execute_program {
 
         if program_id != "credits.aleo" {
             log("Adding program to the process");
-            if let Ok(stored_program) = $process.get_program(program.id()) {
-                if stored_program != &program {
-                    return Err("The program provided does not match the program stored in the cache, please clear the cache before proceeding".to_string());
-                }
-            } else {
-                $process.add_program(&program).map_err(|e| e.to_string())?;
-            }
+            $process.add_program(&program).map_err(|e| e.to_string())?;
         }
 
         if let Some(proving_key) = $proving_key {

@@ -14,8 +14,22 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-use snarkvm_console::prelude::ToBits;
+use snarkvm_console::prelude::{ConsensusVersion, ToBits};
 
 pub fn to_bits<T: ToBits>(value: T) -> Vec<bool> {
     value.to_bits_le()
+}
+
+pub fn consensus_version_from_u8(value: u8) -> ConsensusVersion {
+    match value {
+        1 => ConsensusVersion::V1,
+        2 => ConsensusVersion::V2,
+        3 => ConsensusVersion::V3,
+        4 => ConsensusVersion::V4,
+        5 => ConsensusVersion::V5,
+        6 => ConsensusVersion::V6,
+        7 => ConsensusVersion::V7,
+        8 => ConsensusVersion::V8,
+        _ => ConsensusVersion::V8,
+    }
 }

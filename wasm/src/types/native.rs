@@ -14,10 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-pub use snarkvm_circuit_network::{AleoTestnetV0, AleoV0, AleoCanaryV0};
+use snarkvm_algorithms::snark::varuna::VarunaVersion;
+pub use snarkvm_circuit_network::{AleoCanaryV0, AleoTestnetV0, AleoV0};
 pub use snarkvm_console::{
     account::{Address, PrivateKey, Signature, ViewKey},
-    network::{Network, TestnetV0, MainnetV0, CanaryV0},
+    network::{CanaryV0, MainnetV0, Network, TestnetV0},
     program::{
         Ciphertext,
         Entry,
@@ -39,19 +40,15 @@ pub use snarkvm_ledger_query::Query;
 pub use snarkvm_ledger_store::helpers::memory::BlockMemory;
 use snarkvm_synthesizer::Authorization;
 pub use snarkvm_synthesizer::{
-    snark::{ProvingKey, VerifyingKey},
     Process,
     Program,
-    program::StackKeys,
-    VM,
-    Trace
+    snark::{ProvingKey, VerifyingKey},
 };
 pub use snarkvm_wasm::{
     console::network::Environment,
     fields::PrimeField,
     utilities::{FromBytes, ToBytes, Uniform},
 };
-use snarkvm_algorithms::snark::varuna::VarunaVersion;
 
 // Account types
 pub type AddressNative<N> = Address<N>;
