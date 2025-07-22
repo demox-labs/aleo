@@ -1,9 +1,10 @@
 {
   "name": "@demox-labs/aleo-sdk",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Wasm build for the SDK",
   "collaborators": [
-    "The Aleo Team <hello@aleo.org>"
+    "The Aleo Team <hello@aleo.org>",
+    "Demox Labs <hi@demoxlabs.xyz>"
   ],
   "license": "GPL-3.0",
   "type": "module",
