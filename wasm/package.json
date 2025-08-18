@@ -1,6 +1,6 @@
 {
   "name": "@demox-labs/aleo-sdk",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Wasm build for the SDK",
   "collaborators": [
     "The Aleo Team <hello@aleo.org>",
