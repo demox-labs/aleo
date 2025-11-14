@@ -25,7 +25,6 @@ checksum = "4d2fd9bf7b4949480ce03d1f4dfce6e2956bde268808a05ac8e667f0e1ed9907"
 dependencies = [
  "aleo-std-cpu",
  "aleo-std-profiler",
- "aleo-std-storage",
  "aleo-std-time",
  "aleo-std-timed",
  "aleo-std-timer",
@@ -131,6 +130,9 @@ name = "anyhow"
 version = "1.0.99"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0674a1ddeecb70197781e945de4b3b8ffb61fa939a5597bcf48503737663100"
+dependencies = [
+ "backtrace",
+]
 
 [[package]]
 name = "arrayref"
@@ -181,6 +183,12 @@ dependencies = [
  "rustc-demangle",
  "windows-targets 0.52.6",
 ]
+
+[[package]]
+name = "base16ct"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c7f02d4ea65f2c1853089ffd8d2787bdbc63de2f0d29dedbcf8ccdfa0ccd4cf"
 
 [[package]]
 name = "base64"
@@ -300,6 +308,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "const-oid"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
+
+[[package]]
 name = "constant_time_eq"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -360,6 +374,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc32fast"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "crossbeam-deque"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -389,6 +412,18 @@ name = "crunchy"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
+
+[[package]]
+name = "crypto-bigint"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0dc92fb57ca44df6db8059111ab3af99a63d5d0f8375d9972e319a379c6bab76"
+dependencies = [
+ "generic-array",
+ "rand_core",
+ "subtle",
+ "zeroize",
+]
 
 [[package]]
 name = "crypto-common"
@@ -431,6 +466,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "der"
+version = "0.7.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7c1832837b905bbfb5101e07cc24c8deddf52f93225eee6ead5f4d63d53ddcb"
+dependencies = [
+ "const-oid",
+ "zeroize",
+]
+
+[[package]]
 name = "deranged"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -446,6 +491,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
 dependencies = [
  "block-buffer",
+ "const-oid",
  "crypto-common",
  "subtle",
 ]
@@ -491,10 +537,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "ecdsa"
+version = "0.16.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee27f32b5c5292967d2d4a9d7f1e0b0aed2c15daded5a60300e4abb9d8020bca"
+dependencies = [
+ "der",
+ "digest",
+ "elliptic-curve",
+ "rfc6979",
+ "signature",
+]
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
+
+[[package]]
+name = "elliptic-curve"
+version = "0.13.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b5e6043086bf7973472e0c7dff2142ea0b680d30e18d9cc40f267efbf222bd47"
+dependencies = [
+ "base16ct",
+ "crypto-bigint",
+ "digest",
+ "ff",
+ "generic-array",
+ "group",
+ "rand_core",
+ "sec1",
+ "subtle",
+ "zeroize",
+]
 
 [[package]]
 name = "encoding"
@@ -626,6 +703,26 @@ name = "fastrand"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
+
+[[package]]
+name = "ff"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0b50bfb653653f9ca9095b427bed08ab8d75a137839d9ad64eb11810d5b6393"
+dependencies = [
+ "rand_core",
+ "subtle",
+]
+
+[[package]]
+name = "flate2"
+version = "1.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfe33edd8e85a12a67454e37f8c75e730830d83e313556ab9ebf9ee7fbeb3bfb"
+dependencies = [
+ "crc32fast",
+ "miniz_oxide",
+]
 
 [[package]]
 name = "fnv"
@@ -769,6 +866,7 @@ checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
 dependencies = [
  "typenum",
  "version_check",
+ "zeroize",
 ]
 
 [[package]]
@@ -801,6 +899,17 @@ name = "gimli"
 version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
+
+[[package]]
+name = "group"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0f9ef7462f7c099f518d754361858f86d8a07af53ba9af0fe635bbccb151a63"
+dependencies = [
+ "ff",
+ "rand_core",
+ "subtle",
+]
 
 [[package]]
 name = "h2"
@@ -843,6 +952,15 @@ name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+
+[[package]]
+name = "hmac"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
+dependencies = [
+ "digest",
+]
 
 [[package]]
 name = "http"
@@ -1136,6 +1254,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "k256"
+version = "0.13.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6e3919bbaa2945715f0bb6d3934a173d1e9a59ac23767fbaaef277265a7411b"
+dependencies = [
+ "cfg-if",
+ "ecdsa",
+ "elliptic-curve",
+ "sha2",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1247,6 +1377,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
 dependencies = [
  "adler2",
+ "simd-adler32",
 ]
 
 [[package]]
@@ -1628,6 +1759,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rfc6979"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8dd2a808d456c4a54e300a23e9f5a67e122c3024119acbfd73e3bf664491cb2"
+dependencies = [
+ "hmac",
+ "subtle",
+]
+
+[[package]]
 name = "ring"
 version = "0.17.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1675,11 +1816,22 @@ version = "0.23.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0ebcbd2f03de0fc1122ad9bb24b127a5a6cd51d72604a3f3c50ac459762b6cc"
 dependencies = [
+ "log",
  "once_cell",
+ "ring",
  "rustls-pki-types",
  "rustls-webpki",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "rustls-pemfile"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dce314e5fee3f39953d46bb63bb8a46d40c2f8fb7cc5a3b6cab2bde9721d6e50"
+dependencies = [
+ "rustls-pki-types",
 ]
 
 [[package]]
@@ -1739,6 +1891,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "sec1"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3e97a565f76233a6003f9f5c54be1d9c5bdfa3eccfb189469f11ec4901c47dc"
+dependencies = [
+ "base16ct",
+ "der",
+ "generic-array",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
 name = "security-framework"
 version = "2.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1766,6 +1931,12 @@ name = "semver"
 version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56e6fa9c48d24d85fb3de5ad847117517440f6beceb7798af16b4a87d616b8d0"
+
+[[package]]
+name = "seq-macro"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bc711410fbe7399f390ca1c3b60ad0f53f80e95c5eb935e52268a0e2cd49acc"
 
 [[package]]
 name = "serde"
@@ -1830,6 +2001,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
+name = "signature"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77549399552de45a898a580c1b41d445bf730df867cc44e6c0233bbc4b8329de"
+dependencies = [
+ "digest",
+ "rand_core",
+]
+
+[[package]]
+name = "simd-adler32"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
+
+[[package]]
 name = "slab"
 version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1852,8 +2039,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-algorithms"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -1879,8 +2066,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-account",
  "snarkvm-circuit-algorithms",
@@ -1893,8 +2080,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-account"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-network",
  "snarkvm-circuit-types",
@@ -1903,8 +2090,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-algorithms"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-types",
  "snarkvm-console-algorithms",
@@ -1913,8 +2100,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-collections"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-algorithms",
  "snarkvm-circuit-types",
@@ -1923,8 +2110,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-environment"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "indexmap",
  "itertools",
@@ -1941,13 +2128,13 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-environment-witness"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 
 [[package]]
 name = "snarkvm-circuit-network"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-algorithms",
  "snarkvm-circuit-collections",
@@ -1957,8 +2144,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-program"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-account",
  "snarkvm-circuit-algorithms",
@@ -1971,8 +2158,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-address",
@@ -1986,8 +2173,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-address"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -1999,8 +2186,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-boolean"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-console-types-boolean",
@@ -2008,8 +2195,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-field"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -2018,8 +2205,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-group"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -2030,8 +2217,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-integers"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -2042,8 +2229,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-scalar"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -2053,8 +2240,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-circuit-types-string"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-circuit-environment",
  "snarkvm-circuit-types-boolean",
@@ -2065,8 +2252,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-console-account",
  "snarkvm-console-algorithms",
@@ -2078,8 +2265,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-account"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "bs58",
  "snarkvm-console-network",
@@ -2089,10 +2276,12 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-algorithms"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "blake2s_simd",
+ "hex",
+ "k256",
  "smallvec",
  "snarkvm-console-types",
  "snarkvm-fields",
@@ -2102,8 +2291,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-collections"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "aleo-std",
  "rayon",
@@ -2113,8 +2302,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-network"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "anyhow",
  "enum-iterator",
@@ -2133,8 +2322,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-network-environment"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "anyhow",
  "bech32",
@@ -2151,8 +2340,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-program"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "enum-iterator",
  "enum_index",
@@ -2160,6 +2349,7 @@ dependencies = [
  "indexmap",
  "num-derive",
  "num-traits",
+ "seq-macro",
  "serde_json",
  "snarkvm-console-account",
  "snarkvm-console-algorithms",
@@ -2171,8 +2361,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-address",
@@ -2186,8 +2376,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-address"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2197,16 +2387,16 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-boolean"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-console-network-environment",
 ]
 
 [[package]]
 name = "snarkvm-console-types-field"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2215,8 +2405,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-group"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2226,8 +2416,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-integers"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2237,8 +2427,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-scalar"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2248,8 +2438,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-console-types-string"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-console-network-environment",
  "snarkvm-console-types-boolean",
@@ -2259,8 +2449,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-curves"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "rand",
  "rayon",
@@ -2273,8 +2463,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-fields"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2290,8 +2480,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-ledger-authority"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "anyhow",
  "rand",
@@ -2302,9 +2492,10 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-ledger-block"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
+ "anyhow",
  "indexmap",
  "rayon",
  "serde_json",
@@ -2318,12 +2509,13 @@ dependencies = [
  "snarkvm-ledger-puzzle",
  "snarkvm-synthesizer-program",
  "snarkvm-synthesizer-snark",
+ "snarkvm-utilities",
 ]
 
 [[package]]
 name = "snarkvm-ledger-committee"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "indexmap",
  "rayon",
@@ -2334,8 +2526,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-ledger-narwhal-batch-certificate"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "indexmap",
  "rayon",
@@ -2347,8 +2539,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-ledger-narwhal-batch-header"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "indexmap",
  "rayon",
@@ -2359,8 +2551,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-ledger-narwhal-data"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "bytes",
  "serde_json",
@@ -2369,8 +2561,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-ledger-narwhal-subdag"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "indexmap",
  "rayon",
@@ -2384,8 +2576,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-ledger-narwhal-transmission-id"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "snarkvm-console",
  "snarkvm-ledger-puzzle",
@@ -2393,8 +2585,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-ledger-puzzle"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2412,8 +2604,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-ledger-puzzle-epoch"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2434,8 +2626,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-ledger-query"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2443,6 +2635,7 @@ dependencies = [
  "serde",
  "serde_json",
  "snarkvm-console",
+ "snarkvm-ledger-block",
  "snarkvm-ledger-store",
  "snarkvm-synthesizer-program",
  "ureq",
@@ -2450,8 +2643,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-ledger-store"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "aleo-std-storage",
  "anyhow",
@@ -2469,12 +2662,13 @@ dependencies = [
  "snarkvm-ledger-puzzle",
  "snarkvm-synthesizer-program",
  "snarkvm-synthesizer-snark",
+ "snarkvm-utilities",
 ]
 
 [[package]]
 name = "snarkvm-parameters"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2498,8 +2692,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-synthesizer"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2529,8 +2723,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-synthesizer-process"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "aleo-std",
  "colored",
@@ -2553,9 +2747,10 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-synthesizer-program"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
+ "enum-iterator",
  "indexmap",
  "paste",
  "rand",
@@ -2571,20 +2766,21 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-synthesizer-snark"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "bincode",
  "serde_json",
  "snarkvm-algorithms",
  "snarkvm-circuit",
  "snarkvm-console",
+ "snarkvm-utilities",
 ]
 
 [[package]]
 name = "snarkvm-utilities"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "aleo-std",
  "anyhow",
@@ -2599,13 +2795,14 @@ dependencies = [
  "smol_str",
  "snarkvm-utilities-derives",
  "thiserror 2.0.15",
+ "tracing",
  "zeroize",
 ]
 
 [[package]]
 name = "snarkvm-utilities-derives"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "proc-macro2",
  "quote 1.0.40",
@@ -2614,8 +2811,8 @@ dependencies = [
 
 [[package]]
 name = "snarkvm-wasm"
-version = "4.1.0"
-source = "git+https://github.com/demox-labs/snarkVM?branch=mainnet-staging-sdk-canary#fc844290c4476b8470cacb0eb97c4b6d252cf1d4"
+version = "4.3.0"
+source = "git+https://github.com/ProvableHQ/snarkVM-forked-demox?branch=mainnet-4.3.1#e90e9a00fbcd2580720a03b9b734dcf9adea6f4a"
 dependencies = [
  "getrandom 0.2.16",
  "snarkvm-console",
@@ -3021,12 +3218,17 @@ checksum = "00432f493971db5d8e47a65aeb3b02f8226b9b11f1450ff86bb772776ebadd70"
 dependencies = [
  "base64",
  "cookie_store",
+ "flate2",
  "log",
  "percent-encoding",
+ "rustls",
+ "rustls-pemfile",
+ "rustls-pki-types",
  "serde",
  "serde_json",
  "ureq-proto",
  "utf-8",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -3215,6 +3417,15 @@ checksum = "33b6dd2ef9186f1f2072e409e99cd22a975331a6b3591b12c764e0e55c60d5d2"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "webpki-roots"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2878ef029c47c6e8cf779119f20fcf52bde7ad42a731b2a304bc221df17571e"
+dependencies = [
+ "rustls-pki-types",
 ]
 
 [[package]]

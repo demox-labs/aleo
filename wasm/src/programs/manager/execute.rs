@@ -276,14 +276,13 @@ pub async fn execute_transaction_impl<N: Network, A: Aleo<Network = N>>(
     fee_verifying_key: Option<VerifyingKey>,
     inclusion_key: ProvingKey,
 ) -> Result<Transaction, String> {
-    let consensus_version = match consensus_version {
-        Some(version) => consensus_version_from_u8(version),
-        None => ConsensusVersion::V8,
-    };
+    let version = consensus_version.unwrap_or(255);
+    let consensus_version = consensus_version_from_u8(version);
 
-    let inclusion_version = match consensus_version {
-        ConsensusVersion::V8 => InclusionVersion::V1,
-        _ => InclusionVersion::V0,
+    let inclusion_version = if version > 7 {
+        InclusionVersion::V1
+    } else {
+        InclusionVersion::V0
     };
 
     log(&format!("Executing function: {function} on-chain"));
@@ -333,7 +332,7 @@ pub async fn execute_transaction_impl<N: Network, A: Aleo<Network = N>>(
 
     log("Preparing inclusion proofs for execution");
     // Prepare the inclusion proofs for the fee & execution
-    let query = QueryNative::<N>::from(url);
+    let query = QueryNative::<N>::try_from(url).map_err(|e| "Invalid query uri: {e}")?;
     trace.prepare_async(&query).await.map_err(|err| err.to_string())?;
 
     log("Proving execution");
@@ -341,10 +340,9 @@ pub async fn execute_transaction_impl<N: Network, A: Aleo<Network = N>>(
     let program = ProgramNative::<N>::from_str(&program).map_err(|err| err.to_string())?;
     let locator = program.id().to_string().add("/").add(&function);
     let execution = trace
-        .prove_execution_web::<A, _>(
+        .prove_execution::<A, _>(
             &locator,
             VarunaVersionNative::V2,
-            inclusion_key.clone().into(),
             &mut StdRng::from_entropy(),
         )
         .map_err(|e| e.to_string())?;
@@ -372,11 +370,11 @@ pub async fn execute_transaction_impl<N: Network, A: Aleo<Network = N>>(
     let (_, mut trace) = process.execute::<A, _>(fee_authorization, rng).map_err(|err| err.to_string())?;
 
     log("Created fee");
-    let query = QueryNative::<N>::from(url);
+    let query = QueryNative::<N>::try_from(url).map_err(|e| "Invalid query uri: {e}")?;
     trace.prepare_async(&query).await.map_err(|err| err.to_string())?;
     log("Prepared fee");
     let fee = trace
-        .prove_fee_web::<A, _>(VarunaVersionNative::V2, inclusion_key.into(), &mut StdRng::from_entropy())
+        .prove_fee::<A, _>(VarunaVersionNative::V2, &mut StdRng::from_entropy())
         .map_err(|e| e.to_string())?;
 
     log("Proved fee");
@@ -407,15 +405,15 @@ pub async fn build_execution_impl<N: Network, A: Aleo<Network = N>>(
     verifying_key: Option<VerifyingKey>,
     inclusion_key: ProvingKey,
 ) -> Result<String, String> {
-    let consensus_version = match consensus_version {
-        Some(version) => consensus_version_from_u8(version),
-        None => ConsensusVersion::V8,
-    };
+    let version = consensus_version.unwrap_or(255);
+    let consensus_version = consensus_version_from_u8(version);
 
-    let inclusion_version = match consensus_version {
-        ConsensusVersion::V8 => InclusionVersion::V1,
-        _ => InclusionVersion::V0,
+    let inclusion_version = if version > 7 {
+        InclusionVersion::V1
+    } else {
+        InclusionVersion::V0
     };
+    
     log(&format!("Executing function: {function} on-chain"));
     let mut process_native = ProcessNative::<N>::load_web().map_err(|err| err.to_string())?;
     let process = &mut process_native;
@@ -439,16 +437,15 @@ pub async fn build_execution_impl<N: Network, A: Aleo<Network = N>>(
 
     log("Creating inclusion");
     // Prepare the inclusion proofs for the fee & execution
-    let query = QueryNative::<N>::from(url);
+    let query = QueryNative::<N>::try_from(url).map_err(|e| "Invalid query uri: {e}")?;
     trace.prepare_async(&query).await.map_err(|err| err.to_string())?;
 
     // Prove the execution and fee
     let locator = program_native.id().to_string().add("/").add(&function);
     let execution = trace
-        .prove_execution_web::<A, _>(
+        .prove_execution::<A, _>(
             &locator,
             VarunaVersionNative::V2,
-            inclusion_key.clone().into(),
             &mut StdRng::from_entropy(),
         )
         .map_err(|e| e.to_string())?;
@@ -542,14 +539,13 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
     fee_verifying_key: Option<VerifyingKey>,
     inclusion_key: ProvingKey,
 ) -> Result<Transaction, String> {
-    let consensus_version = match consensus_version {
-        Some(version) => consensus_version_from_u8(version),
-        None => ConsensusVersion::V8,
-    };
+    let version = consensus_version.unwrap_or(255);
+    let consensus_version = consensus_version_from_u8(version);
 
-    let inclusion_version = match consensus_version {
-        ConsensusVersion::V8 => InclusionVersion::V1,
-        _ => InclusionVersion::V0,
+    let inclusion_version = if version > 7 {
+        InclusionVersion::V1
+    } else {
+        InclusionVersion::V0
     };
     log(&format!("Authorizing function: {function} on-chain"));
     let authorization = AuthorizationNative::<N>::from_str(&authorization).map_err(|err| err.to_string())?;
@@ -619,7 +615,7 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
 
     log("Preparing inclusion proofs for execution");
     // Prepare the inclusion proofs for the fee & execution
-    let query = QueryNative::<N>::from(url);
+    let query = QueryNative::<N>::try_from(url).map_err(|e| "Invalid query uri: {e}")?;
     trace.prepare_async(&query).await.map_err(|err| err.to_string())?;
 
     log("Proving execution");
@@ -627,10 +623,9 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
     let program = ProgramNative::<N>::from_str(&program).map_err(|err| err.to_string())?;
     let locator = program.id().to_string().add("/").add(&function);
     let execution = trace
-        .prove_execution_web::<A, _>(
+        .prove_execution::<A, _>(
             &locator,
             VarunaVersionNative::V2,
-            inclusion_key.clone().into(),
             &mut StdRng::from_entropy(),
         )
         .map_err(|e| e.to_string())?;
@@ -643,11 +638,11 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
             let rng = &mut StdRng::from_entropy();
             let (_, mut trace) = process.execute::<A, _>(fee_authorization, rng).map_err(|err| err.to_string())?;
             log("Created fee");
-            let query = QueryNative::<N>::from(url);
+            let query = QueryNative::<N>::try_from(url).map_err(|e| "Invalid query uri: {e}")?;
             trace.prepare_async(&query).await.map_err(|err| err.to_string())?;
             log("Prepared fee");
             let fee = trace
-                .prove_fee_web::<A, _>(VarunaVersionNative::V2, inclusion_key.into(), &mut StdRng::from_entropy())
+                .prove_fee::<A, _>(VarunaVersionNative::V2, &mut StdRng::from_entropy())
                 .map_err(|e| e.to_string())?;
 
             log("Proved fee");

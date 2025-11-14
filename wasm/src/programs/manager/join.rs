@@ -120,7 +120,7 @@ impl ProgramManager {
         if let Some(offline_query) = offline_query.as_ref() {
             trace.prepare_async(offline_query.clone()).await.map_err(|err| err.to_string())?;
         } else {
-            let query = QueryNative::from(node_url);
+            let query = QueryNative::from(node_url.to_string());
             trace.prepare_async(query).await.map_err(|err| err.to_string())?;
         }
 

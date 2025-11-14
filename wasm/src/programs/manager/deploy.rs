@@ -207,9 +207,9 @@ pub async fn deploy_transaction_impl<N: Network, A: Aleo<Network = N>>(
 ) -> Result<Transaction, String> {
     let consensus_version = match consensus_version {
         Some(version) => consensus_version_from_u8(version),
-        None => ConsensusVersion::V8,
+        None => ConsensusVersion::V11,
     };
-
+    
     log("Creating deployment transaction");
     // Convert fee to microcredits and check that the fee record has enough credits to pay it
     let fee_microcredits = match &fee_record {
@@ -283,11 +283,11 @@ pub async fn deploy_transaction_impl<N: Network, A: Aleo<Network = N>>(
     let (_, mut trace) = process.execute::<A, _>(fee_authorization, rng).map_err(|err| err.to_string())?;
 
     log("Created fee");
-    let query = QueryNative::<N>::from(&url);
+    let query = QueryNative::<N>::try_from(&url).map_err(|e| format!("Invalid query uri {e}"))?;
     trace.prepare_async(&query).await.map_err(|err| err.to_string())?;
     log("Prepared fee");
     let fee = trace
-        .prove_fee_web::<A, _>(VarunaVersionNative::V2, inclusion_key.into(), &mut StdRng::from_entropy())
+        .prove_fee::<A, _>(VarunaVersionNative::V2, &mut StdRng::from_entropy())
         .map_err(|e| e.to_string())?;
 
     log("Proved fee");

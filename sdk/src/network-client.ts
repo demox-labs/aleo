@@ -30,7 +30,7 @@ class AleoNetworkClient {
   account: Account | undefined;
 
   constructor(host: string) {
-    this.host = host + "/testnet3";
+    this.host = host;
   }
 
   /**

@@ -8,7 +8,7 @@ describe('NodeConnection', () => {
     let connection: AleoNetworkClient;
 
     beforeEach(() => {
-        connection = new AleoNetworkClient("https://api.explorer.aleo.org/v1");
+        connection = new AleoNetworkClient("https://api.explorer.provable.com/v1/mainnet");
     });
 
     describe('setAccount', () => {
