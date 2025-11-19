@@ -1,7 +1,7 @@
 [package]
 name = "aleo-wasm"
-version = "1.0.0"
-authors = ["The Aleo Team <hello@aleo.org>"]
+version = "1.0.2"
+authors = ["The Team"]
 description = "WebAssembly based toolkit for developing zero knowledge applications with Aleo"
 homepage = "https://aleo.org"
 repository = "https://github.com/AleoHQ/sdk"
@@ -23,15 +23,15 @@ doctest = false
 
 [dependencies.snarkvm-algorithms]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-branch = "mainnet-4.3.1"
+rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
 
 [dependencies.snarkvm-circuit-network]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-branch = "mainnet-4.3.1"
+rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
 
 [dependencies.snarkvm-console]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-branch = "mainnet-4.3.1"
+rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
 default-features = false
 features = [
   "account",
@@ -45,40 +45,40 @@ features = [
 
 [dependencies.snarkvm-fields]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-branch = "mainnet-4.3.1"
+rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
 
 [dependencies.snarkvm-ledger-block]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-branch = "mainnet-4.3.1"
+rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
 features = ["wasm"]
 
 [dependencies.snarkvm-ledger-query]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-branch = "mainnet-4.3.1"
+rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
 features = ["async", "wasm"]
 
 [dependencies.snarkvm-ledger-store]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-branch = "mainnet-4.3.1"
+rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
 
 [dependencies.snarkvm-parameters]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-branch = "mainnet-4.3.1"
+rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
 features = ["wasm"]
 
 [dependencies.snarkvm-synthesizer-program]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-branch = "mainnet-4.3.1"
+rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
 features = ["wasm"]
 
 [dependencies.snarkvm-synthesizer]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-branch = "mainnet-4.3.1"
+rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
 features = ["async", "wasm"]
 
 [dependencies.snarkvm-wasm]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-branch = "mainnet-4.3.1"
+rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
 features = ["fields", "utilities"]
 
 [dependencies.anyhow]

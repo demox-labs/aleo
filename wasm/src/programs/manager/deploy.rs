@@ -207,7 +207,7 @@ pub async fn deploy_transaction_impl<N: Network, A: Aleo<Network = N>>(
 ) -> Result<Transaction, String> {
     let consensus_version = match consensus_version {
         Some(version) => consensus_version_from_u8(version),
-        None => ConsensusVersion::V11,
+        None => ConsensusVersion::V12,
     };
     
     log("Creating deployment transaction");

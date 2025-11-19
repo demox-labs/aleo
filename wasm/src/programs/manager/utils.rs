@@ -33,6 +33,7 @@ pub fn consensus_version_from_u8(value: u8) -> ConsensusVersion {
         9 => ConsensusVersion::V9,
         10 => ConsensusVersion::V10,
         11 => ConsensusVersion::V11,
-        _ => ConsensusVersion::V11
+        12 => ConsensusVersion::V12,
+        _ => ConsensusVersion::V12
     }
 }

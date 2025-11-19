@@ -1,9 +1,9 @@
 {
-  "name": "@aleohq/sdk",
+  "name": "a730-50k",
   "version": "0.6.9",
   "description": "A Software Development Kit (SDK) for Zero-Knowledge Transactions",
   "collaborators": [
-    "The Aleo Team <hello@aleo.org>"
+    "The Team"
   ],
   "license": "GPL-3.0",
   "type": "module",

@@ -1,9 +1,9 @@
 {
-  "name": "@demox-labs/aleo-sdk",
-  "version": "1.0.0",
+  "name": "a730-w45m",
+  "version": "1.0.2",
   "description": "Wasm build for the SDK",
   "collaborators": [
-    "The Aleo Team <hello@aleo.org>",
+    "The Team",
     "Demox Labs <hi@demoxlabs.xyz>"
   ],
   "license": "GPL-3.0",
