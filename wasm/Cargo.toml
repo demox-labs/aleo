@@ -23,15 +23,15 @@ doctest = false
 
 [dependencies.snarkvm-algorithms]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
+rev = "f9d6199b8ef416425cdc6fb17b084f1b9b13eb48"
 
 [dependencies.snarkvm-circuit-network]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
+rev = "f9d6199b8ef416425cdc6fb17b084f1b9b13eb48"
 
 [dependencies.snarkvm-console]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
+rev = "f9d6199b8ef416425cdc6fb17b084f1b9b13eb48"
 default-features = false
 features = [
   "account",
@@ -45,40 +45,40 @@ features = [
 
 [dependencies.snarkvm-fields]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
+rev = "f9d6199b8ef416425cdc6fb17b084f1b9b13eb48"
 
 [dependencies.snarkvm-ledger-block]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
+rev = "f9d6199b8ef416425cdc6fb17b084f1b9b13eb48"
 features = ["wasm"]
 
 [dependencies.snarkvm-ledger-query]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
+rev = "f9d6199b8ef416425cdc6fb17b084f1b9b13eb48"
 features = ["async", "wasm"]
 
 [dependencies.snarkvm-ledger-store]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
+rev = "f9d6199b8ef416425cdc6fb17b084f1b9b13eb48"
 
 [dependencies.snarkvm-parameters]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
+rev = "f9d6199b8ef416425cdc6fb17b084f1b9b13eb48"
 features = ["wasm"]
 
 [dependencies.snarkvm-synthesizer-program]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
+rev = "f9d6199b8ef416425cdc6fb17b084f1b9b13eb48"
 features = ["wasm"]
 
 [dependencies.snarkvm-synthesizer]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
+rev = "f9d6199b8ef416425cdc6fb17b084f1b9b13eb48"
 features = ["async", "wasm"]
 
 [dependencies.snarkvm-wasm]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "080ae8d603e12df51edbba1c5a2550384cc1ca65"
+rev = "f9d6199b8ef416425cdc6fb17b084f1b9b13eb48"
 features = ["fields", "utilities"]
 
 [dependencies.anyhow]

@@ -496,6 +496,16 @@ pub fn program_get_plaintext_input_impl<N: Network>(
           let inputs = program_get_struct_members_impl::<N>(program, &struct_name)?;
           Reflect::set(&input, &"members".into(), &inputs.into()).map_err(|_| "Failed to set property")?;
       }
+      PlaintextType::ExternalStruct(locator) => {
+          let input = Object::new();
+          let value_type = JsValue::from_str("external_struct");
+          Reflect::set(&input, &"type".into(), &"struct".into()).map_err(|_| "Failed to set property")?;
+          Reflect::set(&input, &"locator".into(), &locator.to_string().into())
+              .map_err(|_| "Failed to set property")?;
+          if let Some(name) = name {
+              Reflect::set(&input, &"name".into(), &name.into()).map_err(|_| "Failed to set property")?;
+          }
+      }
   }
   if let Some(visibility) = visibility {
       Reflect::set(&input, &"visibility".into(), &visibility.into()).map_err(|_| "Failed to set property")?;
