@@ -433,6 +433,20 @@ pub fn program_get_function_inputs_impl<N: Network>(program: &Program, function_
               Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
               function_inputs.set(index as u32, input.into());
           }
+          ValueType::DynamicRecord => {
+              let input = Object::new();
+              let value_type = JsValue::from_str("dynamic_record");
+              Reflect::set(&input, &"type".into(), &value_type).map_err(|_| "Failed to set property")?;
+              Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
+              function_inputs.set(index as u32, input.into());
+          }
+          ValueType::DynamicFuture => {
+              let input = Object::new();
+              let value_type = JsValue::from_str("dynamic_future");
+              Reflect::set(&input, &"type".into(), &value_type).map_err(|_| "Failed to set property")?;
+              Reflect::set(&input, &"register".into(), &register).map_err(|_| "Failed to set property")?;
+              function_inputs.set(index as u32, input.into());
+          }
       }
   }
   Ok(function_inputs)

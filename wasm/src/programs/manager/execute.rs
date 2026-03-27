@@ -45,7 +45,7 @@ use serde::Serialize;
 use snarkvm_circuit_network::Aleo;
 use snarkvm_console::prelude::{ConsensusVersion, ToBytes};
 use snarkvm_synthesizer::process::InclusionVersion;
-pub use snarkvm_synthesizer::process::cost_in_microcredits_v2;
+pub use snarkvm_synthesizer::process::minimum_cost_in_microcredits_v2;
 use snarkvm_synthesizer_program::StackTrait;
 use std::str::FromStr;
 
@@ -697,7 +697,7 @@ pub async fn estimate_execution_fee_impl<N: Network, A: Aleo<Network = N>>(
         let stack = process.get_stack(program_id).map_err(|e| e.to_string())?;
 
         // Calculate the finalize cost for the function identified in the transition
-        let cost = cost_in_microcredits_v2(&stack, function_name).map_err(|e| e.to_string())?;
+        let cost = minimum_cost_in_microcredits_v2(&stack, function_name).map_err(|e| e.to_string())?;
 
         // Accumulate the finalize cost.
         finalize_cost = finalize_cost
