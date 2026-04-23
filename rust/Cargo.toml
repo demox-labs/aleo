@@ -41,7 +41,7 @@ version = "2.0"
 version = "1.18.0"
 
 [dependencies.rand]
-version = "0.8.5"
+version = "0.8.6"
 
 [dependencies.ureq]
 features = [ "json" ]
