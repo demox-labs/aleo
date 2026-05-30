@@ -23,15 +23,15 @@ doctest = false
 
 [dependencies.snarkvm-algorithms]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "7638eed66807adc6f611dae4673bbd5405f359cb"
+rev = "ede7513872fef1b61e61b211480f9ebd4e6e95e3"
 
 [dependencies.snarkvm-circuit-network]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "7638eed66807adc6f611dae4673bbd5405f359cb"
+rev = "ede7513872fef1b61e61b211480f9ebd4e6e95e3"
 
 [dependencies.snarkvm-console]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "7638eed66807adc6f611dae4673bbd5405f359cb"
+rev = "ede7513872fef1b61e61b211480f9ebd4e6e95e3"
 default-features = false
 features = [
   "account",
@@ -45,40 +45,40 @@ features = [
 
 [dependencies.snarkvm-fields]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "7638eed66807adc6f611dae4673bbd5405f359cb"
+rev = "ede7513872fef1b61e61b211480f9ebd4e6e95e3"
 
 [dependencies.snarkvm-ledger-block]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "7638eed66807adc6f611dae4673bbd5405f359cb"
+rev = "ede7513872fef1b61e61b211480f9ebd4e6e95e3"
 features = ["wasm"]
 
 [dependencies.snarkvm-ledger-query]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "7638eed66807adc6f611dae4673bbd5405f359cb"
+rev = "ede7513872fef1b61e61b211480f9ebd4e6e95e3"
 features = ["async", "wasm"]
 
 [dependencies.snarkvm-ledger-store]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "7638eed66807adc6f611dae4673bbd5405f359cb"
+rev = "ede7513872fef1b61e61b211480f9ebd4e6e95e3"
 
 [dependencies.snarkvm-parameters]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "7638eed66807adc6f611dae4673bbd5405f359cb"
+rev = "ede7513872fef1b61e61b211480f9ebd4e6e95e3"
 features = ["wasm"]
 
 [dependencies.snarkvm-synthesizer-program]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "7638eed66807adc6f611dae4673bbd5405f359cb"
+rev = "ede7513872fef1b61e61b211480f9ebd4e6e95e3"
 features = ["wasm"]
 
 [dependencies.snarkvm-synthesizer]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "7638eed66807adc6f611dae4673bbd5405f359cb"
+rev = "ede7513872fef1b61e61b211480f9ebd4e6e95e3"
 features = ["async", "wasm"]
 
 [dependencies.snarkvm-wasm]
 git = "https://github.com/ProvableHQ/snarkVM-forked-demox"
-rev = "7638eed66807adc6f611dae4673bbd5405f359cb"
+rev = "ede7513872fef1b61e61b211480f9ebd4e6e95e3"
 features = ["fields", "utilities"]
 
 [dependencies.anyhow]
@@ -94,6 +94,14 @@ version = "0.1.7"
 version = "0.2"
 features = ["js"]
 
+# snarkVM v4.7 pulls `rand 0.10`, which depends on `getrandom 0.4`. On wasm32 that backend must be
+# opted into the JS-based source via the `wasm_js` feature plus `--cfg getrandom_backend="wasm_js"`
+# (the latter is set in rollup.config.js build rustflags).
+[target.'cfg(target_arch = "wasm32")'.dependencies.getrandom_v04]
+package = "getrandom"
+version = "0.4"
+features = ["wasm_js"]
+
 [dependencies.indexmap]
 version = "2.0.0"
 
@@ -107,7 +115,7 @@ version = "0.3"
 version = "1.18.0"
 
 [dependencies.rand]
-version = "0.8"
+version = "0.10"
 
 [dependencies.rayon]
 version = "1.8"

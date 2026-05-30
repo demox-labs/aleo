@@ -86,7 +86,7 @@ impl ProgramManager {
         log("Setup the program and inputs");
         let node_url = url.as_deref().unwrap_or(DEFAULT_URL);
         let program = ProgramNative::credits().unwrap().to_string();
-        let rng = &mut StdRng::from_entropy();
+        let rng = &mut rand::make_rng::<StdRng>();
 
         log("Transfer Type is:");
         log(transfer_type);
@@ -172,7 +172,7 @@ impl ProgramManager {
         let execution_id = execution.to_execution_id().map_err(|e| e.to_string())?;
 
         log("Verifying the transfer execution");
-        process.verify_execution(VarunaVersionNative::V2, &execution).map_err(|err| err.to_string())?;
+        verify_execution_latest(&*process, &execution).map_err(|err| err.to_string())?;
 
         log("Executing the fee");
         let fee = execute_fee!(

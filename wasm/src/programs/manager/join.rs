@@ -75,7 +75,7 @@ impl ProgramManager {
             Some(fee_record) => Self::validate_amount(fee_credits, fee_record, true)?,
             None => (fee_credits * 1_000_000.0) as u64,
         };
-        let rng = &mut StdRng::from_entropy();
+        let rng = &mut rand::make_rng::<StdRng>();
 
         log("Setup program and inputs");
         let node_url = url.as_deref().unwrap_or(DEFAULT_URL);
@@ -129,7 +129,7 @@ impl ProgramManager {
         let execution_id = execution.to_execution_id().map_err(|e| e.to_string())?;
 
         log("Verifying the join execution");
-        process.verify_execution(VarunaVersionNative::V2, &execution).map_err(|err| err.to_string())?;
+        verify_execution_latest(&*process, &execution).map_err(|err| err.to_string())?;
 
         log("Executing the fee");
         let fee = execute_fee!(

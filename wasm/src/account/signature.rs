@@ -88,7 +88,7 @@ impl Signature {
 
 pub fn signature_sign_impl<N: Network>(private_key: &PrivateKey, message: &[u8]) -> Result<Signature, String> {
   let pk_native = PrivateKeyNative::<N>::from_str(&**private_key).unwrap();
-  let signature = SignatureNative::<N>::sign_bytes(&pk_native, message, &mut StdRng::from_entropy()).unwrap();
+  let signature = SignatureNative::<N>::sign_bytes(&pk_native, message, &mut rand::make_rng::<StdRng>()).unwrap();
   let network = network_string_id!(N::ID).unwrap().to_string();
   Ok(Signature { network, as_string: signature.to_string() })
 }
@@ -97,7 +97,7 @@ pub fn signature_sign_plaintext_impl<N: Network>(private_key: &PrivateKey, plain
   let pk_native = PrivateKeyNative::<N>::from_str(&**private_key).unwrap();
   let plaintext_native = PlaintextNative::<N>::from_str(plaintext).unwrap();
   let message_fields = plaintext_native.to_fields().unwrap();
-  let signature = SignatureNative::<N>::sign(&pk_native, &message_fields, &mut StdRng::from_entropy()).unwrap();
+  let signature = SignatureNative::<N>::sign(&pk_native, &message_fields, &mut rand::make_rng::<StdRng>()).unwrap();
   let network = network_string_id!(N::ID).unwrap().to_string();
   Ok(Signature { network, as_string: signature.to_string() })
 }

@@ -14,10 +14,47 @@
 // You should have received a copy of the GNU General Public License
 // along with the Aleo SDK library. If not, see <https://www.gnu.org/licenses/>.
 
-use snarkvm_console::prelude::{ConsensusVersion, ToBits};
+use snarkvm_console::prelude::{ConsensusVersion, Network, ToBits};
+
+use indexmap::IndexMap;
+use snarkvm_algorithms::snark::varuna::VarunaVersion;
+use snarkvm_ledger_block::Execution;
+use snarkvm_synthesizer::{Process, process::InclusionVersion};
 
 pub fn to_bits<T: ToBits>(value: T) -> Vec<bool> {
     value.to_bits_le()
+}
+
+/// Verifies an execution against the given protocol versions.
+///
+/// In snarkVM v4.7.x `Process::verify_execution` became an associated function that takes the
+/// execution's program stacks explicitly (rather than reading them from `&self`). This helper
+/// reconstructs that `execution_stacks` map from the process and delegates to it, preserving the
+/// call shape the wasm bindings relied on previously.
+pub fn verify_execution_with_versions<N: Network>(
+    process: &Process<N>,
+    consensus_version: ConsensusVersion,
+    varuna_version: VarunaVersion,
+    inclusion_version: InclusionVersion,
+    execution: &Execution<N>,
+) -> anyhow::Result<()> {
+    let mut execution_stacks = IndexMap::new();
+    for transition in execution.transitions() {
+        execution_stacks.insert(*transition.program_id(), process.get_stack(transition.program_id())?);
+    }
+    Process::<N>::verify_execution(consensus_version, varuna_version, inclusion_version, execution, &execution_stacks)
+}
+
+/// Verifies an execution using the latest protocol versions. Used by call sites that historically
+/// did not thread a consensus version through (they predate the version parameters).
+pub fn verify_execution_latest<N: Network>(process: &Process<N>, execution: &Execution<N>) -> anyhow::Result<()> {
+    verify_execution_with_versions(
+        process,
+        consensus_version_from_u8(u8::MAX),
+        VarunaVersion::V2,
+        InclusionVersion::V1,
+        execution,
+    )
 }
 
 pub fn consensus_version_from_u8(value: u8) -> ConsensusVersion {

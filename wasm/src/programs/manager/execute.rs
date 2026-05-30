@@ -248,11 +248,11 @@ pub fn execute_synthesize_impl<N: Network, A: Aleo<Network = N>>(
 
     if program.id().to_string() != "credits.aleo" {
         log(&format!("Adding program: {}", program.id().to_string()));
-        process.add_program(&program).map_err(|_| "Failed to add program".to_string())?;
+        process.lock().add_program(&program).map_err(|_| "Failed to add program".to_string())?;
     }
 
     process
-        .synthesize_key::<A, _>(&program.id(), &function_name, &mut StdRng::from_entropy())
+        .synthesize_key::<A, _>(&program.id(), &function_name, &mut rand::make_rng::<StdRng>())
         .map_err(|err| err.to_string())?;
 
     let proving_key = process.get_proving_key(program.id(), function_name).map_err(|e| e.to_string())?;
@@ -318,7 +318,7 @@ pub async fn execute_transaction_impl<N: Network, A: Aleo<Network = N>>(
     }
 
     log("Executing program");
-    let rng = &mut StdRng::from_entropy();
+    let rng = &mut rand::make_rng::<StdRng>();
     let (_, mut trace) = execute_program!(
         process,
         process_inputs!(inputs),
@@ -343,7 +343,7 @@ pub async fn execute_transaction_impl<N: Network, A: Aleo<Network = N>>(
         .prove_execution::<A, _>(
             &locator,
             VarunaVersionNative::V2,
-            &mut StdRng::from_entropy(),
+            &mut rand::make_rng::<StdRng>(),
         )
         .map_err(|e| e.to_string())?;
 
@@ -358,15 +358,15 @@ pub async fn execute_transaction_impl<N: Network, A: Aleo<Network = N>>(
                 fee_microcredits,
                 0u64,
                 execution_id,
-                &mut StdRng::from_entropy(),
+                &mut rand::make_rng::<StdRng>(),
             )
             .map_err(|e| e.to_string())?,
         None => process
-            .authorize_fee_public::<A, _>(&pk_native, fee_microcredits, 0u64, execution_id, &mut StdRng::from_entropy())
+            .authorize_fee_public::<A, _>(&pk_native, fee_microcredits, 0u64, execution_id, &mut rand::make_rng::<StdRng>())
             .map_err(|e| e.to_string())?,
     };
 
-    let rng = &mut StdRng::from_entropy();
+    let rng = &mut rand::make_rng::<StdRng>();
     let (_, mut trace) = process.execute::<A, _>(fee_authorization, rng).map_err(|err| err.to_string())?;
 
     log("Created fee");
@@ -374,14 +374,13 @@ pub async fn execute_transaction_impl<N: Network, A: Aleo<Network = N>>(
     trace.prepare_async(&query).await.map_err(|err| err.to_string())?;
     log("Prepared fee");
     let fee = trace
-        .prove_fee::<A, _>(VarunaVersionNative::V2, &mut StdRng::from_entropy())
+        .prove_fee::<A, _>(VarunaVersionNative::V2, &mut rand::make_rng::<StdRng>())
         .map_err(|e| e.to_string())?;
 
     log("Proved fee");
 
     // Verify the execution and fee
-    process
-        .verify_execution(consensus_version, VarunaVersionNative::V2, inclusion_version, &execution)
+    verify_execution_with_versions(&*process, consensus_version, VarunaVersionNative::V2, inclusion_version, &execution)
         .map_err(|err| err.to_string())?;
     process
         .verify_fee(consensus_version, VarunaVersionNative::V2, inclusion_version, &fee, execution_id)
@@ -423,7 +422,7 @@ pub async fn build_execution_impl<N: Network, A: Aleo<Network = N>>(
     let program_native = ProgramNative::<N>::from_str(&program).map_err(|e| e.to_string())?;
     program_manager_resolve_imports_impl::<N>(process, &program_native, imports)?;
 
-    let rng = &mut StdRng::from_entropy();
+    let rng = &mut rand::make_rng::<StdRng>();
     let (_, mut trace) = execute_program!(
         process,
         process_inputs!(inputs),
@@ -446,14 +445,13 @@ pub async fn build_execution_impl<N: Network, A: Aleo<Network = N>>(
         .prove_execution::<A, _>(
             &locator,
             VarunaVersionNative::V2,
-            &mut StdRng::from_entropy(),
+            &mut rand::make_rng::<StdRng>(),
         )
         .map_err(|e| e.to_string())?;
 
     log("Created inclusion");
 
-    process
-        .verify_execution(consensus_version, VarunaVersionNative::V2, inclusion_version, &execution)
+    verify_execution_with_versions(&*process, consensus_version, VarunaVersionNative::V2, inclusion_version, &execution)
         .map_err(|err| err.to_string())?;
 
     let execution_string =
@@ -486,11 +484,11 @@ pub async fn authorize_transaction_impl<N: Network, A: Aleo<Network = N>>(
     program_manager_resolve_imports_impl::<N>(process, &program_native, imports)?;
     let program_id = program_native.id();
     if program_id.to_string() != "credits.aleo" {
-        process.add_program(&program_native).map_err(|e| e.to_string())?;
+        process.lock().add_program(&program_native).map_err(|e| e.to_string())?;
     }
 
     log("Creating authorization");
-    let rng = &mut StdRng::from_entropy();
+    let rng = &mut rand::make_rng::<StdRng>();
     let authorization = process
         .authorize::<A, _>(&pk_native, program_id, function, process_inputs!(inputs).iter(), rng)
         .map_err(|err| err.to_string())?;
@@ -505,11 +503,11 @@ pub async fn authorize_transaction_impl<N: Network, A: Aleo<Network = N>>(
                 fee_microcredits,
                 0u64,
                 execution_id,
-                &mut StdRng::from_entropy(),
+                &mut rand::make_rng::<StdRng>(),
             )
             .map_err(|e| e.to_string())?,
         None => process
-            .authorize_fee_public::<A, _>(&pk_native, fee_microcredits, 0u64, execution_id, &mut StdRng::from_entropy())
+            .authorize_fee_public::<A, _>(&pk_native, fee_microcredits, 0u64, execution_id, &mut rand::make_rng::<StdRng>())
             .map_err(|e| e.to_string())?,
     };
 
@@ -585,7 +583,7 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
 
     let program_id = program_native.id();
     if program_id.to_string() != "credits.aleo" {
-        process.add_program(&program_native).map_err(|e| e.to_string())?;
+        process.lock().add_program(&program_native).map_err(|e| e.to_string())?;
     }
 
     let function_name = IdentifierNative::<N>::from_str(function).map_err(|err| err.to_string())?;
@@ -610,7 +608,7 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
     };
 
     log("Executing program");
-    let rng = &mut StdRng::from_entropy();
+    let rng = &mut rand::make_rng::<StdRng>();
     let (_, mut trace) = process.execute::<A, _>(authorization, rng).map_err(|err| err.to_string())?;
 
     log("Preparing inclusion proofs for execution");
@@ -626,7 +624,7 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
         .prove_execution::<A, _>(
             &locator,
             VarunaVersionNative::V2,
-            &mut StdRng::from_entropy(),
+            &mut rand::make_rng::<StdRng>(),
         )
         .map_err(|e| e.to_string())?;
 
@@ -635,14 +633,14 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
 
     let fee = match fee_authorization {
         Some(fee_authorization) => {
-            let rng = &mut StdRng::from_entropy();
+            let rng = &mut rand::make_rng::<StdRng>();
             let (_, mut trace) = process.execute::<A, _>(fee_authorization, rng).map_err(|err| err.to_string())?;
             log("Created fee");
             let query = QueryNative::<N>::try_from(url).map_err(|e| "Invalid query uri: {e}")?;
             trace.prepare_async(&query).await.map_err(|err| err.to_string())?;
             log("Prepared fee");
             let fee = trace
-                .prove_fee::<A, _>(VarunaVersionNative::V2, &mut StdRng::from_entropy())
+                .prove_fee::<A, _>(VarunaVersionNative::V2, &mut rand::make_rng::<StdRng>())
                 .map_err(|e| e.to_string())?;
 
             log("Proved fee");
@@ -656,8 +654,7 @@ pub async fn execute_authorization_impl<N: Network, A: Aleo<Network = N>>(
     };
 
     // Verify the execution and fee
-    process
-        .verify_execution(consensus_version, VarunaVersionNative::V2, inclusion_version, &execution)
+    verify_execution_with_versions(&*process, consensus_version, VarunaVersionNative::V2, inclusion_version, &execution)
         .map_err(|err| err.to_string())?;
 
     log("Creating execution transaction");
@@ -680,7 +677,7 @@ pub async fn estimate_execution_fee_impl<N: Network, A: Aleo<Network = N>>(
     let process = &mut process_native;
     let program_native = ProgramNative::from_str(program).map_err(|err| err.to_string())?;
     program_manager_resolve_imports_impl::<N>(process, &program_native, imports)?;
-    process.add_program(&program_native).map_err(|e| e.to_string())?;
+    process.lock().add_program(&program_native).map_err(|e| e.to_string())?;
 
     // Get the storage cost in bytes for the program execution
     log("Estimating cost");

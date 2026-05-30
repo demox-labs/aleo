@@ -163,7 +163,7 @@ pub async fn deploy_authorize_deploy_impl<N: Network, A: Aleo<Network = N>>(
                 fee_microcredits,
                 0u64,
                 deployment_id,
-                &mut StdRng::from_entropy(),
+                &mut rand::make_rng::<StdRng>(),
             )
             .map_err(|e| e.to_string())?,
         None => process
@@ -172,13 +172,13 @@ pub async fn deploy_authorize_deploy_impl<N: Network, A: Aleo<Network = N>>(
                 fee_microcredits,
                 0u64,
                 deployment_id,
-                &mut StdRng::from_entropy(),
+                &mut rand::make_rng::<StdRng>(),
             )
             .map_err(|e| e.to_string())?,
     };
 
     log("Create the program owner");
-    let owner = ProgramOwnerNative::<N>::new(&pk_native, deployment_id, &mut StdRng::from_entropy())
+    let owner = ProgramOwnerNative::<N>::new(&pk_native, deployment_id, &mut rand::make_rng::<StdRng>())
         .map_err(|err| err.to_string())?;
 
     let authorization_response = DeployAuthorizationResponse {
@@ -228,14 +228,14 @@ pub async fn deploy_transaction_impl<N: Network, A: Aleo<Network = N>>(
     program_manager_resolve_imports_impl::<N>(process, &program, imports)?;
 
     log("Create and validate deployment");
-    let deployment = process.deploy::<A, _>(&program, &mut StdRng::from_entropy()).map_err(|err| err.to_string())?;
+    let deployment = process.deploy::<A, _>(&program, &mut rand::make_rng::<StdRng>()).map_err(|err| err.to_string())?;
     if deployment.program().functions().is_empty() {
         return Err("Attempted to create an empty transaction deployment".to_string());
     }
 
     log("Verify the deployment and fees");
     process
-        .verify_deployment::<A, _>(consensus_version, &deployment, &mut StdRng::from_entropy())
+        .verify_deployment::<A, _>(consensus_version, &deployment, &mut rand::make_rng::<StdRng>())
         .map_err(|err| err.to_string())?;
 
     let deployment_id = deployment.to_deployment_id().map_err(|e| e.to_string())?;
@@ -265,7 +265,7 @@ pub async fn deploy_transaction_impl<N: Network, A: Aleo<Network = N>>(
                 fee_microcredits,
                 0u64,
                 deployment_id,
-                &mut StdRng::from_entropy(),
+                &mut rand::make_rng::<StdRng>(),
             )
             .map_err(|e| e.to_string())?,
         None => process
@@ -274,12 +274,12 @@ pub async fn deploy_transaction_impl<N: Network, A: Aleo<Network = N>>(
                 fee_microcredits,
                 0u64,
                 deployment_id,
-                &mut StdRng::from_entropy(),
+                &mut rand::make_rng::<StdRng>(),
             )
             .map_err(|e| e.to_string())?,
     };
 
-    let rng = &mut StdRng::from_entropy();
+    let rng = &mut rand::make_rng::<StdRng>();
     let (_, mut trace) = process.execute::<A, _>(fee_authorization, rng).map_err(|err| err.to_string())?;
 
     log("Created fee");
@@ -287,18 +287,18 @@ pub async fn deploy_transaction_impl<N: Network, A: Aleo<Network = N>>(
     trace.prepare_async(&query).await.map_err(|err| err.to_string())?;
     log("Prepared fee");
     let fee = trace
-        .prove_fee::<A, _>(VarunaVersionNative::V2, &mut StdRng::from_entropy())
+        .prove_fee::<A, _>(VarunaVersionNative::V2, &mut rand::make_rng::<StdRng>())
         .map_err(|e| e.to_string())?;
 
     log("Proved fee");
 
     log("Create the program owner");
-    let owner = ProgramOwnerNative::<N>::new(&pk_native, deployment_id, &mut StdRng::from_entropy())
+    let owner = ProgramOwnerNative::<N>::new(&pk_native, deployment_id, &mut rand::make_rng::<StdRng>())
         .map_err(|err| err.to_string())?;
 
     log("Verify the deployment and fees");
     process
-        .verify_deployment::<A, _>(consensus_version, &deployment, &mut StdRng::from_entropy())
+        .verify_deployment::<A, _>(consensus_version, &deployment, &mut rand::make_rng::<StdRng>())
         .map_err(|err| err.to_string())?;
 
     log("Creating deployment transaction");

@@ -88,12 +88,12 @@ pub fn verify_function_execution(
     let program_id = ProgramID::<CurrentNetwork>::from_str(&program.id()).unwrap();
     let mut process = ProcessNative::load_web().map_err(|e| e.to_string())?;
     if &program.id() != "credits.aleo" {
-        process.add_program(program).map_err(|e| e.to_string())?;
+        process.lock().add_program(program).map_err(|e| e.to_string())?;
     }
     process
         .insert_verifying_key(&program_id, &function, VerifyingKeyNative::from(verifying_key))
         .map_err(|e| e.to_string())?;
-    process.verify_execution(VarunaVersionNative::V2, execution).map_or(Ok(false), |_| Ok(true))
+    verify_execution_latest(&process, execution).map_or(Ok(false), |_| Ok(true))
 }
 
 #[cfg(test)]

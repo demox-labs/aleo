@@ -98,7 +98,7 @@ pub(crate) fn program_manager_resolve_imports_impl<N: Network>(
                     program_manager_resolve_imports_impl::<N>(process, &import, Some(imports.clone()))?;
                     // If the process does not already contain the program, add it
                     if !process.contains_program(import.id()) {
-                        process.add_program(&import).map_err(|err| err.to_string())?;
+                        process.lock().add_program(&import).map_err(|err| err.to_string())?;
                     }
                 }
             }

@@ -124,7 +124,7 @@ pub fn private_key_to_view_key_impl<N: Network>(private_key: &str) -> Result<Vie
 }
 
 pub fn private_key_new_impl<N: Network>() -> Result<String, String> {
-  Ok(PrivateKeyNative::<N>::new(&mut StdRng::from_entropy()).unwrap().to_string())
+  Ok(PrivateKeyNative::<N>::new(&mut rand::make_rng::<StdRng>()).unwrap().to_string())
 }
 
 pub fn private_key_from_string_impl<N: Network>(private_key: &str) -> Result<String, String> {
@@ -216,7 +216,7 @@ mod tests {
     pub fn test_from_seed_unchecked() {
         for _ in 0..ITERATIONS {
             // Sample a random seed.
-            let seed: [u8; 32] = StdRng::from_entropy().gen();
+            let seed: [u8; 32] = rand::make_rng::<StdRng>().random();
 
             // Ensure the private key is deterministically recoverable.
             let expected = PrivateKey::from_seed_unchecked("mainnet", &seed);
@@ -242,7 +242,7 @@ mod tests {
     //     for _ in 0..ITERATIONS {
     //         // Sample a new private key and message.
     //         let private_key = PrivateKey::new();
-    //         let message: [u8; 32] = StdRng::from_entropy().gen();
+    //         let message: [u8; 32] = rand::make_rng::<StdRng>().random();
 
     //         // Sign the message.
     //         let signature = private_key.sign(&message);

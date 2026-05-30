@@ -58,7 +58,7 @@ impl ProgramManager {
 
         let mut process_native = ProcessNative::load_web().map_err(|err| err.to_string())?;
         let process = &mut process_native;
-        let rng = &mut StdRng::from_entropy();
+        let rng = &mut rand::make_rng::<StdRng>();
 
         log("Executing the split function");
         let (_, mut trace) = execute_program!(
@@ -85,7 +85,7 @@ impl ProgramManager {
             trace.prove_execution::<CurrentAleo, _>("credits.aleo/split", rng).map_err(|e| e.to_string())?;
 
         log("Verifying the split execution");
-        process.verify_execution(VarunaVersionNative::V2, &execution).map_err(|err| err.to_string())?;
+        verify_execution_latest(&*process, &execution).map_err(|err| err.to_string())?;
 
         log("Creating execution transaction for split");
         let transaction = TransactionNative::from_execution(execution, None).map_err(|err| err.to_string())?;
